@@ -30,7 +30,7 @@ class BLE_Central:
 
 
     async def connection_task(self):
-        _ADV_INTERVAL_US = 500_000
+        _ADV_INTERVAL_US = 150_000
         while True:
             try:
                 print("Advertising and waiting for central...")

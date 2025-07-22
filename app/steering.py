@@ -13,7 +13,7 @@ class Steering:
         self.steer_position = 0
         
         
-    def set_steering_position(self, pos):
+    def set_steering_position_old(self, pos):
         print(pos)
         if pos == -2:
             self.steer_position = self.left
@@ -29,3 +29,11 @@ class Steering:
             print(f'[Steering]: Invalid position: {pos}')
             return
         self.steering_servo.set_angle(self.steer_position)
+
+    def set_steering_position(self, pos):
+        angle = 0
+        # right steering
+        if pos >=0:
+            angle = pos / 128 * (self.right - self.center)
+        else:
+            angle = abs(pos) / 127 * (self.center - self.right)

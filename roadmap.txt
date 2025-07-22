@@ -1,0 +1,27 @@
+1. app remote (desktop)
+2. beculete
+3. gyro
+4. nivel % baterie
+5. senzori distanta
+6. implementat functii automate legate de senzorii de distanta
+7. smooth acceleration
+8. smooth braking
+9. refactor server + commands handling
+10. testing
+11. documentatie
+12. prezentare
+13. discutat cu Popovici
+
+in ordinea in care trebuie facute:
+- app remote (desktop)
+- refactor server + commands handling
+- smooth acceleration
+- smooth braking
+- senzori distanta
+- implementat functii automate legate de senzorii de distanta
+- Popovici
+- documentatie
+- nivel % baterie
+- gyro
+- beculete
+- prezentare
