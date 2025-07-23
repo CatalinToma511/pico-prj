@@ -14,10 +14,12 @@ class Steering:
     def set_steering_position(self, pos):
         angle = self.center
         # mapping
-        if pos <0:
-            angle = self.center + (self.center - self.left) / 127 * pos
+        if pos < 0:
+            # for pos in (0, 128)
+            angle = self.center + (self.center - self.left) / 128 * pos
         else:
-            angle = self.center + (self.right - self.center) / 128 * pos
+            # for pos in (-127, 0)
+            angle = self.center + (self.right - self.center) / 127 * pos
         # validating
         if self.left <= angle <= self.right:
             print(f'Servo angle: {angle}')
