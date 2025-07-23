@@ -21,7 +21,7 @@ class Servo:
     
     def write_microseconds(self, ms):
         duty_cycle = int((ms / 20000) * 65535)
-        print(f"{ms}({duty_cycle}) on pin {self.pin}")
+        #print(f"{ms}({duty_cycle}) on pin {self.pin}")
         #abc = input(f'Enter to continue.')
         self.servo_pin.duty_u16(duty_cycle)
         self.ms = ms

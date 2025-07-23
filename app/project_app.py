@@ -4,8 +4,8 @@ from ble_central import BLE_Central
 from car import Car
 
 def controls_callback(data):
-    for b in data:
-        print(b, ' ')
+    # for b in data:
+    #     print(b, ' ')
     global my_car
     spd = data[0] - data[1]
     if spd != 0:
@@ -22,7 +22,7 @@ def controls_callback(data):
     my_car.motor.set_speed(int(abs(spd)/255 * 100))
         
     # steering
-    my_car.steering.set_steering_position(data[2]  - 127)
+    my_car.steering.set_steering_position(128 - data[2])
 
 
 async def main_task():

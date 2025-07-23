@@ -48,6 +48,7 @@ class BLE_Central:
             while True:
                 await characteristic.written()
                 data = characteristic.read()
-                callback(data.decode('utf-8'))
+                #callback(data.decode('utf-8'))
+                callback(data)
         except Exception as e:
             print(f"Error while listening to a characteristic: {e}")
