@@ -17,11 +17,11 @@ class Steering:
         if -128 <= pos <= 0:
             # for pos in (-128, 0)
             # steering left
-            angle = self.center + abs(self.center - self.left) / 128 * pos
+            angle = self.center + abs(self.center - self.left) / 128 * pos * (-1)
         elif 0 < pos <= 127:
             # for pos in (0, 127)
             # steering right
-            angle = self.center + abs(self.right - self.center) / 127 * pos
+            angle = self.center - abs(self.right - self.center) / 127 * pos
         else:
             print(f'[Steering]: Invalid position (remote input): {pos}')
         # validating
