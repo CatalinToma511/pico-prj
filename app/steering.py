@@ -14,11 +14,11 @@ class Steering:
     def set_steering_position(self, pos):
         angle = self.center
         # mapping
-        if pos < 0:
-            # for pos in (0, 128)
+        if pos <= 0:
+            # for pos in (-128, 0)
             angle = self.center + (self.center - self.left) / 128 * pos
         else:
-            # for pos in (-127, 0)
+            # for pos in (0, 127)
             angle = self.center + (self.right - self.center) / 127 * pos
         # validating
         if self.left <= angle <= self.right:

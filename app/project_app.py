@@ -22,7 +22,7 @@ def controls_callback(data):
     my_car.motor.set_speed(int(abs(spd)/255 * 100))
         
     # steering
-    my_car.steering.set_steering_position(128 - data[2])
+    my_car.steering.set_steering_position(data[2] - 128)
 
 
 async def main_task():

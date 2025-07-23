@@ -19,7 +19,7 @@ class Motor:
             
     def set_direction(self, direction):
         if -1 <= direction <= 1:
-            print(f'new dir {direction}, old dir {self.direction}')
+            # print(f'new dir {direction}, old dir {self.direction}')
             self.direction = direction
             self.update()
         else:
@@ -28,12 +28,12 @@ class Motor:
     def update(self):
         # print(f"{self.direction} {self.speed}")
         if self.direction == 0:
-            print('stop')
+            # print('stop')
             self.in1.duty_u16(0)
             self.in2.duty_u16(0)
             
         elif self.direction == 1:
-            print(self.speed)
+            # print(self.speed)
             self.in1.duty_u16(65535 // 100 * self.speed)
             self.in2.duty_u16(0)
             
