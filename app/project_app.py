@@ -3,21 +3,6 @@ import time
 from ble_central import BLE_Central
 from car import Car
 
-XINPUT_GAMEPAD_DPAD_UP_MASK = 0x0001
-XINPUT_GAMEPAD_DPAD_DOWN_MASK = 0x0002
-XINPUT_GAMEPAD_DPAD_LEFT_MASK = 0x0004
-XINPUT_GAMEPAD_DPAD_RIGHT_MASK = 0x0008
-XINPUT_GAMEPAD_START_MASK = 0x0010
-XINPUT_GAMEPAD_BACK_MASK = 0x0020
-XINPUT_GAMEPAD_LEFT_THUMB_MASK = 0x0040
-XINPUT_GAMEPAD_RIGHT_THUMB_MASK = 0x0080
-XINPUT_GAMEPAD_LEFT_SHOULDER_MASK = 0x0100
-XINPUT_GAMEPAD_RIGHT_SHOULDER_MASK = 0x0200
-XINPUT_GAMEPAD_A_MASK = 0x1000
-XINPUT_GAMEPAD_B_MASK = 0x2000
-XINPUT_GAMEPAD_X_MASK = 0x4000
-XINPUT_GAMEPAD_Y_MASK = 0x8000
-
 def controls_callback(data):
     global my_car
     # speed
@@ -34,10 +19,9 @@ def controls_callback(data):
     l_joystick_x = data[2] - 128
     my_car.steering.set_steering_position(l_joystick_x)
 
-    buttons = data[3]
     #gearbox
-    left_button = (buttons & XINPUT_GAMEPAD_LEFT_SHOULDER_MASK) != 0
-    right_button = (buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER_MASK) != 0
+    left_button = data[3]
+    right_button = data[4]
     if left_button and not right_button:
         my_car.gearbox.set_gear(0)
     elif right_button and not left_button:
