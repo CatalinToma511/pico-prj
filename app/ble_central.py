@@ -7,6 +7,7 @@ import asyncio
 
 class BLE_Central:
     def __init__(self, name="PicoW_Car"):
+        self.led = machine.Pin("LED", machine.Pin.OUT)
         self.name = name
         self.connection = None
         self.connected = False
@@ -27,7 +28,6 @@ class BLE_Central:
         )
         aioble.register_services(self.controls_service)
         self.controls_descriptor.write("Controller data".encode('utf-8'))
-
 
     async def connection_task(self):
         _ADV_INTERVAL_US = 150_000
@@ -52,3 +52,12 @@ class BLE_Central:
                 callback(data)
         except Exception as e:
             print(f"Error while listening to a characteristic: {e}")
+
+    async def blink_task(self):
+        while True:
+            while self.connected is False:
+                self.led.toggle()
+                await asyncio.sleep(1)
+            while self.connected is True:
+                self.led.on()
+                await asyncio.sleep(1)
