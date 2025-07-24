@@ -32,7 +32,7 @@ def controls_callback(data):
 async def main_task():
     ble = BLE_Central("PicoW_BLE")
     global my_car
-    my_car = Car(2,3,8,5)
+    my_car = Car(2,3,9,5)
     tasks = [
         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, controls_callback)),
         asyncio.create_task(ble.connection_task()),
