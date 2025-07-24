@@ -39,6 +39,7 @@ class BLE_Central:
                 print("Connected:", self.connection.device)
 
                 await self.connection.disconnected(timeout_ms = None)
+                self.connected = False
                 print("Disconnected")
             except Exception as e:
                 print(f"Error while establishing connection: {e}")
