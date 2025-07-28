@@ -3,6 +3,7 @@ from gearbox import Gearbox
 from steering import Steering
 from mpu6050 import MPU6050
 import asyncio
+import machine
 
 class Car:
     def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin):
@@ -19,9 +20,13 @@ class Car:
         #self.mpu6050.calibrate_aceel()
 
     def process_data(self, data):
+        # restart the Pico if needed
+        if len(data) == 5 and data.decode('utf-8') == "RESET":
+            machine.reset()
+
         # speed
         spd = data[0] - data[1] #RT - LT
-        self.speed_target(int(abs(spd)/255 * 100))
+        self.speed_target = int(abs(spd)/255 * 100)
             
         # steering
         l_joystick_x = data[2] - 128
