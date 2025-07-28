@@ -13,9 +13,9 @@ class Car:
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
-        self.max_speed_increase = 10
-        self.max_speed_decrease = 30
-        self.max_steering_change = 10
+        self.max_speed_increase = 20
+        self.max_speed_decrease = 33
+        self.max_steering_change = 20
         #self.mpu6050 = MPU6050(0, 21, 20)
         #self.mpu6050.calibrate_aceel()
 
@@ -32,7 +32,7 @@ class Car:
 
             # speed
             spd = data[0] - data[1] #RT - LT
-            self.speed_target = int(abs(spd)/255 * 100)
+            self.speed_target = int(spd/255 * 100)
                 
             # steering
             l_joystick_x = data[2] - 128
@@ -52,8 +52,11 @@ class Car:
         INTERVAL_UPDATE_CONTROLS_MS = 50
         while True:
             speed_step = 0
+            # if target speed is the same as current speed, do nothing
+            if self.speed_target == self.motor.speed:
+                speed_step = 0
             # accelerating when going forward -> step should increase current val
-            if self.speed_target > self.motor.speed and self.motor.speed >= 0:
+            elif self.speed_target > self.motor.speed and self.motor.speed >= 0:
                 difference = self.speed_target - self.motor.speed
                 speed_step = min(self.max_speed_increase, difference)
             # accelerating when going backward -> step should decrease current val
@@ -63,13 +66,19 @@ class Car:
             # braking when going forward -> step should decrease current val
             elif self.speed_target < self.motor.speed and self.motor.speed >= 0:
                 difference = self.motor.speed - self.speed_target
-                speed_step = (-1) * min(self.max_speed_decrease, difference)
+                # added distance to 0 to avoid accelerating with brake rate
+                speed_step = (-1) * min(self.max_speed_decrease, difference, self.motor.speed)
             # braking when going backward -> step should increase current val
             elif self.speed_target > self.motor.speed and self.motor.speed <= 0:
                 difference = self.speed_target - self.motor.speed
-                speed_step = min(self.max_speed_decrease, difference)
+                # added distance to 0 to avoid accelerating with brake rate
+                speed_step = min(self.max_speed_decrease, difference, abs(self.motor.speed))
             self.motor.set_speed(self.motor.speed + speed_step)
 
+            steering_step = 0
+            # if target steering is the same as current steering, do nothing
+            if self.steering_target == self.steering.steer_position:
+                steering_step = 0
             # steering left -> step should increase current value
             if self.steering_target > self.steering.steer_position:
                 difference = self.steering_target - self.steering.steer_position
@@ -78,5 +87,6 @@ class Car:
             elif self.steering_target < self.steering.steer_position:
                 difference = self.steering.steer_position - self.steering_target
                 steering_step = (-1) * min(self.max_steering_change, difference)
+            self.steering.set_steering_position(self.steering.steer_position + steering_step)  
 
             await asyncio.sleep_ms(INTERVAL_UPDATE_CONTROLS_MS)
