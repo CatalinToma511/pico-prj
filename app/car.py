@@ -20,25 +20,33 @@ class Car:
         #self.mpu6050.calibrate_aceel()
 
     def process_data(self, data):
-        # restart the Pico if needed
-        if len(data) == 5 and data.decode('utf-8') == "RESET":
-            machine.reset()
+        try:
+            print('')
+            for b in data:
+                print(b)
 
-        # speed
-        spd = data[0] - data[1] #RT - LT
-        self.speed_target = int(abs(spd)/255 * 100)
-            
-        # steering
-        l_joystick_x = data[2] - 128
-        self.steering_target = l_joystick_x
+            # restart the Pico if needed
+            if data == b'RESET':
+                print("Resetting the machine...")
+                machine.reset()
 
-        #gearbox
-        left_button = data[3]
-        right_button = data[4]
-        if left_button and not right_button:
-            self.gearbox.set_gear(0)
-        elif right_button and not left_button:
-            self.gearbox.set_gear(1)
+            # speed
+            spd = data[0] - data[1] #RT - LT
+            self.speed_target = int(abs(spd)/255 * 100)
+                
+            # steering
+            l_joystick_x = data[2] - 128
+            self.steering_target = l_joystick_x
+
+            #gearbox
+            left_button = data[3]
+            right_button = data[4]
+            if left_button and not right_button:
+                self.gearbox.set_gear(0)
+            elif right_button and not left_button:
+                self.gearbox.set_gear(1)
+        except Exception as e:
+            print(f"Error processing data: {e}")
 
     async def smooth_controls(self):
         INTERVAL_UPDATE_CONTROLS_MS = 50
