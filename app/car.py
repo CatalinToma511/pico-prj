@@ -21,10 +21,6 @@ class Car:
 
     def process_data(self, data):
         try:
-            print('')
-            for b in data:
-                print(b)
-
             # restart the Pico if needed
             if data == b'RESET':
                 print("Resetting the machine...")
