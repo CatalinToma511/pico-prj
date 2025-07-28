@@ -1,7 +1,6 @@
 import aioble
 import bluetooth
 import machine
-import utime
 import asyncio
 
 
@@ -11,8 +10,11 @@ class BLE_Central:
         self.name = name
         self.connection = None
         self.connected = False
-        self.CONTROLS_SERVICE_UUID = bluetooth.UUID("12345678-1234-5678-1234-56789abcdef0")
-        self.CONTROLS_CHARACTERISTIC_UUID = bluetooth.UUID("12345678-1234-5678-1234-56789abcdef1")
+        CONST_CONTROLS_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
+        CONST_CONTROLS_CHARACTERISTIC_UUID = "12345678-1234-5678-1234-56789abcdef1"
+        CONST_CHARACTERISTIC_USER_DESCRIPTION = 0x2901
+        self.CONTROLS_SERVICE_UUID = bluetooth.UUID(CONST_CONTROLS_SERVICE_UUID)
+        self.CONTROLS_CHARACTERISTIC_UUID = bluetooth.UUID(CONST_CONTROLS_CHARACTERISTIC_UUID)
         self.controls_service =  aioble.Service(self.CONTROLS_SERVICE_UUID)
         self.controls_characteristic = aioble.Characteristic(
             self.controls_service,
@@ -23,7 +25,7 @@ class BLE_Central:
         )
         self.controls_descriptor = aioble.Descriptor(
             self.controls_characteristic,
-            bluetooth.UUID(0x2901),  # Characteristic User Description
+            bluetooth.UUID(CONST_CHARACTERISTIC_USER_DESCRIPTION),  # Characteristic User Description
             read=True
         )
         aioble.register_services(self.controls_service)
@@ -34,7 +36,10 @@ class BLE_Central:
         while True:
             try:
                 print("Advertising and waiting for central...")
-                self.connection = await aioble.advertise(_ADV_INTERVAL_US, name=self.name, services=[self.CONTROLS_SERVICE_UUID]) # type: ignore
+                self.connection = await aioble.advertise(
+                    _ADV_INTERVAL_US,
+                    name=self.name,
+                    services=[self.CONTROLS_SERVICE_UUID]) # type: ignore
                 self.connected = True
                 print("Connected:", self.connection.device)
 
