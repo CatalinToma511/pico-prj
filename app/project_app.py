@@ -8,6 +8,7 @@ async def main_task():
     my_car = Car(2,3,9,5)
     tasks = [
         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, my_car.process_data)),
+        asyncio.create_task(my_car.smooth_controls()),
         asyncio.create_task(ble.connection_task()),
         asyncio.create_task(ble.blink_task())
     ]

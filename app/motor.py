@@ -7,6 +7,7 @@ class Motor:
         self.in1.freq(MOTOR_PWM_FREQ)
         self.in2 = machine.PWM(machine.Pin(in2))
         self.in2.freq(MOTOR_PWM_FREQ)
+        self.speed = 0
         self.set_speed(0)
         
     # Positive speed goes forward, negative speed goes backwards
