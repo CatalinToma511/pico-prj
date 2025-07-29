@@ -45,7 +45,7 @@ class Car:
             print(f"Error processing data: {e}")
 
     async def smooth_controls(self):
-        INTERVAL_UPDATE_CONTROLS_MS = 25
+        INTERVAL_UPDATE_CONTROLS_MS = 50
         while True:
             speed_step = 0
             # if target speed is the same as current speed, do nothing
