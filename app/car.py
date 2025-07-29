@@ -69,7 +69,9 @@ class Car:
                 difference = self.speed_target - self.motor.speed
                 # added distance to 0 to avoid accelerating with brake rate
                 speed_step = min(self.max_speed_decrease, difference, abs(self.motor.speed))
-            self.motor.set_speed(self.motor.speed + speed_step)
+            # if the speed step is not zero, update the motor speed
+            if speed_step != 0:
+                self.motor.set_speed(self.motor.speed + speed_step)
 
             steering_step = 0
             # if target steering is the same as current steering, do nothing
@@ -83,6 +85,9 @@ class Car:
             elif self.steering_target < self.steering.steer_position:
                 difference = self.steering.steer_position - self.steering_target
                 steering_step = (-1) * min(self.max_steering_change, difference)
-            self.steering.set_steering_position(self.steering.steer_position + steering_step)  
+            self.steering.set_steering_position(self.steering.steer_position + steering_step)
+            # if the steering step is not zero, update the steering position
+            if steering_step != 0:
+                self.steering.set_steering_position(self.steering.steer_position + steering_step)  
 
             await asyncio.sleep_ms(INTERVAL_UPDATE_CONTROLS_MS)
