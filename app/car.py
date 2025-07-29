@@ -13,9 +13,9 @@ class Car:
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
-        self.max_speed_increase = 20
-        self.max_speed_decrease = 33
-        self.max_steering_change = 20
+        self.max_speed_increase = 10
+        self.max_speed_decrease = 20
+        self.max_steering_change = 10
         #self.mpu6050 = MPU6050(0, 21, 20)
         #self.mpu6050.calibrate_aceel()
 
@@ -45,7 +45,7 @@ class Car:
             print(f"Error processing data: {e}")
 
     async def smooth_controls(self):
-        INTERVAL_UPDATE_CONTROLS_MS = 50
+        INTERVAL_UPDATE_CONTROLS_MS = 25
         while True:
             speed_step = 0
             # if target speed is the same as current speed, do nothing
@@ -78,7 +78,7 @@ class Car:
             if self.steering_target == self.steering.steer_position:
                 steering_step = 0
             # steering left -> step should increase current value
-            elif self.steering_target > self.steering.steer_position:
+            if self.steering_target > self.steering.steer_position:
                 difference = self.steering_target - self.steering.steer_position
                 steering_step = min(self.max_steering_change, difference)
             # steering right -> step should decrease current value
