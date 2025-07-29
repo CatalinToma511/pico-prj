@@ -78,14 +78,13 @@ class Car:
             if self.steering_target == self.steering.steer_position:
                 steering_step = 0
             # steering left -> step should increase current value
-            if self.steering_target > self.steering.steer_position:
+            elif self.steering_target > self.steering.steer_position:
                 difference = self.steering_target - self.steering.steer_position
                 steering_step = min(self.max_steering_change, difference)
             # steering right -> step should decrease current value
             elif self.steering_target < self.steering.steer_position:
                 difference = self.steering.steer_position - self.steering_target
                 steering_step = (-1) * min(self.max_steering_change, difference)
-            self.steering.set_steering_position(self.steering.steer_position + steering_step)
             # if the steering step is not zero, update the steering position
             if steering_step != 0:
                 self.steering.set_steering_position(self.steering.steer_position + steering_step)  

@@ -7,8 +7,8 @@ class Steering:
         self.center = center
         self.left = left
         self.right = right
-        self.steering_servo.set_angle(self.center)
-        self.steer_position = self.center
+        self.set_steering_position(0)
+        self.steer_position = 0
 
 
     def set_steering_position(self, pos):
@@ -27,6 +27,6 @@ class Steering:
         # validating
         if self.left <= angle <= self.right or self.right <= angle <= self.left:
             self.steering_servo.set_angle(angle)
-            self.steer_position = angle
+            self.steer_position = pos
         else:
             print(f'[Steering]: Invalid angle (servo output): {angle}')
