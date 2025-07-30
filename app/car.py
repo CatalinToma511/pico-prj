@@ -17,7 +17,7 @@ class Car:
         self.steering_target = self.steering.steer_position
         self.max_speed_increase = 10
         self.max_speed_decrease = 20
-        self.max_steering_change = 10
+        self.max_steering_change = 15
         #self.mpu6050 = MPU6050(0, 21, 20)
         #self.mpu6050.calibrate_aceel()
 
@@ -48,6 +48,8 @@ class Car:
             horn_button = data[5]
             if horn_button:
                 self.horn.turn_on()
+            else:
+                self.horn.turn_off()
         except Exception as e:
             print(f"Error processing data: {e}")
 
