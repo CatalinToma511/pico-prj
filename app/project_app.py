@@ -5,7 +5,7 @@ from car import Car
 
 async def main_task():
     ble = BLE_Central("PicoW_BLE")
-    my_car = Car(2,3,9,5)
+    my_car = Car(2, 3, 9, 5, 10)
     tasks = [
         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, my_car.process_data)),
         asyncio.create_task(my_car.smooth_controls()),

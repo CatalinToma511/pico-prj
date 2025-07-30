@@ -52,7 +52,7 @@ class MPU6050:
         return self.accel_x_raw, self.accel_y_raw, self.accel_z_raw
     
     
-    def calibrate_aceel(self, samples = 100):
+    def calibrate_accel(self, samples = 100):
         sum_x, sum_y, sum_z = 0.0, 0.0, 0.0
         for _ in range(samples):
             ax, ay, az = self.read_accel_raw()

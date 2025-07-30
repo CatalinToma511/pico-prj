@@ -2,14 +2,16 @@ from motor import Motor
 from gearbox import Gearbox
 from steering import Steering
 from mpu6050 import MPU6050
+from horn import Horn
 import asyncio
 import machine
 
 class Car:
-    def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin):
+    def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin, horn_pin):
         self.motor = Motor(motor_in1, motor_in2)
         self.gearbox = Gearbox(gearbox_shift_pin)
         self.steering = Steering(steering_pin)
+        self.horn = Horn(horn_pin)
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
@@ -41,6 +43,11 @@ class Car:
                 self.gearbox.set_gear(0)
             elif right_button and not left_button:
                 self.gearbox.set_gear(1)
+
+            # horn
+            horn_button = data[5]
+            if horn_button:
+                self.horn.turn_on()
         except Exception as e:
             print(f"Error processing data: {e}")
 
