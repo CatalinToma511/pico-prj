@@ -9,6 +9,7 @@ class updateManager:
     def __init__(self):
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
+        time.sleep(1)  # wait for WLAN to initialize
         self.config = utils.load_json_from_file('projectconfig.json')
         self.project_files = utils.load_json_from_file('projectfiles.json')
         self.headers = {'User-Agent': 'PiPicoW'}
@@ -26,7 +27,7 @@ class updateManager:
                 saved_networks[entry["ssid"]] = entry["key"]
 
             # check if there is any known network available with internet and connect to it
-            timeout = 10
+            timeout = 20
             for network in available_networks:
                 ssid = network[0].decode('utf-8')
                 try:
@@ -39,7 +40,7 @@ class updateManager:
                         while not self.wlan.isconnected():
                             if time.time() - start_time > timeout:
                                 # if it takes more than "timeout" seconds, consider failed connection
-                                print(f'Failed to connect to {ssid}')
+                                print(f'Failed to connect to {ssid}, timeout reached')
                                 break
                         if self.wlan.isconnected() is True:
                             print(f'Connected to network: {ssid}')
@@ -53,6 +54,8 @@ class updateManager:
                                 return True
                             else:
                                 print('Internet connection not available. Trying another network...')
+                        else:
+                            print(f'Status: {self.wlan.status()}')
                 except Exception as e:
                     print(f'Error while connecting to {ssid}: {e}')
             print('Unable to connect to any network with internet connection')  
@@ -190,6 +193,7 @@ class updateManager:
 
         else:
             print('Already up to date')
+        self.wlan.active(False)
 
 
         

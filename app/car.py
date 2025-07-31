@@ -7,16 +7,17 @@ import asyncio
 import machine
 
 class Car:
-    def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin, horn_pin):
+    def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin, horn_pin, mpu_bus_id, mpu_scl_pin, mpu_sda_pin):
         self.motor = Motor(motor_in1, motor_in2)
         self.gearbox = Gearbox(gearbox_shift_pin)
         self.steering = Steering(steering_pin)
         self.horn = Horn(horn_pin)
+        #self.mpu6050 = MPU6050(mpu_bus_id, mpu_scl_pin, mpu_sda_pin)
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
-        self.max_speed_increase = 10
-        self.max_speed_decrease = 20
+        self.max_speed_increase = 5
+        self.max_speed_decrease = 10
         self.max_steering_change = 15
         #self.mpu6050 = MPU6050(0, 21, 20)
         #self.mpu6050.calibrate_aceel()
@@ -54,7 +55,7 @@ class Car:
             print(f"Error processing data: {e}")
 
     async def smooth_controls(self):
-        INTERVAL_UPDATE_CONTROLS_MS = 50
+        INTERVAL_UPDATE_CONTROLS_MS = 25
         while True:
             speed_step = 0
             # if target speed is the same as current speed, do nothing
