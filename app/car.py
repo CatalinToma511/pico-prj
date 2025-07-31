@@ -17,7 +17,7 @@ class Car:
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
         self.max_speed_increase = 3
-        self.max_speed_decrease = 7
+        self.max_speed_decrease = 5
         self.max_steering_change = 30
         #self.mpu6050 = MPU6050(0, 21, 20)
         #self.mpu6050.calibrate_aceel()
