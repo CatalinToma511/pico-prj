@@ -2,7 +2,7 @@ from servo import Servo
 
 
 class Steering:
-    def __init__(self, steering_servo_pin, center = 77., left = 110., right = 30.):
+    def __init__(self, steering_servo_pin, center = 71., left = 110., right = 30.):
         self.steering_servo = Servo(steering_servo_pin)
         self.center = center
         self.left = left
@@ -17,7 +17,7 @@ class Steering:
         if -128 <= pos <= 0:
             # for pos in (-128, 0)
             # steering left
-            angle = self.center + abs(self.center - self.left) / 128 * pos * (-1)
+            angle = self.center - abs(self.center - self.left) / 128 * pos
         elif 0 < pos <= 127:
             # for pos in (0, 127)
             # steering right
