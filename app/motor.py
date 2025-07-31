@@ -14,11 +14,11 @@ class Motor:
     def set_speed(self, speed):
         if 0 <= speed <= 100: 
             self.speed = speed
-            self.in1.duty_u16(65535 // 100 * self.speed)
+            self.in1.duty_u16(int(65535 / 100 * self.speed))
             self.in2.duty_u16(0)
         elif -100 <= speed <= 0:
             self.speed = speed
             self.in1.duty_u16(0)
-            self.in2.duty_u16(65535 // 100 * abs(self.speed))
+            self.in2.duty_u16(int(65535 / 100 * abs(self.speed)))
         else:
             print(f"[Motor] Invalid speed: {speed}")
