@@ -9,6 +9,7 @@ class updateManager:
     def __init__(self):
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
+        # self.wlan.config(pm=network.WLAN.PM_NONE)  # disable power management
         time.sleep(1)  # wait for WLAN to initialize
         self.config = utils.load_json_from_file('projectconfig.json')
         self.project_files = utils.load_json_from_file('projectfiles.json')

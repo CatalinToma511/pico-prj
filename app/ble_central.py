@@ -63,7 +63,7 @@ class BLE_Central:
         while True:
             while self.connected is False:
                 self.led.toggle()
-                await asyncio.sleep(1)
+                await asyncio.sleep_ms(500)
             while self.connected is True:
                 self.led.on()
-                await asyncio.sleep(1)
+                await asyncio.sleep_ms(500)

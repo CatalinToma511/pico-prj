@@ -5,6 +5,7 @@ from mpu6050 import MPU6050
 from horn import Horn
 import asyncio
 import machine
+import time
 
 class Car:
     def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin, horn_pin, mpu_bus_id, mpu_scl_pin, mpu_sda_pin):
@@ -19,8 +20,9 @@ class Car:
         self.max_speed_increase = 3
         self.max_speed_decrease = 5
         self.max_steering_change = 30
-        #self.mpu6050 = MPU6050(0, 21, 20)
-        #self.mpu6050.calibrate_aceel()
+
+        self.smooth_control_running = True
+        self.smooth_control_interval_ms = 25
 
     def process_data(self, data):
         try:
@@ -55,8 +57,7 @@ class Car:
             print(f"Error processing data: {e}")
 
     async def smooth_controls(self):
-        INTERVAL_UPDATE_CONTROLS_MS = 25
-        while True:
+        while self.smooth_control_running:
             speed_step = 0
             # if target speed is the same as current speed, do nothing
             if self.speed_target == self.motor.speed:
@@ -83,20 +84,23 @@ class Car:
             if speed_step != 0:
                 self.motor.set_speed(self.motor.speed + speed_step)
 
-            steering_step = 0
-            # if target steering is the same as current steering, do nothing
-            if self.steering_target == self.steering.steer_position:
-                steering_step = 0
-            # steering left -> step should increase current value
-            if self.steering_target > self.steering.steer_position:
-                difference = self.steering_target - self.steering.steer_position
-                steering_step = min(self.max_steering_change, difference)
-            # steering right -> step should decrease current value
-            elif self.steering_target < self.steering.steer_position:
-                difference = self.steering.steer_position - self.steering_target
-                steering_step = (-1) * min(self.max_steering_change, difference)
-            # if the steering step is not zero, update the steering position
-            if steering_step != 0:
-                self.steering.set_steering_position(self.steering.steer_position + steering_step)  
+            # steering_step = 0
+            # # if target steering is the same as current steering, do nothing
+            # if self.steering_target == self.steering.steer_position:
+            #     steering_step = 0
+            # # steering left -> step should increase current value
+            # if self.steering_target > self.steering.steer_position:
+            #     difference = self.steering_target - self.steering.steer_position
+            #     steering_step = min(self.max_steering_change, difference)
+            # # steering right -> step should decrease current value
+            # elif self.steering_target < self.steering.steer_position:
+            #     difference = self.steering.steer_position - self.steering_target
+            #     steering_step = (-1) * min(self.max_steering_change, difference)
+            # # if the steering step is not zero, update the steering position
+            # if steering_step != 0:
+            #     self.steering.set_steering_position(self.steering.steer_position + steering_step)
 
-            await asyncio.sleep_ms(INTERVAL_UPDATE_CONTROLS_MS)
+            # for now, no smooth steering
+            self.steering.set_steering_position(self.steering_target)
+
+            await asyncio.sleep_ms(self.smooth_control_interval_ms)
