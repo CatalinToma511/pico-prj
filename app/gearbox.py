@@ -6,8 +6,8 @@ class Gearbox:
         self.gear_shift_servo = Servo(gear_shift_pin)
         self.low_gear_angle = low_gear_angle
         self.high_gear_angle = high_gear_angle
-        self.gear = 1
-        self.set_gear(1)
+        self.gear = 0  # 0 for low gear, 1 for high gear
+        self.set_gear(0)
         
         
     def set_gear(self, gear):
