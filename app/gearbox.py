@@ -8,8 +8,8 @@ class Gearbox:
         self.high_gear_angle = high_gear_angle
         self.gear = 0  # 0 for low gear, 1 for high gear
         self.set_gear(0)
-        
-        
+
+
     def set_gear(self, gear):
         if gear == 0:
             self.gear_shift_servo.set_angle(self.low_gear_angle)

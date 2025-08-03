@@ -3,17 +3,30 @@ from gearbox import Gearbox
 from steering import Steering
 from mpu6050 import MPU6050
 from horn import Horn
+from voltagereader import VoltageReader
 import asyncio
 import machine
 import time
+import struct
 
 class Car:
-    def __init__(self, motor_in1, motor_in2, steering_pin, gearbox_shift_pin, horn_pin, mpu_bus_id, mpu_scl_pin, mpu_sda_pin):
+    def __init__(self,
+                 motor_in1,
+                 motor_in2,
+                 steering_pin,
+                 gearbox_shift_pin,
+                 horn_pin,
+                 voltage_pin,
+                 mpu_bus_id,
+                 mpu_scl_pin,
+                 mpu_sda_pin):
         self.motor = Motor(motor_in1, motor_in2)
         self.gearbox = Gearbox(gearbox_shift_pin)
         self.steering = Steering(steering_pin)
         self.horn = Horn(horn_pin)
+        self.voltage_reader = VoltageReader(pin=voltage_pin)
         #self.mpu6050 = MPU6050(mpu_bus_id, mpu_scl_pin, mpu_sda_pin)
+        self.voltage_reader = VoltageReader(pin=26)
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
@@ -104,3 +117,14 @@ class Car:
             self.steering.set_steering_position(self.steering_target)
 
             await asyncio.sleep_ms(self.smooth_control_interval_ms)
+
+    def get_parameters_encoded(self):
+        try:
+            voltage = self.voltage_reader.read()
+            # since the maximum voltage is 10V and the precision is 0.1V, we can multiply by 10
+            voltage_encoded = int(voltage * 10).to_bytes(1, 'big')
+            
+            data = voltage_encoded
+            return data
+        except Exception as e:
+            print(f"Error encoding parameters: {e}")

@@ -2,14 +2,14 @@ import machine
 
 
 class Servo:
-    def __init__(self, pin, min_pulse_ms=500, max_pulse_ms=2500):
+    def __init__(self, pin, min_pulse_ms=500, max_pulse_ms=2500, frequency=50):
         self.ms = 0
         self.min_pulse_ms = min_pulse_ms
         self.max_pulse_ms = max_pulse_ms
         self.angle = 0
         self.pin = pin
         self.servo_pin = machine.PWM(machine.Pin(pin))
-        self.servo_pin.freq(50)
+        self.servo_pin.freq(frequency)
         self.write_microseconds(0)
     
     
