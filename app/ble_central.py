@@ -73,22 +73,17 @@ class BLE_Central:
             except Exception as e:
                 print(f"Error while listening to a characteristic: {e}")
 
-    async def send_parameters(self, characteristic, get_encoded_data_callback, interval_ms=100):
+    async def send_parameters(self, characteristic, get_encoded_data_callback, interval_ms=1000):
         while True:
             try:
-                while not self.connected:
-                    await asyncio.sleep_ms(interval_ms)
-                data_encoded = get_encoded_data_callback()
-                if data_encoded is None:
-                    print("No data to send")
-                    await asyncio.sleep_ms(interval_ms)
-                    continue
-                await characteristic.write(data_encoded)
-                await asyncio.sleep_ms(interval_ms)
+                if self.connected is True:
+                    data_encoded = get_encoded_data_callback()
+                    print(f"Sending data: {data_encoded}")
+                    if data_encoded is not None:
+                        await characteristic.write(data_encoded, send_update=True)
             except Exception as e:
-                print(f"Error while getting data list: {e}")
-                return
-
+                print(f"Error while sending data list: {e}")
+            await asyncio.sleep_ms(interval_ms)
 
     async def blink_task(self, interval_ms=500):
         while True:

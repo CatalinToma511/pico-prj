@@ -120,11 +120,10 @@ class Car:
 
     def get_parameters_encoded(self):
         try:
-            voltage = self.voltage_reader.read()
             # since the maximum voltage is 10V and the precision is 0.1V, we can multiply by 10
-            voltage_encoded = int(voltage * 10).to_bytes(1, 'big')
-            
-            data = voltage_encoded
-            return data
+            voltage = int(self.voltage_reader.read() * 10)
+            data = [voltage]  # Placeholder for other parameters
+            encoded_data = struct.pack('8B', *data)
+            return encoded_data
         except Exception as e:
             print(f"Error encoding parameters: {e}")

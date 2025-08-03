@@ -28,7 +28,7 @@ async def main_task():
         asyncio.create_task(ble.connection_task()),
         asyncio.create_task(ble.blink_task()),
         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, my_car.process_data)),
-        asyncio.create_task(ble.send_parameters(ble.parameters_characteristic, my_car.get_parameters_encoded())),
+        asyncio.create_task(ble.send_parameters(ble.parameters_characteristic, my_car.get_parameters_encoded)),
         asyncio.create_task(my_car.smooth_controls()),
     ]
     await asyncio.gather(*tasks) # type: ignore
