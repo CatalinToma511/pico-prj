@@ -130,7 +130,6 @@ class Car:
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch]  # Placeholder for other parameters
-            print(f'Parameters before encoding: {data}')
             encoded_data = struct.pack('>Bhh', *data)
 
             return encoded_data
