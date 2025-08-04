@@ -25,8 +25,10 @@ class Car:
         self.steering = Steering(steering_pin)
         self.horn = Horn(horn_pin)
         self.voltage_reader = VoltageReader(pin=voltage_pin)
-        #self.mpu6050 = MPU6050(mpu_bus_id, mpu_scl_pin, mpu_sda_pin)
+        self.mpu6050 = MPU6050(mpu_bus_id, mpu_scl_pin, mpu_sda_pin)
         self.voltage_reader = VoltageReader(pin=26)
+
+        self.mpu6050.calibrate_accelerometer()
 
         self.speed_target = self.motor.speed
         self.steering_target = self.steering.steer_position
@@ -122,8 +124,15 @@ class Car:
         try:
             # since the maximum voltage is 10V and the precision is 0.1V, we can multiply by 10
             voltage = int(self.voltage_reader.read() * 10)
-            data = [voltage]  # Placeholder for other parameters
-            encoded_data = struct.pack('8B', *data)
+
+            # get MPU6050 position, 2 numbers between -180 and 180
+            roll, pitch = self.mpu6050.read_position()
+
+            # encode the parameters as a byte array
+            data = [voltage, roll, pitch]  # Placeholder for other parameters
+            encoded_data = struct.pack('Bhh', *data)
+
             return encoded_data
         except Exception as e:
             print(f"Error encoding parameters: {e}")
+            return b'/x00'
