@@ -4,6 +4,8 @@ import ujson
 import time
 import os
 import utils as utils
+import machine
+
 
 class updateManager:
     def __init__(self):
@@ -14,6 +16,7 @@ class updateManager:
         self.config = utils.load_json_from_file('projectconfig.json')
         self.project_files = utils.load_json_from_file('projectfiles.json')
         self.headers = {'User-Agent': 'PiPicoW'}
+        self.led = machine.Pin("LED", machine.Pin.OUT)
         
 
     def connect_to_internet(self, saved_networks_file = 'networks.json'):
@@ -171,6 +174,7 @@ class updateManager:
                     return
 
     def run(self):
+        self.led.off()
         internet_flag = self.connect_to_internet()
         if internet_flag is False:
             return
@@ -178,6 +182,7 @@ class updateManager:
         print(f'Last commit was made on: {last_commit}')
 
         if "last_modified" not in self.project_files or last_commit > self.project_files["last_modified"]:
+            self.led.on()
             print('Needs update')
 
             files = self.get_repo_tree() # gets json with each file and its details
@@ -191,9 +196,10 @@ class updateManager:
             # use a dir named like "app" where the source files are located, and
             # delete it and rename the "download" dir into "app"
             self.update_project_files(new_files_directory, files, last_commit)
-
         else:
             print('Already up to date')
+
+        self.led.off()
         self.wlan.active(False)
 
 
