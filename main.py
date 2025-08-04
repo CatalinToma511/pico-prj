@@ -10,3 +10,4 @@ try:
     prj.run()
 except Exception as e:
     print(f'Error running the app: {e}')
+    

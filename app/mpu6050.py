@@ -45,7 +45,7 @@ class MPU6050:
     def read_accelerometer_raw(self):
         data = self.i2c.readfrom_mem(self.addr, MPU6050_REG_ACCEL_XOUT_H, 6)
         accel_cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, 1)
-        sensitivity = AFS_TABLE[(accel_cfg[0] & DLPF_CFG_6) >> 3]
+        sensitivity = AFS_TABLE[(accel_cfg[0] & AFS_SEL_MASK) >> 3]
         self.accel_x_raw = ustruct.unpack('>h', data[0:2])[0] / sensitivity * G_CONSTANT
         self.accel_y_raw = ustruct.unpack('>h', data[2:4])[0] / sensitivity * G_CONSTANT
         self.accel_z_raw = ustruct.unpack('>h', data[4:6])[0] / sensitivity * G_CONSTANT
@@ -77,7 +77,6 @@ class MPU6050:
             self.read_accelerometer()
             roll = math.atan2(self.accel_y, self.accel_x) * (180.0 / math.pi)
             pitch = math.atan2(-self.accel_z, math.sqrt(self.accel_y**2 + self.accel_x**2)) * (180.0 / math.pi)
-            print(f"Roll: {roll}, Pitch: {pitch}")
             return int(roll), int(pitch)
         except Exception as e:
             print(f"Error reading position: {e}")
