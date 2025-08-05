@@ -26,20 +26,23 @@ class MPU6050:
         self.accel_factors = [1.0, 1.0, 1.0]
         self.accel_offsets = [0.0, 0.0, 0.0]
         
-        # wake up
-        self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
-        
-        # adjust sample rate
-        cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_CONFIG, 1)
-        dlpf_cfg = DLPF_CFG_6
-        new_cfg = (cfg[0] & DLPF_CFG_MASK_INVERSE) | dlpf_cfg
-        self.i2c.writeto_mem(self.addr, MPU6050_REG_CONFIG, bytes([new_cfg]))
-        
-        # adjust accelerometer high pass filter
-        accel_cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, 1)
-        afs_sel = AFS_SEL_3
-        new_accel_cfg = (accel_cfg[0] & AFS_SEL_MASK_INVERSE) | (AFS_SEL_3 << 3)
-        self.i2c.writeto_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, bytes([new_accel_cfg]))
+        try:
+            # wake up
+            self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
+            
+            # adjust sample rate
+            cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_CONFIG, 1)
+            dlpf_cfg = DLPF_CFG_6
+            new_cfg = (cfg[0] & DLPF_CFG_MASK_INVERSE) | dlpf_cfg
+            self.i2c.writeto_mem(self.addr, MPU6050_REG_CONFIG, bytes([new_cfg]))
+            
+            # adjust accelerometer high pass filter
+            accel_cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, 1)
+            afs_sel = AFS_SEL_3
+            new_accel_cfg = (accel_cfg[0] & AFS_SEL_MASK_INVERSE) | (AFS_SEL_3 << 3)
+            self.i2c.writeto_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, bytes([new_accel_cfg]))
+        except Exception as e:
+            print(f"Error initializing MPU6050: {e}")
         
         
     def read_accelerometer_raw(self):
@@ -54,15 +57,18 @@ class MPU6050:
     
     
     def calibrate_accelerometer(self, samples = 100):
-        sum_x, sum_y, sum_z = 0.0, 0.0, 0.0
-        for _ in range(samples):
-            ax, ay, az = self.read_accelerometer_raw()
-            sum_x += ax * self.accel_factors[0]
-            sum_y += ay * self.accel_factors[1]
-            sum_z += az * self.accel_factors[2]
-        self.accel_offsets = [9.81 - sum_x / samples,
-                              0 - sum_y / samples,
-                              0 - sum_z / samples]
+        try:
+            sum_x, sum_y, sum_z = 0.0, 0.0, 0.0
+            for _ in range(samples):
+                ax, ay, az = self.read_accelerometer_raw()
+                sum_x += ax * self.accel_factors[0]
+                sum_y += ay * self.accel_factors[1]
+                sum_z += az * self.accel_factors[2]
+            self.accel_offsets = [9.81 - sum_x / samples,
+                                0 - sum_y / samples,
+                                0 - sum_z / samples]
+        except Exception as e:
+            print(f"Error calibrating accelerometer: {e}")
         
     def read_accelerometer(self):
         self.read_accelerometer_raw()

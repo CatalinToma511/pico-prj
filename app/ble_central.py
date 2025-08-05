@@ -29,7 +29,7 @@ class BLE_Central:
             self.controls_characteristic,
             bluetooth.UUID(CONST_CHARACTERISTIC_USER_DESCRIPTION),  # Characteristic User Description
             read=True,
-            value = "Controller data".encode('utf-8')
+            initial = "Controller data".encode('utf-8')
         )
         self.parameters_characteristic = aioble.Characteristic(
             self.controls_service,
@@ -37,12 +37,12 @@ class BLE_Central:
             read=True,
             write=False,
             notify=True,
-            value="Device parameters".encode('utf-8')
         )
         self.paramters_descriptor = aioble.Descriptor(
             self.parameters_characteristic,
             bluetooth.UUID(CONST_CHARACTERISTIC_USER_DESCRIPTION),  # Characteristic User Description
-            read=True
+            read=True,
+            initial = "Device parameters".encode('utf-8')
         )
         aioble.register_services(self.controls_service)
 
