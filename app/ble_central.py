@@ -50,34 +50,41 @@ class BLE_Central:
     async def connection_task(self, _ADV_INTERVAL_US=150_000):
         while True:
             try:
+                # Start advertising the BLE service
                 print("Advertising and waiting for central...")
+                # Wait for a connection
                 self.connection = await aioble.advertise(
                     _ADV_INTERVAL_US,
                     name=self.name,
                     services=[self.CONTROLS_SERVICE_UUID]) # type: ignore
+                
+                # A connection is established
                 self.connected = True
+                # Blinking will stop automatically, set led to on
                 print("Connected:", self.connection.device)
 
-                await self.connection.disconnected(timeout_ms = None)
+                # When the connection is ended
+                await self.connection.disconnected(timeout_ms=None)
                 self.connected = False
+                self.led.off()
                 print("Disconnected")
             except Exception as e:
                 print(f"Error while establishing connection: {e}")
 
-    async def characteristic_listener(self, characteristic, callback):
+    async def characteristic_listener(self, characteristic, handler):
         while True:
             try:
                 await characteristic.written()
                 data = characteristic.read()
-                callback(data)
+                handler(data)
             except Exception as e:
                 print(f"Error while listening to a characteristic: {e}")
 
-    async def send_parameters(self, characteristic, get_encoded_data_callback, interval_ms=1000):
+    async def send_parameters(self, characteristic, get_encoded_data_handler, interval_ms=1000):
         while True:
             try:
                 if self.connected is True:
-                    data_encoded = get_encoded_data_callback()
+                    data_encoded = get_encoded_data_handler()
                     if data_encoded is not None:
                         await characteristic.write(data_encoded, send_update=True)
             except Exception as e:
@@ -87,11 +94,10 @@ class BLE_Central:
             finally:
                 await asyncio.sleep_ms(interval_ms)
 
-    async def blink_task(self, interval_ms=500):
+    async def no_connection_blink(self, interval_ms=500):
         while True:
-            while self.connected is False:
+            if self.connected is False:
                 self.led.toggle()
-                await asyncio.sleep_ms(interval_ms)
-            while self.connected is True:
+            else:
                 self.led.on()
-                await asyncio.sleep_ms(interval_ms)
+            await asyncio.sleep_ms(interval_ms)
