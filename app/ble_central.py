@@ -28,7 +28,8 @@ class BLE_Central:
         self.controls_descriptor = aioble.Descriptor(
             self.controls_characteristic,
             bluetooth.UUID(CONST_CHARACTERISTIC_USER_DESCRIPTION),  # Characteristic User Description
-            read=True
+            read=True,
+            value = "Controller data".encode('utf-8')
         )
         self.parameters_characteristic = aioble.Characteristic(
             self.controls_service,
@@ -36,6 +37,7 @@ class BLE_Central:
             read=True,
             write=False,
             notify=True,
+            value="Device parameters".encode('utf-8')
         )
         self.paramters_descriptor = aioble.Descriptor(
             self.parameters_characteristic,
@@ -43,8 +45,6 @@ class BLE_Central:
             read=True
         )
         aioble.register_services(self.controls_service)
-        self.controls_descriptor.write("Controller data".encode('utf-8'))
-        self.parameters_characteristic.write("Car parameters".encode('utf-8'))
 
 
     async def connection_task(self, _ADV_INTERVAL_US=150_000):
