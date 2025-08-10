@@ -147,7 +147,10 @@ class Car:
 
             distance = 0
             if self.distance_sensor:
-                distance = int(self.distance_sensor.read())
+                try:
+                    distance = int(self.distance_sensor.read())
+                except Exception as e:
+                    print(f'Error while reading distance sensor data: {e}')
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
