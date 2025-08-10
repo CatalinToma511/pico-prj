@@ -4,7 +4,7 @@ from steering import Steering
 from mpu6050 import MPU6050
 from horn import Horn
 from voltagereader import VoltageReader
-from vl53l0x import VL53L0X
+from distance_sensor import DistanceSensor
 import asyncio
 import machine
 import time
@@ -25,8 +25,6 @@ class Car:
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
         self.max_steering_change = 0
-        self.distance_offset = 0
-        self.old_distance = 0
 
         self.smooth_control_running = True
         self.smooth_control_interval_ms = 25
@@ -61,13 +59,7 @@ class Car:
 
     def config_distance_sensor(self, bus_id, scl_pin, sda_pin):
         try:
-            i2c = machine.I2C(id=bus_id, scl=scl_pin, sda=sda_pin)
-            self.distance_sensor = VL53L0X(i2c)
-            self.distance_sensor.set_measurement_timing_budget(250000)
-            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[0], 14)
-            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[1], 10)
-            self.distance_sensor.start()
-            self.distance_offset = -50
+            self.distance_sensor = DistanceSensor(bus_id, scl_pin, sda_pin)
         except Exception as e:
             print(f"Error initializing distance sensor: {e}")
             self.distance_sensor = None
@@ -155,10 +147,7 @@ class Car:
 
             distance = 0
             if self.distance_sensor:
-                # offset + low pass filter
-                distance_read = self.distance_sensor.read() + self.distance_offset # type: ignore
-                distance = 0.8 * distance_read + 0.2 * self.old_distance
-                self.old_distance = distance
+                distance = int(self.distance_sensor.read())
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
