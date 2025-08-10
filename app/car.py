@@ -4,6 +4,7 @@ from steering import Steering
 from mpu6050 import MPU6050
 from horn import Horn
 from voltagereader import VoltageReader
+from vl53l0x import VL53L0X
 import asyncio
 import machine
 import time
@@ -17,6 +18,7 @@ class Car:
         self.horn = None
         self.voltage_reader = None
         self.mpu6050 = None
+        self.distance_sensor = None
 
         self.speed_target = 0
         self.steering_target = None
@@ -47,13 +49,24 @@ class Car:
     def config_voltage_reader(self, voltage_pin):
         self.voltage_reader = VoltageReader(pin=voltage_pin)
 
-    def config_mpu6050(self, mpu_bus_id, mpu_scl_pin, mpu_sda_pin):
+    def config_mpu6050(self, bus_id, scl_pin, sda_pin):
         try:
-            self.mpu6050 = MPU6050(mpu_bus_id, mpu_scl_pin, mpu_sda_pin)
+            self.mpu6050 = MPU6050(bus_id, scl_pin, sda_pin)
             self.mpu6050.calibrate_accelerometer()
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")
             self.mpu6050 = None
+
+    def config_distance_sensor(self, bus_id, scl_pin, sda_pin):
+        try:
+            self.distance_sensor = VL53L0X(machine.I2C(bus_id, scl_pin, sda_pin))
+            self.distance_sensor.set_measurement_timing_budget(200000)
+            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[0], 12)
+            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[1], 8)
+            self.distance_sensor.start()
+        except Exception as e:
+            print(f"Error initializing distance sensor: {e}")
+            self.distance_sensor = None
 
     def process_data(self, data):
         try:
@@ -136,9 +149,13 @@ class Car:
             if self.mpu6050:
                 roll, pitch = self.mpu6050.read_position()
 
+            distance = 0
+            if self.distance_sensor:
+                distance = self.distance_sensor.read()
+
             # encode the parameters as a byte array
-            data = [voltage, roll, pitch]  # Placeholder for other parameters
-            encoded_data = struct.pack('>Bhh', *data)
+            data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
+            encoded_data = struct.pack('>Bhhh', *data)
 
             return encoded_data
         except Exception as e:

@@ -12,6 +12,10 @@ MPU_BUS_ID = 0
 MPU_SCL_PIN = 21
 MPU_SDA_PIN = 20
 VOLTAGE_PIN = 26
+VL53L0X_BUS_ID = 0
+VL53L0X_SCL_PIN = 21
+VL53L0X_SDA_PIN = 20
+
 
 async def main_task():
     ble = BLE_Central("PicoW_BLE")
@@ -22,6 +26,7 @@ async def main_task():
     my_car.config_horn(HORN_PIN)
     my_car.config_voltage_reader(VOLTAGE_PIN)
     my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
+    my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
     tasks = [
         asyncio.create_task(ble.connection_task()),
         asyncio.create_task(ble.no_connection_blink()),
