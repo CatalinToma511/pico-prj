@@ -158,7 +158,7 @@ class Car:
                 # offset + low pass filter
                 distance_read = self.distance_sensor.read() + self.distance_offset # type: ignore
                 distance = 0.8 * distance_read + 0.2 * self.old_distance
-                old_distance = distance
+                self.old_distance = distance
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
