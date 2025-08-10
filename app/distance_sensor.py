@@ -6,17 +6,12 @@ class DistanceSensor:
     def __init__(self, bus_id, scl_pin, sda_pin):
         i2c = I2C(id=bus_id, scl=scl_pin, sda=sda_pin)
         self.vl53l0x = VL53L0X(i2c)
-        time.sleep_ms(10)
         self.vl53l0x.set_measurement_timing_budget(250000)
-        time.sleep_ms(10)
         self.vl53l0x.set_Vcsel_pulse_period(self.vl53l0x.vcsel_period_type[0], 18)
-        time.sleep_ms(10)
         self.vl53l0x.set_Vcsel_pulse_period(self.vl53l0x.vcsel_period_type[1], 14)
-        time.sleep_ms(10)
         self.vl53l0x.start()
         self.distance_offset = -50
         self.old_distance = 0
-        time.sleep_ms(10)
     
     # Returns the distance in milimeters
     def read(self, low_pass_filter = True):

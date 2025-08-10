@@ -354,7 +354,7 @@ class VL53L0X():
         for timeout in range(_IO_TIMEOUT):
             if self._register(0x83):
                 break
-            utime.sleep_ms(1)
+            # utime.sleep_ms(1)
         else:
             raise TimeoutError()
         self._config(
@@ -382,7 +382,7 @@ class VL53L0X():
         for timeout in range(_IO_TIMEOUT):
             if self._register(_RESULT_INTERRUPT_STATUS) & 0x07: # type: ignore
                 break
-            utime.sleep_ms(1)
+            # utime.sleep_ms(1)
         else:
             raise TimeoutError()
         self._register(_INTERRUPT_CLEAR, 0x01)
@@ -434,13 +434,13 @@ class VL53L0X():
             for timeout in range(_IO_TIMEOUT):
                 if not self._register(_SYSRANGE_START) & 0x01: # type: ignore
                     break
-                utime.sleep_ms(1)
+                # utime.sleep_ms(1)
             else:
                 raise TimeoutError()
         for timeout in range(_IO_TIMEOUT):
             if self._register(_RESULT_INTERRUPT_STATUS) & 0x07: # type: ignore
                 break
-            utime.sleep_ms(1)
+            #utime.sleep_ms(1)
         else:
             raise TimeoutError()
         value = self._register(_RESULT_RANGE_STATUS + 10, struct='>H')
