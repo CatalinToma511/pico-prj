@@ -26,6 +26,7 @@ class Car:
         self.max_speed_decrease = 0
         self.max_steering_change = 0
         self.distance_offset = 0
+        self.old_distance = 0
 
         self.smooth_control_running = True
         self.smooth_control_interval_ms = 25
@@ -154,7 +155,10 @@ class Car:
 
             distance = 0
             if self.distance_sensor:
-                distance = self.distance_sensor.read() + self.distance_offset
+                # offset + low pass filter
+                distance_read = self.distance_sensor.read() + self.distance_offset # type: ignore
+                distance = 0.8 * distance_read + 0.2 * self.old_distance
+                old_distance = distance
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
