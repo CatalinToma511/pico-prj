@@ -146,11 +146,11 @@ class Car:
                 roll, pitch = self.mpu6050.read_position()
 
             distance = 0
-            if self.distance_sensor:
-                try:
-                    distance = int(self.distance_sensor.read())
-                except Exception as e:
-                    print(f'Error while reading distance sensor data: {e}')
+            # if self.distance_sensor:
+            #     try:
+            #         distance = int(self.distance_sensor.read())
+            #     except Exception as e:
+            #         print(f'Error while reading distance sensor data: {e}')
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters

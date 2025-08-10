@@ -11,7 +11,7 @@ class DistanceSensor:
         time.sleep_ms(10)
         self.vl53l0x.set_Vcsel_pulse_period(self.vl53l0x.vcsel_period_type[0], 18)
         time.sleep_ms(10)
-        self.vl53l0x.set_Vcsel_pulse_period(self.vl53l0x.vcsel_period_type[1], 18)
+        self.vl53l0x.set_Vcsel_pulse_period(self.vl53l0x.vcsel_period_type[1], 14)
         time.sleep_ms(10)
         self.vl53l0x.start()
         self.distance_offset = -50
