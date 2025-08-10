@@ -3,11 +3,11 @@ import time
 from ble_central import BLE_Central
 from car import Car
 
-MOTOR_IN1 = 2
-MOTOR_IN2 = 3
-STEERING_PIN = 9
-GEARBOX_SHIFT_PIN = 5
-HORN_PIN = 11
+MOTOR_IN1 = 12
+MOTOR_IN2 = 13
+STEERING_PIN = 3
+GEARBOX_SHIFT_PIN = 4
+HORN_PIN = 5
 MPU_BUS_ID = 0
 MPU_SCL_PIN = 21
 MPU_SDA_PIN = 20

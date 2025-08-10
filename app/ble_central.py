@@ -80,7 +80,7 @@ class BLE_Central:
             except Exception as e:
                 print(f"Error while listening to a characteristic: {e}")
 
-    async def send_parameters(self, characteristic, get_encoded_data_handler, interval_ms=1000):
+    async def send_parameters(self, characteristic, get_encoded_data_handler, interval_ms=250):
         while True:
             try:
                 if self.connected is True:

@@ -59,10 +59,11 @@ class Car:
 
     def config_distance_sensor(self, bus_id, scl_pin, sda_pin):
         try:
-            self.distance_sensor = VL53L0X(machine.I2C(bus_id, scl_pin, sda_pin))
-            self.distance_sensor.set_measurement_timing_budget(200000)
-            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[0], 12)
-            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[1], 8)
+            i2c = machine.I2C(id=bus_id, scl=scl_pin, sda=sda_pin)
+            self.distance_sensor = VL53L0X(i2c)
+            self.distance_sensor.set_measurement_timing_budget(250000)
+            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[0], 14)
+            self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[1], 10)
             self.distance_sensor.start()
         except Exception as e:
             print(f"Error initializing distance sensor: {e}")
