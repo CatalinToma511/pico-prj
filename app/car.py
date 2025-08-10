@@ -25,6 +25,7 @@ class Car:
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
         self.max_steering_change = 0
+        self.distance_offset = 0
 
         self.smooth_control_running = True
         self.smooth_control_interval_ms = 25
@@ -65,6 +66,7 @@ class Car:
             self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[0], 14)
             self.distance_sensor.set_Vcsel_pulse_period(self.distance_sensor.vcsel_period_type[1], 10)
             self.distance_sensor.start()
+            self.distance_offset = -50
         except Exception as e:
             print(f"Error initializing distance sensor: {e}")
             self.distance_sensor = None
@@ -152,7 +154,7 @@ class Car:
 
             distance = 0
             if self.distance_sensor:
-                distance = self.distance_sensor.read()
+                distance = self.distance_sensor.read() + self.distance_offset
 
             # encode the parameters as a byte array
             data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
