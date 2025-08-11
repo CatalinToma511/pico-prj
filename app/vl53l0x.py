@@ -351,7 +351,7 @@ class VL53L0X():
         for timeout in range(_IO_TIMEOUT):
             if self._register(0x83):
                 break
-            utime.sleep_ms(1)
+            utime.sleep_us(100)
         else:
             raise TimeoutError()
         self._config(
@@ -417,29 +417,6 @@ class VL53L0X():
         self._started = False
 
     def read(self):
-        if not self._started:
-            self._config(
-                (0x80, 0x01),
-                (0xFF, 0x01),
-                (0x00, 0x00),
-                (0x91, self._stop_variable),
-                (0x00, 0x01),
-                (0xFF, 0x00),
-                (0x80, 0x00),
-                (_SYSRANGE_START, 0x01),
-            )
-            for timeout in range(_IO_TIMEOUT):
-                if not self._register(_SYSRANGE_START) & 0x01: # type: ignore
-                    break
-                utime.sleep_ms(1)
-            else:
-                raise TimeoutError()
-        for timeout in range(_IO_TIMEOUT):
-            if self._register(_RESULT_INTERRUPT_STATUS) & 0x07: # type: ignore
-                break
-            utime.sleep_ms(1)
-        else:
-            raise TimeoutError()
         value = self._register(_RESULT_RANGE_STATUS + 10, struct='>H')
         self._register(_INTERRUPT_CLEAR, 0x01)
         return value
