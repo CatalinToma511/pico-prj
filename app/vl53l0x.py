@@ -4,9 +4,6 @@
 from micropython import const
 import ustruct
 import utime
-# from machine import Timer
-# import time
-import asyncio
 
 _IO_TIMEOUT = 1000
 _SYSRANGE_START = const(0x00)
@@ -112,15 +109,11 @@ ALGO_PHASECAL_CONFIG_TIMEOUT = 0x30
 class TimeoutError(RuntimeError):
     pass
 
-async def async_sleep_ms(ms = 0):
-    await asyncio.sleep_ms(ms)
-    return ms
-
 class VL53L0X():
     def __init__(self, i2c, address=0x29):
         self.i2c = i2c
         self.address = address
-        wait = asyncio.run(async_sleep_ms(100))
+        utime.sleep_ms(100)
         self.init()
         self._started = False
         self.measurement_timing_budget_us = 0
@@ -358,7 +351,7 @@ class VL53L0X():
         for timeout in range(_IO_TIMEOUT):
             if self._register(0x83):
                 break
-            wait = asyncio.run(async_sleep_ms(1))
+            utime.sleep_ms(1)
         else:
             raise TimeoutError()
         self._config(
@@ -386,7 +379,7 @@ class VL53L0X():
         for timeout in range(_IO_TIMEOUT):
             if self._register(_RESULT_INTERRUPT_STATUS) & 0x07: # type: ignore
                 break
-            wait = asyncio.run(async_sleep_ms(1))
+            utime.sleep_ms(1)
         else:
             raise TimeoutError()
         self._register(_INTERRUPT_CLEAR, 0x01)
@@ -438,13 +431,13 @@ class VL53L0X():
             for timeout in range(_IO_TIMEOUT):
                 if not self._register(_SYSRANGE_START) & 0x01: # type: ignore
                     break
-                wait = asyncio.run(async_sleep_ms(1))
+                utime.sleep_ms(1)
             else:
                 raise TimeoutError()
         for timeout in range(_IO_TIMEOUT):
             if self._register(_RESULT_INTERRUPT_STATUS) & 0x07: # type: ignore
                 break
-            wait = asyncio.run(async_sleep_ms(1))
+            utime.sleep_ms(1)
         else:
             raise TimeoutError()
         value = self._register(_RESULT_RANGE_STATUS + 10, struct='>H')
@@ -665,7 +658,7 @@ class VL53L0X():
             if time_elapsed > _IO_TIMEOUT:
                 return False
             
-            wait = asyncio.run(async_sleep_ms(0))
+            utime.sleep_ms(1)
         self._register(SYSTEM_INTERRUPT_CLEAR, 0x01)
         self._register(SYSRANGE_START, 0x00)
         return True
