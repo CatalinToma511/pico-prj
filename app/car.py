@@ -52,7 +52,6 @@ class Car:
     def config_mpu6050(self, bus_id, scl_pin, sda_pin):
         try:
             self.mpu6050 = MPU6050(bus_id, scl_pin, sda_pin)
-            self.mpu6050.calibrate_accelerometer()
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")
             self.mpu6050 = None

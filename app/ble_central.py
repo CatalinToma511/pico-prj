@@ -86,11 +86,9 @@ class BLE_Central:
                 if self.connected is True:
                     data_encoded = get_encoded_data_handler()
                     if data_encoded is not None:
-                        await characteristic.write(data_encoded, send_update=True)
+                        characteristic.write(data_encoded, send_update=True)
             except Exception as e:
-                # print(f"Error while sending data list: {e}")
-                # seemms to always give e('NoneType' object isn't iterable), but it works anyway
-                pass
+                print(f"Error while sending data list: {e}")
             finally:
                 await asyncio.sleep_ms(interval_ms)
 
