@@ -131,7 +131,7 @@ class Car:
         self.update_running = True
         while self.update_running:
             if self.motor:
-                if self.distance_sensor and self.distance_mm > self.aeb_max_safe_distance_mm and self.speed_target > 0:
+                if self.distance_sensor and self.distance_mm < self.aeb_max_safe_distance_mm and self.speed_target > 0:
                     self.speed_target = 0
                 # if target speed is the same as current speed, do nothing
                 speed_step = 0
