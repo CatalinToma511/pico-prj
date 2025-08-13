@@ -21,13 +21,25 @@ class Car:
         self.distance_sensor = None
 
         self.speed_target = 0
+        self.speed = 0
         self.steering_target = None
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
         self.max_steering_change = 0
 
-        self.smooth_control_running = True
-        self.smooth_control_interval_ms = 25
+        self.update_running = False
+        self.update_interval_ms = 25
+
+        self.aquire_sensors_data_running = False
+        self.aquire_data_interval_ms = 25
+
+        self.battery_voltage = 0
+        self.roll = 0
+        self.pitch = 0
+        self.distance_mm = 0
+
+        self.aeb = True
+        self.aeb_max_safe_distance_mm= 150
 
     def config_motor(self, motor_in1, motor_in2, max_speed_increase=5, max_speed_decrease=10):
         self.motor = Motor(motor_in1, motor_in2)
@@ -76,7 +88,7 @@ class Car:
                 
             # steering
             l_joystick_x = data[2] - 128
-            self.steering_target = l_joystick_x
+            self.steering_target = int(l_joystick_x)
 
             #gearbox
             if self.gearbox:
@@ -94,12 +106,33 @@ class Car:
                     self.horn.turn_on()
                 else:
                     self.horn.turn_off()
+
         except Exception as e:
             print(f"Error processing data: {e}")
 
-    async def smooth_controls(self):
-        while self.smooth_control_running:
+    async def aquire_sensors_data(self):
+        self.aquire_sensors_data_running = True
+        while True:
+            try:
+                if self.voltage_reader:
+                    self.voltage = int(self.voltage_reader.read() * 10)
+
+                if self.mpu6050:
+                    self.roll, self.pitch = self.mpu6050.read_position()
+
+                if self.distance_sensor:
+                        self.distance_mm = int(self.distance_sensor.read())
+            except Exception as e:
+                        print(f'Error while reading distance sensor data: {e}')
+
+            await asyncio.sleep_ms(self.aquire_data_interval_ms)
+
+    async def update(self):
+        self.update_running = True
+        while self.update_running:
             if self.motor:
+                if self.distance_mm > self.aeb_max_safe_distance_mm and self.speed_target > 0:
+                    self.speed_target = 0
                 # if target speed is the same as current speed, do nothing
                 speed_step = 0
                 if self.speed_target == self.motor.speed:
@@ -125,37 +158,22 @@ class Car:
                 # if the speed step is not zero, update the motor speed
                 if speed_step != 0:
                     self.motor.set_speed(self.motor.speed + speed_step)
+                    self.speed = self.motor.speed
 
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
 
-            await asyncio.sleep_ms(self.smooth_control_interval_ms)
+            await asyncio.sleep_ms(self.update_interval_ms)
 
     def get_parameters_encoded(self):
-        try:
-            # since the maximum voltage is 10V and the precision is 0.1V, we can multiply by 10
-            voltage = 0
-            if self.voltage_reader:
-                voltage = int(self.voltage_reader.read() * 10)
-
-            # get MPU6050 position, 2 numbers between -180 and 180
-            roll, pitch = 0, 0
-            if self.mpu6050:
-                roll, pitch = self.mpu6050.read_position()
-
-            distance = 0
-            if self.distance_sensor:
-                try:
-                    distance = int(self.distance_sensor.read())
-                except Exception as e:
-                    print(f'Error while reading distance sensor data: {e}')
-
-            # encode the parameters as a byte array
-            data = [voltage, roll, pitch, distance]  # Placeholder for other parameters
-            encoded_data = struct.pack('>Bhhh', *data)
-
-            return encoded_data
-        except Exception as e:
-            print(f"Error encoding parameters: {e}")
-            return b'/x00'
+        data = [self.voltage,
+                self.roll,
+                self.pitch,
+                self.distance_mm,
+                self.speed,
+                self.speed_target,
+                self.steering_target
+                ]
+        encoded_data = struct.pack('>Bhhhbbb', *data)
+        return encoded_data
