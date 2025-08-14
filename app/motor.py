@@ -1,7 +1,7 @@
 import machine
 
 class Motor:
-    def __init__(self, in1, in2, MOTOR_PWM_FREQ=2000):
+    def __init__(self, in1, in2, MOTOR_PWM_FREQ=20000):
         self.in1 = machine.PWM(machine.Pin(in1))
         self.in1.freq(MOTOR_PWM_FREQ)
         self.in2 = machine.PWM(machine.Pin(in2))
