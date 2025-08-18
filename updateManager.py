@@ -3,8 +3,9 @@ import urequests
 import ujson
 import time
 import os
-import utils as utils
+import utils
 import machine
+from network_manager import NetworkManager
 
 
 class updateManager:
@@ -17,6 +18,7 @@ class updateManager:
         self.project_files = utils.load_json_from_file('projectfiles.json')
         self.headers = {'User-Agent': 'PiPicoW'}
         self.led = machine.Pin("LED", machine.Pin.OUT)
+        self.nm = NetworkManager('networks')
         
 
     def connect_to_internet(self, saved_networks_file = 'networks.json'):
@@ -24,11 +26,8 @@ class updateManager:
             available_networks = self.wlan.scan()
             print(f'{len(available_networks)} wireless networks discovered')
 
-            # load saved networks into a dictionary
-            saved_networks_json = utils.load_json_from_file(saved_networks_file)
-            saved_networks = {}
-            for entry in saved_networks_json:
-                saved_networks[entry["ssid"]] = entry["key"]
+            # get saved networks ssid's
+            saved_networks = self.nm.get_networks()
 
             # check if there is any known network available with internet and connect to it
             timeout = 20
@@ -38,7 +37,7 @@ class updateManager:
                     if ssid in saved_networks:
                         # try to connect to network
                         print(f'Trying to connect to {ssid}...')
-                        key = saved_networks[ssid]
+                        key = self.nm.get_network_password(ssid)
                         self.wlan.connect(ssid, key)
                         start_time = time.time()
                         while not self.wlan.isconnected():
