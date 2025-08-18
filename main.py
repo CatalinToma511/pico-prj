@@ -1,4 +1,4 @@
-from updateManager import updateManager
+from update_manager import updateManager
 
 uc = updateManager()
 uc.run()
