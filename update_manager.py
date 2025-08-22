@@ -68,18 +68,18 @@ class updateManager:
             return False
 
 
-    def get_last_repo_update_time(self):
-        try:
-            url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}'
-            response = urequests.get(url, headers=self.headers)
-            if(response.status_code == 200):
-                commit_info = ujson.loads(response.text)[0]
-                return commit_info['commit']['committer']['date']
-            else:
+    def get_last_repo_update_time(self, tries = 3):
+        url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}'
+        for i in range(0, tries):
+            try:
+                response = urequests.get(url, headers=self.headers)
+                if(response.status_code == 200):
+                    commit_info = ujson.loads(response.text)[0]
+                    return commit_info['commit']['committer']['date']
                 raise Exception('request failed')
-        except Exception as e:
-            print(f'Failed to get last commit time: {e}')
-            return ''
+            except Exception as e:
+                print(f'Failed to get last commit time ({i}/{tries} tries): {e}')
+        return None
 
 
     def get_repo_tree(self):
@@ -103,7 +103,7 @@ class updateManager:
                 raise Exception(f'status code {response.status_code}')
         except Exception as e:
             print(f'Failed to get repo tree: {e}')
-            return ''
+            return None
 
 
     def download_files(self, files, directory):
@@ -124,8 +124,10 @@ class updateManager:
                     print(f'{file["path"]} has been downloaded')
                 else:
                     raise Exception(f'failed to download {download_url}')
+            return True
         except Exception as e:
             print(f'Failed to download project files: {e}')
+            return False
 
 
     def update_projectfiles_json(self, new_files, new_last_modified):
@@ -143,9 +145,6 @@ class updateManager:
 
 
     def update_project_files(self, new_files_dir, new_files, last_commit):
-        #TODO
-        # 3. rename new files dir to the old project files dir
-
         try:
             # check for validity of the new files (to be complete or to include essential files)
             for new_file in new_files:
@@ -174,32 +173,52 @@ class updateManager:
 
     def run(self):
         self.led.off()
-        internet_flag = self.connect_to_internet()
-        if internet_flag is False:
-            return
-        last_commit = self.get_last_repo_update_time()
-        print(f'Last commit was made on: {last_commit}')
+        try:
+            # connect to a wifi network with internet connection
+            internet_flag = self.connect_to_internet()
+            if internet_flag is False:
+                raise Exception('no internet connection found')
+            
+            # get the last commit from github
+            last_commit = self.get_last_repo_update_time()
+            if last_commit is None:
+                raise Exception('could not get repo last commit')
+            print(f'Last commit was made on: {last_commit}')
 
-        if "last_modified" not in self.project_files or last_commit > self.project_files["last_modified"]:
+            # if the last commit stored on pico doesn't match the one on github
+            # this can be due to either update or rollback, so == is needed
+            if self.project_files["last_modified"] and last_commit == self.project_files["last_modified"]:
+                raise Exception('already up to date')
+
+            # if code reached here, it needs update
             self.led.on()
             print('Needs update')
 
-            files = self.get_repo_tree() # gets json with each file and its details
+            # gets json with each file and its details
+            files = self.get_repo_tree() 
+            if files is None:
+                raise Exception('error getting files details')
             print(f'Files found: {len(files)}')
 
+            # download the files found above
             new_files_directory = "downloads"
-            self.download_files(files, new_files_directory)
+            download_status = self.download_files(files, new_files_directory)
 
-            #TODO
-            # After download, replace the old files with the new files. Maybe
-            # use a dir named like "app" where the source files are located, and
-            # delete it and rename the "download" dir into "app"
+            # if downloads fail
+            if download_status is False:
+                raise Exception('downloading files failed')
+            
+            # replace the old files with the new files
             self.update_project_files(new_files_directory, files, last_commit)
-        else:
-            print('Already up to date')
+        except Exception as e:
+            print(f'Update Manager: {e}')
+        finally:
+            self.close()
 
+    def close(self):
         self.led.off()
         self.wlan.active(False)
+        print('Update manager closed')
 
 
         
