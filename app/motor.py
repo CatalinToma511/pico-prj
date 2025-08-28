@@ -94,7 +94,7 @@ class Motor:
     def __init__(self, in1, in2, enc_a, enc_b, MOTOR_PWM_FREQ=2000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
-        self.pid = MotorPID(enc_a_pin=2, enc_b_pin=3)
+        self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
         self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
@@ -106,11 +106,9 @@ class Motor:
             print(f"[Motor] Invalid speed: {speed_percent}")
         
     # Positive speed goes forward, negative speed goes backwards
-    def set_speed_rps(self, speed_rps):
-        if -600 <= speed_rps <= 600: 
-            self.pid.set_target_rps(speed_rps)
-        else:
-            print(f"[Motor] Invalid speed: {speed_rps}")
+    def set_speed_rps(self, target_speed_rps):
+        set_point_rps = (max(-self.max_rps, min(target_speed_rps, self.max_rps)))
+        self.pid.set_target_rps(set_point_rps)
 
     def get_speed_rps(self):
         return self.pid.last_rps
@@ -120,7 +118,7 @@ class Motor:
         while self.control_loop_running:
             pwm = self.pid.update()
             # limit pwm to max_pwm; account for negative pwm
-            pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
+            pw = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
             if pwm >= 0:
                 self.in1.duty_u16(pwm)
                 self.in2.duty_u16(0)
