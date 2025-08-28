@@ -120,7 +120,7 @@ def write_content_to_file(file_path, content):
     
 def write_bytes_to_file(file_path, content):
     try:
-        with open(f'{file_path}', 'w') as newfile:
+        with open(f'{file_path}', 'wb') as newfile:
             newfile.write(content)
             newfile.close()
     except Exception as e:

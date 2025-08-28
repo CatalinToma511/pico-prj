@@ -136,7 +136,7 @@ class Car:
         self.update_running = True
         while self.update_running:
             if self.motor:
-                self.motor.set_speed_percent(self.speed)
+                self.motor.set_speed_percent(self.speed_target)
                 self.speed = int(self.motor.get_speed_rps())
             # for now, no smooth steering
             if self.steering:
@@ -159,7 +159,7 @@ class Car:
                 self.speed_target,
                 self.steering_target
                 ]
-        encoded_data = struct.pack('>Bhhhbbb', *data)
+        encoded_data = struct.pack('>Bhhhhbb', *data)
         return encoded_data
     
     def stop_car_activity(self):

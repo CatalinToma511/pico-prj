@@ -43,18 +43,21 @@ class NetworkManager:
                     unpadded_bytes = self._unpad(decrypted_bytes)
                     # convert the resulting byte into string then into a dictionary
                     self.networks = json.loads(unpadded_bytes.decode())
+                    print("NetworkManager: Successfully loaded existing networks")
+                else:
+                    # File exists but isn't encrypted, treat as new
+                    print("NetworkManager info: File not encrypted, starting fresh")
+                    self.networks = {}
+                    self._write_to_file()
             except Exception as e:
                 print(f"NetworkManager error: Failed to decrypt file: {e}")
                 self.networks = {}
-            else:
-                # File exists but isn't encrypted, treat as new
-                print("NetworkManager info: File not encrypted, starting fresh")
-                self.networks = {}
-                self._write_to_file()
+            
         # if the given path is a non-existent file
         elif utils.path_exists(self.file_path) is False:
             self.networks = {}
             self._write_to_file()
+            print(f'NetworkManager error: No existing file found, created new one')
         # if the given path is a directory instead of a file
         elif utils.path_exists(self.file_path) and utils.is_dir(self.file_path):
             print(f'NetworkManager error: Trying to read from a directory instead of a file')
@@ -79,8 +82,7 @@ class NetworkManager:
         self.networks[ssid] = key
         self._write_to_file()
 
-
-    def remove_netowrk(self, ssid):
+    def remove_network(self, ssid):
         if ssid in self.networks:
             self.networks.pop(ssid)
             self._write_to_file()

@@ -28,11 +28,13 @@ class updateManager:
 
             # get saved networks ssid's
             saved_networks = self.nm.get_networks()
+            print(f'Saved networks: {saved_networks}')
 
             # check if there is any known network available with internet and connect to it
             timeout = 20
             for network in available_networks:
                 ssid = network[0].decode('utf-8')
+                print(f'Found network: {ssid}')
                 try:
                     if ssid in saved_networks:
                         # try to connect to network
@@ -59,6 +61,9 @@ class updateManager:
                                 print('Internet connection not available. Trying another network...')
                         else:
                             print(f'Status: {self.wlan.status()}')
+
+                    else:
+                        print(f'Network {ssid} not in saved networks')
                 except Exception as e:
                     print(f'Error while connecting to {ssid}: {e}')
             print('Unable to connect to any network with internet connection')  
@@ -69,7 +74,7 @@ class updateManager:
 
 
     def get_last_repo_update_time(self, tries = 3):
-        url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}'
+        url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}&per_page=1'
         for i in range(0, tries):
             try:
                 response = urequests.get(url, headers=self.headers)
