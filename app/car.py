@@ -38,11 +38,11 @@ class Car:
         self.pitch = 0
         self.distance_mm = 0
 
-        self.aeb = True
+        self.aeb = False
         self.aeb_max_safe_distance_mm= 150
 
-    def config_motor(self, motor_in1, motor_in2, max_speed_increase=5, max_speed_decrease=10):
-        self.motor = Motor(motor_in1, motor_in2)
+    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, max_speed_increase=5, max_speed_decrease=10):
+        self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
         self.max_speed_increase = max_speed_increase
         self.max_speed_decrease = max_speed_decrease
         self.speed_target = 0
@@ -116,6 +116,11 @@ class Car:
             try:
                 if self.voltage_reader:
                     self.voltage = int(self.voltage_reader.read() * 10)
+                    # battery safety, put pico to sleep if voltage is too low
+                    if self.voltage < 6.5:
+                        self.stop_car_activity()
+                        print("Battery voltage too low, going to sleep...")
+                        machine.deepsleep()
 
                 if self.mpu6050:
                     self.roll, self.pitch = self.mpu6050.read_position()
@@ -131,40 +136,19 @@ class Car:
         self.update_running = True
         while self.update_running:
             if self.motor:
-                if self.distance_sensor and self.distance_mm < self.aeb_max_safe_distance_mm and self.speed_target > 0:
-                    self.speed_target = 0
-                # if target speed is the same as current speed, do nothing
-                speed_step = 0
-                if self.speed_target == self.motor.speed:
-                    speed_step = 0
-                # accelerating when going forward -> step should increase current val
-                elif self.speed_target > self.motor.speed and self.motor.speed >= 0:
-                    difference = self.speed_target - self.motor.speed
-                    speed_step = min(self.max_speed_increase, difference)
-                # accelerating when going backward -> step should decrease current val
-                elif self.speed_target < self.motor.speed and self.motor.speed <= 0:
-                    difference = self.motor.speed - self.speed_target
-                    speed_step = (-1) * min(self.max_speed_increase, difference)
-                # braking when going forward -> step should decrease current val
-                elif self.speed_target < self.motor.speed and self.motor.speed >= 0:
-                    difference = self.motor.speed - self.speed_target
-                    # added distance to 0 to avoid accelerating with brake rate
-                    speed_step = (-1) * min(self.max_speed_decrease, difference, self.motor.speed)
-                # braking when going backward -> step should increase current val
-                elif self.speed_target > self.motor.speed and self.motor.speed <= 0:
-                    difference = self.speed_target - self.motor.speed
-                    # added distance to 0 to avoid accelerating with brake rate
-                    speed_step = min(self.max_speed_decrease, difference, abs(self.motor.speed))
-                # if the speed step is not zero, update the motor speed
-                if speed_step != 0:
-                    self.motor.set_speed(self.motor.speed + speed_step)
-                    self.speed = self.motor.speed
-
+                self.motor.set_speed_percent(self.speed)
+                self.speed = int(self.motor.get_speed_rps())
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
 
             await asyncio.sleep_ms(self.update_interval_ms)
+
+    async def motor_control_loop(self):
+        if self.motor:
+            await self.motor.control_loop()
+        else:
+            print("Motor not configured, cannot start control loop.")
 
     def get_parameters_encoded(self):
         data = [self.voltage,
@@ -177,3 +161,12 @@ class Car:
                 ]
         encoded_data = struct.pack('>Bhhhbbb', *data)
         return encoded_data
+    
+    def stop_car_activity(self):
+        self.update_running = False
+        self.aquire_sensors_data_running = False
+        if self.motor:
+            self.motor.control_loop_running = False
+        if self.horn:
+            self.horn.turn_off()
+        print("Car activity stopped.")

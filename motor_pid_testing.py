@@ -1,6 +1,12 @@
-from machine import Pin, PWM
-import asyncio
+from machine import Pin, PWM, Timer
+import machine
+import time
 
+machine.freq(250_000_000)
+
+
+
+# irq handlers
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         self.target_rps = 0
@@ -8,14 +14,15 @@ class MotorPID():
         self.last_rps = 0
         self.kp = 250
         self.ki = 1100
-        self.dt = 0.010 # seconds
+        self.dt = 0.025 # seconds
         self.I = 0
         self.min_speed = 20
         self.u0 = 3000
         self.max_accel = 5 # rot/s per dt
         self.filtered_target_rps = 0 # filtered speed
-        
+        self.total_time = 0
         self.speed_filter_alpha = 0.7
+        
 
         self.pulse_count = 0
         self.direction = 1
@@ -29,10 +36,11 @@ class MotorPID():
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
         self.deadband = 1 / (self.ppr * self.dt)
 
-        # logging, may be useful for later
-        # self.total_time = 0
-        # self.log_data = []
-        # self.file = "data.csv"
+        self.motor_in1 = PWM(Pin(0), freq = 2000, duty_u16 = 0)
+        self.motor_in2 = PWM(Pin(1), freq = 2000, duty_u16 = 0)
+
+        self.log_data = []
+        self.file = "data.csv"
         
     def pin_a_irq(self, pin):
         self.pulse_count += 1
@@ -48,6 +56,7 @@ class MotorPID():
         self.target_rps = rps
 
     def update(self):
+        self.total_time += self.dt
         # read counts
         current_count = self.pulse_count
         elapsed_counts = current_count - self.last_pulse
@@ -70,7 +79,6 @@ class MotorPID():
         self.I += err_i * self.ki
         self.I = int(max(-65535, min(self.I, 65535)))
         
-        # calculate pwm based on direction, min pwm and max pwm
         if self.filtered_target_rps >= self.min_countable_speed:
             pwm = self.u0 + P + self.I
             pwm = int(max(-65535, min(pwm, 65535)))
@@ -84,49 +92,40 @@ class MotorPID():
         else:
             pwm = 0
 
-        # logging, may be useful for later
-        # self.total_time += self.dt
-        # self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
-        return pwm
-
-
-class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, MOTOR_PWM_FREQ=2000):
-        self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
-        self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
-        self.pid = MotorPID(enc_a_pin=2, enc_b_pin=3)
-        self.control_loop_running = False
-        self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
-        self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
-
-    def set_speed_percent(self, speed_percent):
-        if -100 <= speed_percent <= 100:
-            self.set_speed_rps((speed_percent / 100) * self.max_rps)
+        if pwm >= 0:
+            self.motor_in1.duty_u16(pwm)
+            self.motor_in2.duty_u16(0)
         else:
-            print(f"[Motor] Invalid speed: {speed_percent}")
-        
-    # Positive speed goes forward, negative speed goes backwards
-    def set_speed_rps(self, speed_rps):
-        if -600 <= speed_rps <= 600: 
-            self.pid.set_target_rps(speed_rps)
-        else:
-            print(f"[Motor] Invalid speed: {speed_rps}")
+            self.motor_in1.duty_u16(0)
+            self.motor_in2.duty_u16(-pwm)
 
-    def get_speed_rps(self):
-        return self.pid.last_rps
+        self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
 
-    async def control_loop(self):
-        self.control_loop_running = True
-        while self.control_loop_running:
-            pwm = self.pid.update()
-            # limit pwm to max_pwm; account for negative pwm
-            pw = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
-            if pwm >= 0:
-                self.in1.duty_u16(pwm)
-                self.in2.duty_u16(0)
-            else:
-                self.in1.duty_u16(0)
-                self.in2.duty_u16(-pwm)
-            await asyncio.sleep(self.pid.dt)
-        self.in1.duty_u16(0)
-        self.in2.duty_u16(0)
+    def stop(self):
+        self.motor_in1.duty_u16(0)
+        self.motor_in2.duty_u16(0)
+
+
+
+try:
+    mp = MotorPID(2, 3)
+    mp.set_target_rps(100)
+    for i in range(0, int(2/mp.dt)):
+        mp.update()
+        time.sleep(mp.dt)
+    
+    mp.set_target_rps(-50)
+    for i in range(0, int(2/mp.dt)):
+        mp.update()
+        time.sleep(mp.dt)
+    mp.stop()
+    t = 0
+    with open(f'{mp.file}', 'w') as newfile:
+        newfile.write('time, target, filtered_target, raw_rps, current_rps, pwm, err, err_i\n')
+        for time, target_rps, filtered_target_rps, raw_rps, current_rps, pwm, err, err_i in mp.log_data:
+            newfile.write(f'{time}, {target_rps}, {filtered_target_rps}, {raw_rps}, {current_rps}, {pwm}, {err}, {err_i}\n')
+            t+=mp.dt
+        newfile.close()
+except KeyboardInterrupt:
+    mp.stop()
+    print("Stopped")

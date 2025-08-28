@@ -5,6 +5,8 @@ from car import Car
 
 MOTOR_IN1 = 12
 MOTOR_IN2 = 13
+MOTOR_ENC_A = 17
+MOTOR_ENC_B = 16
 STEERING_PIN = 0
 GEARBOX_SHIFT_PIN = 1
 HORN_PIN = 2
@@ -20,7 +22,7 @@ VL53L0X_SDA_PIN = 20
 async def main_task():
     ble = BLE_Central("PicoW_BLE")
     my_car = Car()
-    my_car.config_motor(MOTOR_IN1, MOTOR_IN2)
+    my_car.config_motor(MOTOR_IN1, MOTOR_IN2, MOTOR_ENC_A, MOTOR_ENC_B)
     my_car.config_steering(STEERING_PIN)
     my_car.config_gearbox(GEARBOX_SHIFT_PIN)
     my_car.config_horn(HORN_PIN)
@@ -33,6 +35,7 @@ async def main_task():
         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, my_car.process_data)),
         asyncio.create_task(ble.send_parameters(ble.parameters_characteristic, my_car.get_parameters_encoded)),
         asyncio.create_task(my_car.aquire_sensors_data()),
+        asyncio.create_task(my_car.motor_control_loop()),
         asyncio.create_task(my_car.update()),
     ]
     await asyncio.gather(*tasks) # type: ignore
