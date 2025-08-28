@@ -120,7 +120,7 @@ class Motor:
         while self.control_loop_running:
             pwm = self.pid.update()
             # limit pwm to max_pwm; account for negative pwm
-            pw = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
+            pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
             if pwm >= 0:
                 self.in1.duty_u16(pwm)
                 self.in2.duty_u16(0)
