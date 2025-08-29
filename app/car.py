@@ -140,12 +140,8 @@ class Car:
             if self.motor:
                 self.motor.set_speed_percent(self.speed_target)
                 self.motor_rps = int(self.motor.get_speed_rps())
-                if self.gearbox:
-                    # wheel rps = motor rps * gearing ratio
-                    self.wheel_speed = self.motor_rps * self.gearbox.get_gearing_ratio()
-                    # speed mps = wheel rps * 2 * pi * wheel_radius = wheel rps * pi * wheel_diameter
-                    # wheel diameter is 8.2 cm
-                    self.speed_mps = self.wheel_speed * 3.1415 * 0.082
+                # speed = motor rps / gearbox ratio / axle ratio * pi * diameter
+                self.speed_mps = self.motor_rps / 30 / 4.6666 * 3.1415 * 0.082
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
