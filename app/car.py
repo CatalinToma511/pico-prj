@@ -141,7 +141,7 @@ class Car:
                 self.motor.set_speed_percent(self.speed_target)
                 self.motor_rps = int(self.motor.get_speed_rps())
                 # speed = motor rps / gearbox ratio / axle ratio * pi * diameter
-                self.speed_mps = self.motor_rps / 30 / 4.6666 * 3.1415 * 82 # mm/s to avoid problems with struct and float
+                self.speed_mps = int(self.motor_rps / 30 / 4.6666 * 3.1415 * 82) # mm/s to avoid problems with struct and float
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
