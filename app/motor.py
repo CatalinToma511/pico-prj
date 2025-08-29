@@ -12,7 +12,7 @@ class MotorPID():
         self.I = 0
         self.min_speed = 20
         self.u0 = 3000
-        self.max_accel = 5 # rot/s per dt
+        self.max_accel = 12 # rot/s per dt
         self.filtered_target_rps = 0 # filtered speed
         
         self.speed_filter_alpha = 0.7
