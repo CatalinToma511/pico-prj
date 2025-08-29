@@ -21,7 +21,9 @@ class Car:
         self.distance_sensor = None
 
         self.speed_target = 0
-        self.speed = 0
+        self.motor_rps = 0
+        self.wheel_speed = 0
+        self.speed_mps = 0
         self.steering_target = None
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
@@ -137,7 +139,13 @@ class Car:
         while self.update_running:
             if self.motor:
                 self.motor.set_speed_percent(self.speed_target)
-                self.speed = int(self.motor.get_speed_rps())
+                self.motor_rps = int(self.motor.get_speed_rps())
+                if self.gearbox:
+                    # wheel rps = motor rps * gearing ratio
+                    self.wheel_speed = self.motor_rps * self.gearbox.get_gearing_ratio()
+                    # speed mps = wheel rps * 2 * pi * wheel_radius = wheel rps * pi * wheel_diameter
+                    # wheel diameter is 8.2 cm
+                    self.speed_mps = self.wheel_speed * 3.1415 * 0.082
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
@@ -155,11 +163,11 @@ class Car:
                 self.roll,
                 self.pitch,
                 self.distance_mm,
-                self.speed,
-                self.speed_target,
+                self.motor_rps,
+                self.speed_mps,
                 self.steering_target
                 ]
-        encoded_data = struct.pack('>Bhhhhbb', *data)
+        encoded_data = struct.pack('>Bhhhhfb', *data)
         return encoded_data
     
     def stop_car_activity(self):
