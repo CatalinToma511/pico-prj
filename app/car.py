@@ -28,6 +28,7 @@ class Car:
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
         self.max_steering_change = 0
+        self.max_speed_rps = 0
 
         self.update_running = False
         self.update_interval_ms = 25
@@ -112,7 +113,7 @@ class Car:
             # limit
             if self.motor:
                 speed_limit = data[6]
-                self.motor.set_speed_limit_percent(speed_limit)
+                self.motor.set_speed_limit_factor(speed_limit / 100)
 
         except Exception as e:
             print(f"Error processing data: {e}")
@@ -149,6 +150,7 @@ class Car:
                 self.motor_rps = int(self.motor.get_speed_rps())
                 # speed = motor rps / gearbox ratio / axle ratio * pi * diameter
                 self.speed_mps = int(self.motor_rps / 30 / 4.6666 * 3.1415 * 82) # mm/s to avoid problems with struct and float
+                self.max_speed_rps = int(self.motor.get_max_speed_rps())
             # for now, no smooth steering
             if self.steering:
                 self.steering.set_steering_position(self.steering_target)
@@ -168,9 +170,10 @@ class Car:
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mps,
-                self.steering_target
+                self.steering_target,
+                self.max_speed_rps
                 ]
-        encoded_data = struct.pack('>Bhhhhhb', *data)
+        encoded_data = struct.pack('>Bhhhhhbh', *data)
         return encoded_data
     
     def stop_car_activity(self):

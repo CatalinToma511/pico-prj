@@ -98,15 +98,15 @@ class Motor:
         self.control_loop_running = False
         self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
-        self.speed_limit_percent = 100
+        self.speed_limit_factor = 1
 
-    def set_speed_limit_percent(self, speed_limit_percent):
-        if 10 < speed_limit_percent <= 100:
-            self.speed_limit_percent = speed_limit_percent
+    def set_speed_limit_factor(self, speed_limit_factor):
+        if 0 < speed_limit_factor <= 1:
+            self.speed_limit_factor = speed_limit_factor
 
     def set_speed_percent(self, speed_percent):
         if -100 <= speed_percent <= 100:
-            self.set_speed_rps((speed_percent / 100) * self.max_rps * (self.speed_limit_percent / 100))
+            self.set_speed_rps((speed_percent / 100) * self.max_rps * self.speed_limit_factor)
         else:
             print(f"[Motor] Invalid speed: {speed_percent}")
         
@@ -117,6 +117,9 @@ class Motor:
 
     def get_speed_rps(self):
         return self.pid.last_rps
+
+    def get_max_speed_rps(self):
+        return self.max_rps * self.speed_limit_factor
 
     async def control_loop(self):
         self.control_loop_running = True
