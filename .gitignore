@@ -1,3 +1,5 @@
 .vscode/
 typings/
 .micropico
+data.csv
+networks

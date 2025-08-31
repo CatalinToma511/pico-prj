@@ -30,9 +30,9 @@ class MotorPID():
         self.deadband = 1 / (self.ppr * self.dt)
 
         # logging, may be useful for later
-        # self.total_time = 0
-        # self.log_data = []
-        # self.file = "data.csv"
+        self.total_time = 0
+        self.log_data = []
+        self.file = "data.csv"
         
     def pin_a_irq(self, pin):
         self.pulse_count += 1
@@ -58,7 +58,7 @@ class MotorPID():
         current_rps = raw_rps * self.speed_filter_alpha + self.last_rps * (1 - self.speed_filter_alpha)
         self.last_rps = current_rps
 
-        #filtering speed
+        # filtering speed to avoid harsh transitions
         self.filtered_target_rps += max(-self.max_accel, min(self.max_accel, self.target_rps - self.filtered_target_rps))
 
         # calculate parameters
@@ -85,8 +85,8 @@ class MotorPID():
             pwm = 0
 
         # logging, may be useful for later
-        # self.total_time += self.dt
-        # self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
+        self.total_time += self.dt
+        self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
         return pwm
 
 
@@ -94,17 +94,21 @@ class Motor:
     def __init__(self, in1, in2, enc_a, enc_b, MOTOR_PWM_FREQ=2000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
-        self.pid = MotorPID(enc_a_pin=2, enc_b_pin=3)
+        self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
-        self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
+        self.max_pwm = 65535 * 0.95 # according to IBT-4 datasheet, PWM should not exceed 98%
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
+
+    def set_speed_percent(self, speed_percent):
+        if -100 <= speed_percent <= 100:
+            self.set_speed_rps((speed_percent / 100) * self.max_rps)
+        else:
+            print(f"[Motor] Invalid speed: {speed_percent}")
         
     # Positive speed goes forward, negative speed goes backwards
-    def set_speed_rps(self, speed_rps):
-        if -600 <= speed_rps <= 600: 
-            self.pid.set_target_rps(speed_rps)
-        else:
-            print(f"[Motor] Invalid speed: {speed}")
+    def set_speed_rps(self, target_speed_rps):
+        set_point_rps = (max(-self.max_rps, min(target_speed_rps, self.max_rps)))
+        self.pid.set_target_rps(set_point_rps)
 
     def get_speed_rps(self):
         return self.pid.last_rps
@@ -127,13 +131,27 @@ class Motor:
 
 async def main():
     m = Motor(0, 1, 2, 3)
+    m.pid.kp = 200
+    m.pid.ki = 1100
+    m.pid.dt = 0.010
     print("Starting control loop...")
     asyncio.create_task(m.control_loop())
-    m.set_speed_rps(100)  # Set target speed to 100 RPS
+    m.set_speed_rps(600)  # Set target speed to 100 RPS
     await asyncio.sleep(2)
-    m.set_speed_rps(-100)  # Set target speed to 100 RPS
+    # m.set_speed_rps(200)  # Set target speed to 200 RPS
+    # await asyncio.sleep(1)
+    # m.set_speed_rps(300)  # Set target speed to 300 RPS
+    # await asyncio.sleep(1)
+    m.set_speed_rps(0)
     await asyncio.sleep(2)
     m.control_loop_running = False
     print("Control loop stopped.")
+
+    with open(f'{m.pid.file}', 'w') as newfile:
+        newfile.write('time, target, filtered_target, raw_rps, current_rps, pwm, err, err_i\n')
+        for time, target_rps, filtered_target_rps, raw_rps, current_rps, pwm, err, err_i in m.pid.log_data:
+            newfile.write(f'{time}, {target_rps}, {filtered_target_rps}, {raw_rps}, {current_rps}, {pwm}, {err}, {err_i}\n')
+        newfile.close()
+    print("Data file done")
 
 asyncio.run(main())

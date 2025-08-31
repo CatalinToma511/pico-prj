@@ -109,6 +109,11 @@ class Car:
                 else:
                     self.horn.turn_off()
 
+            # limit
+            if self.motor:
+                speed_limit = data[6]
+                self.motor.set_speed_limit_percent(speed_limit)
+
         except Exception as e:
             print(f"Error processing data: {e}")
 
@@ -117,9 +122,11 @@ class Car:
         while True:
             try:
                 if self.voltage_reader:
+                    # read voltage in decavolts to avoid using float
                     self.voltage = int(self.voltage_reader.read() * 10)
                     # battery safety, put pico to sleep if voltage is too low
-                    if self.voltage < 6.5:
+                    # if battery level under 6.5V
+                    if self.voltage < 65: 
                         self.stop_car_activity()
                         print("Battery voltage too low, going to sleep...")
                         machine.deepsleep()
