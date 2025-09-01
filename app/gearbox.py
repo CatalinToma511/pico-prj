@@ -12,7 +12,6 @@ class Gearbox:
         self.high_gear_ratio = 1 / 11
         self.axle_ratio = 1 / 4.6666
 
-
     def set_gear(self, gear):
         if gear == 0:
             self.gear_shift_servo.set_angle(self.low_gear_angle)
