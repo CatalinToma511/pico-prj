@@ -4,29 +4,32 @@ import time
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
+        # speed and time parameters
         self.target_rps = 0
         self.last_pulse = 0
         self.last_rps = 0
-        self.kp = 130
+        self.last_time = 0
+        self.last_pwm = 0
+        # default values for ff+PI
+        self.default_kp = 130
+        self.default_ki = 600
+        self.default_kff = 0.85
+        # init values for paramters
+        self.kp = 0
         self.ki = 0
-        self.kff = 0.85
+        self.kff = 0
         self.dt = 0.020 # seconds
         self.I = 0
+        # motor parameters
         self.min_speed = 20
         self.u0 = 3000
         self.max_accel = 600 # rot/s^2
-        self.max_accel_dt = self.max_accel * self.dt
         self.max_decel = 1200 # rot/s^2
-        self.max_decel_dt = self.max_decel * self.dt
         self.filtered_target_rps = 0 # filtered speed
-        
+        # alpha coef for filters
         self.speed_filter_alpha = 1
-
-        self.last_time = 0
-
         self.pwm_filter_alpha = 0.7
-        self.last_pwm = 0
-
+        # encoder parameters and interrupts
         self.pulse_count = 0
         self.direction = 1
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
@@ -34,10 +37,13 @@ class MotorPID():
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
-
+        # minimum values
         min_pulses_per_iteration = 3
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
-        self.deadband = 3 / (self.ppr * self.dt) # how much counts per dt is considered noise
+        self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
+        # opperating mode
+        self.mode = 0
+        self.set_mode(self.mode)
 
         # logging, may be useful for later
         # self.total_time = 0
@@ -100,9 +106,11 @@ class MotorPID():
 
         # 6. calculate feed-forward
         # motor model was calculated at a past point and is:
-        # rps = pwm_percent * 7.1 - 10 => pwm_percent = (rps - 10) / 7.1
+        # rps = pwm_percent * 7.1 - 10 =>
+        # => pwm_percent = (rps + 10) / 7.1 = pwm / 65535 * 100 =>
+        # => pwm = (pwm_percent * 65535 / 100) = (rps + 10) / 7.1 * 65535 / 100
         # keep the abs(result) between u0 (min pwm at which motor rotates) and max pwm
-        pwm_ff = self.filtered_target_rps / 7.1 * 65535 / 100 * self.kff
+        pwm_ff = (self.filtered_target_rps + 10) / 7.1 * 65535 / 100 * self.kff
         pwm_ff = max(-65535, min(pwm_ff, 65535))
         if abs(pwm_ff) < self.u0:
             pwm_ff = 0
@@ -121,6 +129,37 @@ class MotorPID():
         # self.total_time += self.dt
         # self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
         return pwm
+    
+    def set_mode(self, mode):
+        # mode 0: using Feed Forward
+        if mode == 0:
+            self.kff = 1
+            self.kp = 0
+            self.ki = 0
+            self.I = 0
+        # mode 1: using Feed Forward + P
+        elif mode == 1:
+            self.kff = self.default_kff
+            self.kp = self.default_kp
+            self.ki = 0
+            self.I = 0
+        # mode 2: using Feed Forward + P + I
+        elif mode == 2:
+            self.kff = self.default_kff
+            self.kp = self.default_kp
+            self.ki = self.default_ki
+            self.I = 0
+        # mode 3: using P + I:
+        elif mode == 3:
+            self.kff = 0
+            self.kp = self.default_kp
+            self.ki = self.default_ki
+            self.I = 0
+        else:
+            print(f"[MotorPID] Invalid mode: {mode}")
+            return
+        self.mode = mode
+
 
 
 class Motor:

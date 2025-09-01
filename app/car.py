@@ -42,9 +42,13 @@ class Car:
         self.distance_mm = 0
 
         self.aeb = False
-        self.aeb_max_safe_distance_mm= 150
+        self.aeb_safety_distance_mm = 50
+        self.aeb_max_safe_speed_mmps = 500
+        self.aeb_max_safe_speed_rps = 666
 
         self.wheel_diameter_mm = 82
+
+        self.gearing_ratio = 1
 
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, max_speed_increase=5, max_speed_decrease=10):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
@@ -103,6 +107,7 @@ class Car:
                     self.gearbox.set_gear(0)
                 elif right_button and not left_button:
                     self.gearbox.set_gear(1)
+                self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
             # horn
             if self.horn:
@@ -116,6 +121,11 @@ class Car:
             if self.motor:
                 speed_limit = data[6]
                 self.motor.set_speed_limit_factor(speed_limit / 100)
+
+            # control mode
+            if self.motor and self.motor.pid:
+                mode = data[7]
+                self.motor.pid.set_mode(mode)
 
         except Exception as e:
             print(f"Error processing data: {e}")
@@ -153,8 +163,6 @@ class Car:
             if self.motor:
                 self.motor.set_speed_percent(self.speed_target)
                 self.motor_rps = int(self.motor.get_speed_rps())
-                # speed = motor rps / gearbox ratio / axle ratio * pi * diameter
-                gearing_ratio = 30
                 if self.gearbox:
                     gearing_ratio = self.gearbox.get_gearing_ratio()
                 self.speed_mmps = int(self.motor_rps * gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
