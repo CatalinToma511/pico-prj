@@ -130,10 +130,12 @@ class Car:
                     # battery safety, put pico to sleep if voltage is too low
                     # if battery level under 6.5V
                     # take account for situations when motor draws battery tension down
-                    if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
-                        self.stop_car_activity()
-                        print("Battery voltage too low, going to sleep...")
-                        machine.deepsleep()
+
+                    # !seems to cause issues, will check later a better method
+                    # if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
+                    #     self.stop_car_activity()
+                    #     print("Battery voltage too low, going to sleep...")
+                    #     machine.deepsleep()
 
                 if self.mpu6050:
                     self.roll, self.pitch = self.mpu6050.read_position()
