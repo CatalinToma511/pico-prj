@@ -8,7 +8,7 @@ class MotorPID():
         self.last_pulse = 0
         self.last_rps = 0
         self.kp = 130
-        self.ki = 600
+        self.ki = 0
         self.kff = 0.85
         self.dt = 0.020 # seconds
         self.I = 0
