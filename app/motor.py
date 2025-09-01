@@ -14,9 +14,9 @@ class MotorPID():
         self.I = 0
         self.min_speed = 20
         self.u0 = 3000
-        self.max_accel = 450 # rot/s^2
+        self.max_accel = 600 # rot/s^2
         self.max_accel_dt = self.max_accel * self.dt
-        self.max_decel = 900 # rot/s^2
+        self.max_decel = 1200 # rot/s^2
         self.max_decel_dt = self.max_decel * self.dt
         self.filtered_target_rps = 0 # filtered speed
         
