@@ -1,21 +1,31 @@
 from machine import Pin, PWM
 import asyncio
+import time
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         self.target_rps = 0
         self.last_pulse = 0
         self.last_rps = 0
-        self.kp = 250
-        self.ki = 1100
-        self.dt = 0.010 # seconds
+        self.kp = 130
+        self.ki = 600
+        self.kff = 0.85
+        self.dt = 0.020 # seconds
         self.I = 0
         self.min_speed = 20
         self.u0 = 3000
-        self.max_accel = 18 # rot/s per dt
+        self.max_accel = 300 # rot/s^2
+        self.max_accel_dt = self.max_accel * self.dt
+        self.max_decel = 600 # rot/s^2
+        self.max_decel_dt = self.max_decel * self.dt
         self.filtered_target_rps = 0 # filtered speed
         
-        self.speed_filter_alpha = 0.7
+        self.speed_filter_alpha = 1
+
+        self.last_time = 0
+
+        self.pwm_filter_alpha = 0.7
+        self.last_pwm = 0
 
         self.pulse_count = 0
         self.direction = 1
@@ -27,12 +37,13 @@ class MotorPID():
 
         min_pulses_per_iteration = 3
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
-        self.deadband = 1 / (self.ppr * self.dt)
+        self.deadband = 3 / (self.ppr * self.dt) # how much counts per dt is considered noise
 
         # logging, may be useful for later
         # self.total_time = 0
         # self.log_data = []
         # self.file = "data.csv"
+
         
     def pin_a_irq(self, pin):
         self.pulse_count += 1
@@ -48,41 +59,63 @@ class MotorPID():
         self.target_rps = rps
 
     def update(self):
-        # read counts
+        # 1. calculate actual elapsed time since last update
+        time_now = time.ticks_ms()
+        real_dt = (time_now - self.last_time) / 1000
+        if self.last_time == 0 or real_dt >= 2 * self.dt:
+            #avoid situation where dt is too big
+            real_dt = self.dt
+        self.last_time = time_now
+
+        # 2. read counts from the encoder
         current_count = self.pulse_count
         elapsed_counts = current_count - self.last_pulse
         self.last_pulse = current_count
 
-        # calculate current speed
-        raw_rps = self.direction * (1 / self.dt) * elapsed_counts / self.ppr
+        # 3. calculate current speed in rps
+        raw_rps = self.direction * (1 / real_dt) * elapsed_counts / self.ppr
         current_rps = raw_rps * self.speed_filter_alpha + self.last_rps * (1 - self.speed_filter_alpha)
         self.last_rps = current_rps
 
-        #filtering speed
-        self.filtered_target_rps += max(-self.max_accel, min(self.max_accel, self.target_rps - self.filtered_target_rps))
+        # 4. filtering speed to avoid harsh transitions
+        # using asymmetrical transitions, one value for acceleration and one for braking
+        target_ramp = 0
+        if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
+            target_ramp = self.max_decel
+        else:
+            # if same direction, check if it need acceleration or decceleration
+            target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
+        target_ramp *= real_dt
+        self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
-        # calculate parameters
+        # 5. calculate parameters of PI control
         err = self.filtered_target_rps - current_rps
+        # since motor cannot determine the exact speed, we use a deadband of 1 count, half above and half below
         if abs(err) < self.deadband/2:
             err = 0
-        err_i = err * self.dt
+        err_i = err * real_dt
         P = err * self.kp
         self.I += err_i * self.ki
-        self.I = int(max(-65535, min(self.I, 65535)))
-        
-        # calculate pwm based on direction, min pwm and max pwm
-        if self.filtered_target_rps >= self.min_countable_speed:
-            pwm = self.u0 + P + self.I
+        self.I = int(max(-65535, min(self.I, 65535))) # anti windup
+
+        # 6. calculate feed-forward
+        # motor model was calculated at a past point and is:
+        # rps = pwm_percent * 7.1 - 10 => pwm_percent = (rps - 10) / 7.1
+        # keep the abs(result) between u0 (min pwm at which motor rotates) and max pwm
+        pwm_ff = self.filtered_target_rps / 7.1 * 65535 / 100 * self.kff
+        pwm_ff = max(-65535, min(pwm_ff, 65535))
+        if abs(pwm_ff) < self.u0:
+            pwm_ff = 0
+
+        # 7. calculate pwm based on feed-forward and PI control
+        # if desired speed is below min_countable_speed, set pwm to 0
+        if abs(self.filtered_target_rps) >= self.min_countable_speed:
+            pwm = pwm_ff + P + self.I
+            pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             pwm = int(max(-65535, min(pwm, 65535)))
-            if(abs(pwm) < self.u0):
-                pwm = 0
-        elif self.filtered_target_rps <= -self.min_countable_speed:
-            pwm = -self.u0 + P + self.I
-            pwm = int(max(-65535, min(pwm, 65535)))
-            if(abs(pwm) < self.u0):
-                pwm = 0
         else:
             pwm = 0
+        self.last_pwm = pwm
 
         # logging, may be useful for later
         # self.total_time += self.dt
