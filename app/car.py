@@ -23,7 +23,7 @@ class Car:
         self.speed_target = 0
         self.motor_rps = 0
         self.wheel_speed = 0
-        self.speed_mps = 0
+        self.speed_mmps = 0
         self.steering_target = None
         self.max_speed_increase = 0
         self.max_speed_decrease = 0
@@ -43,6 +43,8 @@ class Car:
 
         self.aeb = False
         self.aeb_max_safe_distance_mm= 150
+
+        self.wheel_diameter_mm = 82
 
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, max_speed_increase=5, max_speed_decrease=10):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
@@ -150,7 +152,10 @@ class Car:
                 self.motor.set_speed_percent(self.speed_target)
                 self.motor_rps = int(self.motor.get_speed_rps())
                 # speed = motor rps / gearbox ratio / axle ratio * pi * diameter
-                self.speed_mps = int(self.motor_rps / 30 / 4.6666 * 3.1415 * 82) # mm/s to avoid problems with struct and float
+                gearing_ratio = 30
+                if self.gearbox:
+                    gearing_ratio = self.gearbox.get_gearing_ratio()
+                self.speed_mmps = int(self.motor_rps * gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
                 self.max_speed_rps = int(self.motor.get_max_speed_rps())
             # for now, no smooth steering
             if self.steering:
@@ -170,7 +175,7 @@ class Car:
                 self.pitch,
                 self.distance_mm,
                 self.motor_rps,
-                self.speed_mps,
+                self.speed_mmps,
                 self.steering_target,
                 self.max_speed_rps
                 ]
