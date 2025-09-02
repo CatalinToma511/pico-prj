@@ -42,7 +42,7 @@ class Car:
         self.distance_mm = 0
 
         self.aeb = False
-        self.aeb_safety_distance_mm = 50
+        self.aeb_safety_distance_mm = 150
         self.aeb_max_safe_speed_mmps = 500
         self.aeb_max_safe_speed_rps = 666
 
