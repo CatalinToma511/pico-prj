@@ -162,15 +162,36 @@ class Car:
 
             await asyncio.sleep_ms(self.aquire_data_interval_ms)
 
+    def aeb_max_safe_speed(self):
+        # calculate the speed at which the car can stop within the safe distance to the object
+        # d = v^2 / (2 * a)
+        # so, the stopping distance is: current_speed^2 / (2 * wheel_decel)
+        # the stopping distance + aeb max safe speed is also the maximum accepted distance for the specific speed
+        # so the maximum speed at which the car can safely stop is: sqrt(desired stopping distance * 2 * wheel_decel)
+        if self.distance_sensor and self.motor and self.aeb:
+            # stopping distance is within a safety margin to the obstacle
+            stopping_distance = self.distance_mm - self.aeb_safety_distance_mm
+            stopping_distance = max(0, stopping_distance) # cannot be negative
+            wheel_decel = self.motor.pid.max_decel * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm
+            max_safe_speed_mmps = (2 * stopping_distance * wheel_decel) ** 0.5
+            # clamp value between 0 and motor max rps
+            max_safe_speed_mmps = max(0, min(max_safe_speed_mmps, self.max_speed_rps))
+            # convert back to motor rps
+            self.aeb_max_safe_speed_rps = max_safe_speed_mmps / (self.gearing_ratio * 3.1415 * self.wheel_diameter_mm)
+        else:
+            self.aeb_max_safe_speed_rps = self.motor.get_max_speed_rps() if self.motor else 0
+
     async def update(self):
         self.update_running = True
         while self.update_running:
             if self.motor:
+                # speed control and limit
                 self.motor.set_speed_percent(self.speed_target)
+                self.aeb_max_safe_speed()
+
+                # data to be sent to client
                 self.motor_rps = int(self.motor.get_speed_rps())
-                if self.gearbox:
-                    gearing_ratio = self.gearbox.get_gearing_ratio()
-                self.speed_mmps = int(self.motor_rps * gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
+                self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
                 self.max_speed_rps = int(self.motor.get_max_speed_rps())
             # for now, no smooth steering
             if self.steering:
@@ -192,7 +213,7 @@ class Car:
                 self.motor_rps,
                 self.speed_mmps,
                 self.steering_target,
-                self.max_speed_rps
+                self.aeb_max_safe_speed_rps
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
         return encoded_data
