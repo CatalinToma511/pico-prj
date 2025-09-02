@@ -175,7 +175,7 @@ class Car:
             wheel_decel = self.motor.pid.max_decel * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm
             max_safe_speed_mmps = (2 * stopping_distance * wheel_decel) ** 0.5
             # clamp value between 0 and motor max rps
-            max_safe_speed_mmps = max(0, min(max_safe_speed_mmps, self.max_speed_rps))
+            max_safe_speed_mmps = max(0, min(max_safe_speed_mmps, self.max_speed_rps*self.gearing_ratio*3.1415*self.wheel_diameter_mm))
             # convert back to motor rps
             self.aeb_max_safe_speed_rps = max_safe_speed_mmps / (self.gearing_ratio * 3.1415 * self.wheel_diameter_mm)
         else:
@@ -186,8 +186,11 @@ class Car:
         while self.update_running:
             if self.motor:
                 # speed control and limit
-                self.motor.set_speed_percent(self.speed_target)
-                self.aeb_max_safe_speed()
+                speed_target_rps = self.motor.convert_speed_percent_to_rps(self.speed_target)
+                if self.aeb:
+                    self.aeb_max_safe_speed()
+                    speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
+                self.motor.set_speed_rps(speed_target_rps)
 
                 # data to be sent to client
                 self.motor_rps = int(self.motor.get_speed_rps())
