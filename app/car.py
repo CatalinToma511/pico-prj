@@ -42,9 +42,10 @@ class Car:
         self.distance_mm = 0
 
         self.aeb = False
-        self.aeb_safety_distance_mm = 150
+        self.aeb_safety_distance_mm = 50
         self.aeb_max_safe_speed_mmps = 500
         self.aeb_max_safe_speed_rps = 666
+        self.drive_train_backlash_mm = 30
 
         self.wheel_diameter_mm = 82
 
@@ -170,7 +171,7 @@ class Car:
         # so the maximum speed at which the car can safely stop is: sqrt(desired stopping distance * 2 * wheel_decel)
         if self.distance_sensor and self.motor and self.aeb:
             # stopping distance is within a safety margin to the obstacle
-            stopping_distance = self.distance_mm - self.aeb_safety_distance_mm
+            stopping_distance = self.distance_mm - self.aeb_safety_distance_mm - self.drive_train_backlash_mm
             stopping_distance = max(0, stopping_distance) # cannot be negative
             wheel_decel = self.motor.pid.max_decel * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm
             max_safe_speed_mmps = (2 * stopping_distance * wheel_decel) ** 0.5
