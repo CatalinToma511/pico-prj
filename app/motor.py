@@ -161,7 +161,6 @@ class MotorPID():
         self.mode = mode
 
 
-
 class Motor:
     def __init__(self, in1, in2, enc_a, enc_b, MOTOR_PWM_FREQ=2000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)

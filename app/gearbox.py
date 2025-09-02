@@ -8,7 +8,7 @@ class Gearbox:
         self.high_gear_angle = high_gear_angle
         self.low_gear_ratio = 1 / (30 * .9974)
         self.high_gear_ratio = 1 / 11
-        self.axle_ratio = 1 / 4.6666
+        self.axle_ratio = 1 / 2.6666
         self.gearing_ratio = 1
         self.gear = 0  # 0 for low gear, 1 for high gear
         self.set_gear(0)

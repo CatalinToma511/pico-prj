@@ -122,9 +122,14 @@ class Car:
                 speed_limit = data[6]
                 self.motor.set_speed_limit_factor(speed_limit / 100)
 
+            # aeb:
+            if self.motor and self.distance_sensor:
+                aeb_state = data[7]
+                self.aeb = bool(aeb_state)
+
             # control mode
             if self.motor and self.motor.pid:
-                mode = data[7]
+                mode = data[8]
                 self.motor.pid.set_mode(mode)
 
         except Exception as e:
