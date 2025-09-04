@@ -4,8 +4,8 @@ import time
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         # speed and time parameters
-        self.target_rps = 0
-        self.last_pulse = 0
+        self.target_cpi = 0
+        self.last_count = 0
         self.last_rps = 0
         self.last_time = 0
         self.last_pwm = 0
@@ -24,12 +24,12 @@ class MotorPID():
         self.u0 = 3000
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1200 # rot/s^2
-        self.filtered_target_rps = 0 # filtered speed
+        self.filtered_target_cpi = 0 # filtered speed
         # alpha coef for filters
         self.speed_filter_alpha = 1
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
-        self.pulse_count = 0
+        self.total_pulse_count = 0
         self.direction = 1
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
@@ -40,12 +40,9 @@ class MotorPID():
         min_pulses_per_iteration = 3
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
-        # opperating mode
-        self.mode = 0
-        self.set_mode(self.mode)
-
+        # preallocating variables for hard irq
         self.current_count = 0
-        self.elapsed_counts = 0
+        self.diff_count = 0
         self.dt_ms = 20
         self.current_rps = 0
         self.err = 0
@@ -53,25 +50,34 @@ class MotorPID():
         self.P = 0
         self.pwm = 0
         self.pwm_ff = 0
-        self.target_ramp = 0
+        self.target_cpi_ramp = 0
+        self.max_accel_cpi = 360
+        self.max_decel_cpi = 720
+        self.kp2_default = 78
+        self.ki2_default = 360
+        self.kp2 = 0
+        self.ki2 = 0
         # logging, may be useful for later
         # self.total_time = 0
         # self.log_data = []
         # self.file = "data.csv"
+        # opperating mode
+        self.mode = 0
+        self.set_mode(self.mode)
 
         
     def pin_a_irq(self, pin):
-        self.pulse_count += 1
+        self.total_pulse_count += 1
         self.direction = 1 if self.pulse_pin_a.value() == self.pulse_pin_b.value() else -1
 
     def pin_b_irq(self, pin):
-        self.pulse_count += 1
+        self.total_pulse_count += 1
         self.direction = 1 if self.pulse_pin_a.value() != self.pulse_pin_b.value() else -1
 
     def set_target_rps(self, rps):
         if abs(rps) < self.min_speed:
             rps = 0
-        self.target_rps = int(rps)
+        self.target_cpi = int(rps) *  self.ppr
 
     def update(self):
         # 1. calculate actual elapsed time since last update
@@ -83,9 +89,9 @@ class MotorPID():
         self.last_time = time_now
 
         # 2. read counts from the encoder
-        current_count = self.pulse_count
-        elapsed_counts = current_count - self.last_pulse
-        self.last_pulse = current_count
+        current_count = self.total_pulse_count
+        elapsed_counts = current_count - self.last_count
+        self.last_count = current_count
 
         # 3. calculate current speed in rps
         raw_rps = self.direction * (1 / real_dt) * elapsed_counts / self.ppr
@@ -95,16 +101,16 @@ class MotorPID():
         # 4. filtering speed to avoid harsh transitions
         # using asymmetrical transitions, one value for acceleration and one for braking
         target_ramp = 0
-        if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
+        if self.filtered_target_cpi * self.target_cpi < 0: # if changing direction, break first
             target_ramp = self.max_decel
         else:
             # if same direction, check if it need acceleration or decceleration
-            target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
+            target_ramp = self.max_accel if abs(self.target_cpi) > abs(self.filtered_target_cpi) else self.max_decel
         target_ramp *= real_dt
-        self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
+        self.filtered_target_cpi += max(-target_ramp, min(target_ramp, self.target_cpi - self.filtered_target_cpi))
 
         # 5. calculate parameters of PI control
-        err = self.filtered_target_rps - current_rps
+        err = self.filtered_target_cpi - current_rps
         # since motor cannot determine the exact speed, we use a deadband of 1 count, half above and half below
         if abs(err) < self.deadband/2:
             err = 0
@@ -119,14 +125,14 @@ class MotorPID():
         # => pwm_percent = (rps + 10) / 7.1 = pwm / 65535 * 100 =>
         # => pwm = (pwm_percent * 65535 / 100) = (rps + 10) / 7.1 * 65535 / 100
         # keep the abs(result) between u0 (min pwm at which motor rotates) and max pwm
-        pwm_ff = (self.filtered_target_rps + 10) / 7.1 * 65535 / 100 * (self.kff/100)
+        pwm_ff = (self.filtered_target_cpi + 10) / 7.1 * 65535 / 100 * (self.kff/100)
         pwm_ff = max(-65535, min(pwm_ff, 65535))
         if abs(pwm_ff) < self.u0:
             pwm_ff = 0
 
         # 7. calculate pwm based on feed-forward and PI control
         # if desired speed is below min_countable_speed, set pwm to 0
-        if abs(self.filtered_target_rps) >= self.min_countable_speed:
+        if abs(self.filtered_target_cpi) >= self.min_countable_speed:
             pwm = pwm_ff + P + self.I
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             pwm = int(max(-65535, min(pwm, 65535)))
@@ -140,29 +146,40 @@ class MotorPID():
         return pwm
     
     def update_hard_irq(self):
-        self.current_count = self.pulse_count
-        self.elapsed_counts = self.current_count - self.last_pulse
-        self.last_pulse = self.current_count
+        self.current_count = self.total_pulse_count
+        self.diff_count = self.current_count - self.last_count
+        self.last_count = self.current_count
 
-        self.current_rps = self.direction * self.elapsed_counts * 1000 // self.ppr // self.dt_ms # 1/dt = 1000/dt_ms in seconds
-
-        self.target_ramp = 0
-        if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
-            self.target_ramp = self.max_decel
+        self.target_cpi_ramp = 0
+        if self.filtered_target_cpi * self.target_cpi < 0: # if changing direction, break first
+            self.target_cpi_ramp = self.max_decel_cpi
         else:
             # if same direction, check if it need acceleration or decceleration
-            self.target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
+            self.target_cpi_ramp = self.max_accel_cpi if abs(self.target_cpi) > abs(self.filtered_target_cpi) else self.max_decel_cpi
 
-        self.target_ramp = self.target_ramp * self.dt_ms // 1000 # dt = dt_ms / 1000 in seconds
-        self.filtered_target_rps += max(-self.target_ramp, min(self.target_ramp, self.target_rps - self.filtered_target_rps))
+        self.filtered_target_cpi += max(-self.target_cpi_ramp, min(self.target_cpi_ramp, self.target_cpi - self.filtered_target_cpi))
 
-        self.err = self.filtered_target_rps - self.current_rps
-        self.err_i = self.err * self.dt_ms // 1000
-        self.P = self.err * self.kp
-        self.I += self.err_i * self.ki
+        # P = rps_dif * kp                 convertit in cps = rps_dif * ppr
+        # P = (cps_dif * ppr) * kp         convertit in cpi = cps / timp_ms
+        # P = (cpi_dif / dt) * ppr * kp    dt = 20ms
+        # P = cpi_dif * kp * ppr / dt
+        # kp2 = kp * ppr / dt              kp2 = 78
+        # P = cpi_dif * kp2
+        #
+        # err_i = rps_dif * dt                 dt in ms
+        # err_i = (cps_dif * ppr) * dt
+        # err_i = (cpi_dif / dt * ppr) * dt
+        # I gain = erri * ki
+        # I gain = (cpi_dif / dt * ppr) * dt * ki
+        # I gain = (cpi_dif * dt) * ki * ppr / dt
+        # ki2 = ki * ppr / dt
+        self.err = self.filtered_target_cpi - self.diff_count
+        self.err_i = self.err * self.dt_ms
+        self.P = self.err * self.kp2
+        self.I += self.err_i * self.ki2
         self.I = int(max(-65535, min(self.I, 65535)))
 
-        self.pwm_ff = (self.filtered_target_rps + 10) * self.kff * 923 // 1000
+        self.pwm_ff = (self.filtered_target_cpi + 10) * self.kff * 923 // 1000
         self.pwm_ff = max(-65535, min(self.pwm_ff, 65535))
         if abs(self.pwm_ff) < self.u0:
             self.pwm_ff = 0
@@ -178,24 +195,32 @@ class MotorPID():
             self.kff = self.default_kff
             self.kp = 0
             self.ki = 0
+            self.kp2 = 0
+            self.ki2 = 0
             self.I = 0
         # mode 1: using Feed Forward + P
         elif mode == 1:
             self.kff = self.default_kff
             self.kp = self.default_kp
             self.ki = 0
+            self.kp2 = self.kp2_default
+            self.ki2 = 0
             self.I = 0
         # mode 2: using Feed Forward + P + I
         elif mode == 2:
             self.kff = self.default_kff
             self.kp = self.default_kp
             self.ki = self.default_ki
+            self.kp2 = self.kp2_default
+            self.ki2 = self.ki2_default
             self.I = 0
         # mode 3: using P + I:
         elif mode == 3:
             self.kff = 0
             self.kp = self.default_kp
             self.ki = self.default_ki
+            self.kp2 = self.kp2_default
+            self.ki2 = self.ki2_default
             self.I = 0
         else:
             print(f"[MotorPID] Invalid mode: {mode}")
