@@ -5,9 +5,7 @@ from mpu6050 import MPU6050
 from horn import Horn
 from voltagereader import VoltageReader
 from distance_sensor import DistanceSensor
-import asyncio
 import machine
-import time
 import struct
 
 class Car:
@@ -25,15 +23,11 @@ class Car:
         self.wheel_speed = 0
         self.speed_mmps = 0
         self.steering_target = None
-        self.max_speed_increase = 0
-        self.max_speed_decrease = 0
         self.max_steering_change = 0
         self.max_speed_rps = 0
 
-        self.update_running = False
         self.update_interval_ms = 25
 
-        self.aquire_sensors_data_running = False
         self.aquire_data_interval_ms = 25
 
         self.battery_voltage = 0
@@ -51,10 +45,8 @@ class Car:
 
         self.gearing_ratio = 1
 
-    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, max_speed_increase=5, max_speed_decrease=10):
+    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
-        self.max_speed_increase = max_speed_increase
-        self.max_speed_decrease = max_speed_decrease
         self.speed_target = 0
 
     def config_steering(self, steering_pin, max_steering_change=30):
@@ -136,32 +128,28 @@ class Car:
         except Exception as e:
             print(f"Error processing data: {e}")
 
-    async def aquire_sensors_data(self):
-        self.aquire_sensors_data_running = True
-        while True:
-            try:
-                if self.voltage_reader:
-                    # read voltage in decavolts to avoid using float
-                    self.voltage = int(self.voltage_reader.read() * 10)
-                    # battery safety, put pico to sleep if voltage is too low
-                    # if battery level under 6.5V
-                    # take account for situations when motor draws battery tension down
+    def aquire_sensors_data(self):
+        try:
+            if self.voltage_reader:
+                # read voltage in decavolts to avoid using float
+                self.voltage = int(self.voltage_reader.read() * 10)
+                # battery safety, put pico to sleep if voltage is too low
+                # if battery level under 6.5V
+                # take account for situations when motor draws battery tension down
 
-                    # !seems to cause issues, will check later a better method
-                    # if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
-                    #     self.stop_car_activity()
-                    #     print("Battery voltage too low, going to sleep...")
-                    #     machine.deepsleep()
+                # !seems to cause issues, will check later a better method
+                # if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
+                #     self.stop_car_activity()
+                #     print("Battery voltage too low, going to sleep...")
+                #     machine.deepsleep()
 
-                if self.mpu6050:
-                    self.roll, self.pitch = self.mpu6050.read_position()
+            if self.mpu6050:
+                self.roll, self.pitch = self.mpu6050.read_position()
 
-                if self.distance_sensor:
-                        self.distance_mm = int(self.distance_sensor.read())
-            except Exception as e:
-                        print(f'Error while reading distance sensor data: {e}')
-
-            await asyncio.sleep_ms(self.aquire_data_interval_ms)
+            if self.distance_sensor:
+                    self.distance_mm = int(self.distance_sensor.read())
+        except Exception as e:
+                    print(f'Error while reading distance sensor data: {e}')
 
     def aeb_max_safe_speed(self):
         # calculate the speed at which the car can stop within the safe distance to the object
@@ -182,32 +170,22 @@ class Car:
         else:
             self.aeb_max_safe_speed_rps = self.motor.get_max_speed_rps() if self.motor else 0
 
-    async def update(self):
-        self.update_running = True
-        while self.update_running:
-            if self.motor:
-                # speed control and limit
-                speed_target_rps = self.motor.convert_speed_percent_to_rps(self.speed_target)
-                if self.aeb:
-                    self.aeb_max_safe_speed()
-                    speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
-                self.motor.set_speed_rps(speed_target_rps)
-
-                # data to be sent to client
-                self.motor_rps = int(self.motor.get_speed_rps())
-                self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
-                self.max_speed_rps = int(self.motor.get_max_speed_rps())
-            # for now, no smooth steering
-            if self.steering:
-                self.steering.set_steering_position(self.steering_target)
-
-            await asyncio.sleep_ms(self.update_interval_ms)
-
-    async def motor_control_loop(self):
+    def update(self):
         if self.motor:
-            await self.motor.control_loop()
-        else:
-            print("Motor not configured, cannot start control loop.")
+            # speed control and limit
+            speed_target_rps = self.motor.convert_speed_percent_to_rps(self.speed_target)
+            if self.aeb:
+                self.aeb_max_safe_speed()
+                speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
+            self.motor.set_speed_rps(speed_target_rps)
+
+            # data to be sent to client
+            self.motor_rps = int(self.motor.get_speed_rps())
+            self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
+            self.max_speed_rps = int(self.motor.get_max_speed_rps())
+        # for now, no smooth steering
+        if self.steering:
+            self.steering.set_steering_position(self.steering_target)
 
     def get_parameters_encoded(self):
         data = [self.voltage,
