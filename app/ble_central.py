@@ -99,7 +99,7 @@ class BLE_Central:
                 if self.controls_callback:
                     self.controls_callback(value)
 
-    def advertise(self, interval_us=150_000):
+    def advertise(self, interval_us=50_000):
         name = bytes(self.name, "utf-8")
         adv_data = bytearray(
             b"\x02\x01\x06" +                # Flags

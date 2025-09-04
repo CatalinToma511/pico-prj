@@ -28,6 +28,7 @@ def run():
     my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
     my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
     ble = BLE_Central("PicoW_BLE", controls_callback=my_car.process_data)
+    ble.advertise()
 
     while True:
         ble.blink_task()
