@@ -61,7 +61,7 @@ class MotorPID():
     def set_target_rps(self, rps):
         if abs(rps) < self.min_speed:
             rps = 0
-        self.target_rps = rps
+        self.target_rps = int(rps)
 
     def update(self):
         # 1. calculate actual elapsed time since last update
@@ -202,7 +202,7 @@ class Motor:
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
-        self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
+        self.max_pwm = int(65535 * 0.95) # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
         self.irq_timer = Timer()
@@ -229,7 +229,7 @@ class Motor:
     # Positive speed goes forward, negative speed goes backwards
     def set_speed_rps(self, target_speed_rps):
         set_point_rps = (max(-self.max_rps, min(target_speed_rps, self.max_rps)))
-        self.pid.set_target_rps(set_point_rps)
+        self.pid.set_target_rps(int(set_point_rps))
 
     def get_speed_rps(self):
         return self.pid.last_rps
