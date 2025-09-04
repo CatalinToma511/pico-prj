@@ -59,11 +59,11 @@ class BLE_Central:
         self._ble.irq(self._irq)
 
         controls_service = (
-            CONST_CONTROLS_SERVICE_UUID,
+            self.CONTROLS_SERVICE_UUID,
             (
-                (CONST_CONTROLS_CHARACTERISTIC_UUID,
+                (self.CONTROLS_CHARACTERISTIC_UUID,
                  bluetooth.FLAG_READ | bluetooth.FLAG_WRITE | bluetooth.FLAG_NOTIFY),
-                (CONST_PARAMTERES_CHARACTERISTIC_UUID,
+                (self.PARAMETERS_CHARACTERISTIC_UUID,
                  bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY),
             ),
         )
