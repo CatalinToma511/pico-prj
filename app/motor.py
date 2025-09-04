@@ -247,6 +247,7 @@ class Motor:
         return self.max_rps * self.speed_limit_factor
 
     def control_irq(self, tmr):
+        self.debug_pin.on()
         pwm = self.pid.update()
         # limit pwm to max_pwm; account for negative pwm
         pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
@@ -256,6 +257,7 @@ class Motor:
         else:
             self.in1.duty_u16(0)
             self.in2.duty_u16(-pwm)
+        self.debug_pin.off()
 
     def control_irq_hard(self, pin):
         try:
