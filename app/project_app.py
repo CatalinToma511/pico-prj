@@ -19,23 +19,27 @@ VL53L0X_SCL_PIN = 21
 VL53L0X_SDA_PIN = 20
 
 def run():
-    my_car = Car()
-    my_car.config_motor(MOTOR_IN1, MOTOR_IN2, MOTOR_ENC_A, MOTOR_ENC_B)
-    my_car.config_steering(STEERING_PIN)
-    my_car.config_gearbox(GEARBOX_SHIFT_PIN)
-    my_car.config_horn(HORN_PIN)
-    my_car.config_voltage_reader(VOLTAGE_PIN)
-    my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
-    my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
-    ble = BLE_Central("PicoW_BLE", controls_callback=my_car.process_data)
-    ble.advertise()
+    try:
+        my_car = Car()
+        my_car.config_motor(MOTOR_IN1, MOTOR_IN2, MOTOR_ENC_A, MOTOR_ENC_B)
+        my_car.config_steering(STEERING_PIN)
+        my_car.config_gearbox(GEARBOX_SHIFT_PIN)
+        my_car.config_horn(HORN_PIN)
+        my_car.config_voltage_reader(VOLTAGE_PIN)
+        my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
+        my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
+        ble = BLE_Central("PicoW_BLE", controls_callback=my_car.process_data)
+        ble.advertise()
 
-    while True:
-        ble.blink_task()
-        ble.send_parameters(my_car.get_parameters_encoded)
-        my_car.aquire_sensors_data()
-        my_car.update()
-        time.sleep_ms(20)
+        while True:
+            ble.blink_task()
+            ble.send_parameters(my_car.get_parameters_encoded)
+            my_car.aquire_sensors_data()
+            my_car.update()
+            time.sleep_ms(20)
+    except Exception as e:
+        print(f'Err runing main loop: {e}')
+        my_car.stop_car_activity()
 
 
 

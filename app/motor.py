@@ -199,7 +199,7 @@ class Motor:
     def get_max_speed_rps(self):
         return self.max_rps * self.speed_limit_factor
 
-    def control_loop(self, tmr):
+    def control_irq(self, tmr):
         pwm = self.pid.update()
         # limit pwm to max_pwm; account for negative pwm
         pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
@@ -209,10 +209,11 @@ class Motor:
         else:
             self.in1.duty_u16(0)
             self.in2.duty_u16(-pwm)
-        self.in1.duty_u16(0)
-        self.in2.duty_u16(0)
 
     def start_control_loop(self, interval_ms=20):
-        self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_loop)
+        self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
+
+    def stop_control_loop(self, interval_ms=20):
+        self.irq_timer.deinit()
 
     

@@ -202,10 +202,8 @@ class Car:
         return encoded_data
     
     def stop_car_activity(self):
-        self.update_running = False
-        self.aquire_sensors_data_running = False
         if self.motor:
-            self.motor.control_loop_running = False
+            self.motor.stop_control_loop()
         if self.horn:
             self.horn.turn_off()
         print("Car activity stopped.")
