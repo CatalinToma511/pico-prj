@@ -179,10 +179,10 @@ class MotorPID():
         self.I += self.err_i * self.ki2
         self.I = int(max(-65535, min(self.I, 65535)))
 
-        # rps = cps / ppr
-        # rps = cpi / dt / ppr
-        # cpi = rps / dt / ppr
-        self.pwm_ff = (self.filtered_target_cpi + 10) * self.kff * 38
+        # rps = cps * ppr
+        # rps = cpi / dt * ppr
+        # cpi = rps / dt * ppr
+        self.pwm_ff = (self.filtered_target_cpi + 10) * self.kff * 553 // 1000
         self.pwm_ff = max(-65535, min(self.pwm_ff, 65535))
         if abs(self.pwm_ff) < self.u0:
             self.pwm_ff = 0
