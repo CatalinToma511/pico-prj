@@ -95,7 +95,7 @@ class BLE_Central:
             conn_handle, attr_handle = data
             if attr_handle == self._controls_handle:
                 value = self._ble.gatts_read(attr_handle)
-                print("Received:", value)
+                #print("Received:", value)
                 if self.controls_callback:
                     self.controls_callback(value)
 

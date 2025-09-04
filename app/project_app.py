@@ -35,7 +35,7 @@ def run():
         ble.send_parameters(my_car.get_parameters_encoded)
         my_car.aquire_sensors_data()
         my_car.update()
-        time.sleep_ms(50)
+        time.sleep_ms(20)
 
 
 
