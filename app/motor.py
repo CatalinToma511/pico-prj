@@ -77,7 +77,7 @@ class MotorPID():
     def set_target_rps(self, rps):
         if abs(rps) < self.min_speed:
             rps = 0
-        self.target_cpi = int(rps) *  self.ppr
+        self.target_cpi = int(rps) *  self.ppr / self.dt
 
     def update(self):
         # 1. calculate actual elapsed time since last update
