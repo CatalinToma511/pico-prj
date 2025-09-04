@@ -44,6 +44,16 @@ class MotorPID():
         self.mode = 0
         self.set_mode(self.mode)
 
+        self.current_count = 0
+        self.elapsed_counts = 0
+        self.dt_ms = 20
+        self.current_rps = 0
+        self.err = 0
+        self.err_i = 0
+        self.P = 0
+        self.pwm = 0
+        self.pwm_ff = 0
+        self.target_ramp = 0
         # logging, may be useful for later
         # self.total_time = 0
         # self.log_data = []
@@ -130,13 +140,11 @@ class MotorPID():
         return pwm
     
     def update_hard_irq(self):
-        dt_ms = 20 #ms
+        self.current_count = self.pulse_count
+        self.elapsed_counts = self.current_count - self.last_pulse
+        self.last_pulse = self.current_count
 
-        current_count = self.pulse_count
-        elapsed_counts = current_count - self.last_pulse
-        self.last_pulse = current_count
-
-        rps = self.direction * elapsed_counts * 1000 // self.ppr // dt_ms # 1/dt = 1000/dt_ms in seconds
+        self.current_rps = self.direction * self.elapsed_counts * 1000 // self.ppr // self.dt_ms # 1/dt = 1000/dt_ms in seconds
 
         target_ramp = 0
         if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
@@ -145,25 +153,25 @@ class MotorPID():
             # if same direction, check if it need acceleration or decceleration
             target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
 
-        target_ramp = target_ramp * dt_ms // 1000 # dt = dt_ms / 1000 in seconds
+        target_ramp = target_ramp * self.dt_ms // 1000 # dt = dt_ms / 1000 in seconds
         self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
-        err = self.filtered_target_rps - rps
-        err_i = err * dt_ms // 1000
-        P = err * self.kp
-        self.I += err_i * self.ki
+        self.err = self.filtered_target_rps - self.current_rps
+        self.err_i = self.err * self.dt_ms // 1000
+        self.P = self.err * self.kp
+        self.I += self.err_i * self.ki
         self.I = int(max(-65535, min(self.I, 65535)))
 
-        pwm_ff = (self.filtered_target_rps + 10) * 65535 * self.kff // 71000
-        pwm_ff = max(-65535, min(pwm_ff, 65535))
-        if abs(pwm_ff) < self.u0:
-            pwm_ff = 0
+        self.pwm_ff = (self.filtered_target_rps + 10) * 65535 * self.kff // 71000
+        self.pwm_ff = max(-65535, min(self.pwm_ff, 65535))
+        if abs(self.pwm_ff) < self.u0:
+            self.pwm_ff = 0
 
-        pwm = pwm_ff + P + self.I
-        pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
-        pwm = int(max(-65535, min(pwm, 65535)))
+        self.pwm = self.pwm_ff + self.P + self.I
+        self.pwm = self.pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
+        self.pwm = int(max(-65535, min(self.pwm, 65535)))
 
-        return pwm
+        return self.pwm
 
     def set_mode(self, mode):
         # mode 0: using Feed Forward
