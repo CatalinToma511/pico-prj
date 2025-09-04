@@ -212,6 +212,7 @@ class Motor:
         self.max_pwm = int(65535 * 0.95) # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
+        self.debug_pin = Pin(4, Pin.OUT)
         self.irq_timer = Timer()
         self.irq_pin = Pin(5)
         self.irq_pwm = PWM(self.irq_pin, freq=50, duty_u16=10)
@@ -258,6 +259,7 @@ class Motor:
 
     def control_irq_hard(self, pin):
         try:
+            self.debug_pin.on()
             self.pwm = self.pid.update_hard_irq()
             self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
             if self.pwm >= 0:
@@ -266,6 +268,7 @@ class Motor:
             else:
                 self.in1.duty_u16(0)
                 self.in2.duty_u16(-self.pwm)
+            self.debug_pin.off()
         except Exception as e:
             print(f"IRQ Exception: {e}")
 
