@@ -199,7 +199,7 @@ class Motor:
     def get_max_speed_rps(self):
         return self.max_rps * self.speed_limit_factor
 
-    def control_loop(self):
+    def control_loop(self, tmr):
         pwm = self.pid.update()
         # limit pwm to max_pwm; account for negative pwm
         pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
