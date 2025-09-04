@@ -48,6 +48,7 @@ class Car:
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
         self.speed_target = 0
+        self.motor.start_control_loop()
 
     def config_steering(self, steering_pin, max_steering_change=30):
         self.steering = Steering(steering_pin)

@@ -1,5 +1,4 @@
-from machine import Pin, PWM
-import asyncio
+from machine import Pin, PWM, Timer
 import time
 
 class MotorPID():
@@ -170,6 +169,7 @@ class Motor:
         self.max_pwm = 65535 * 0.95 # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
+        self.irq_timer = Timer()
 
     def set_speed_limit_factor(self, speed_limit_factor):
         if 0 < speed_limit_factor <= 1:
@@ -199,18 +199,20 @@ class Motor:
     def get_max_speed_rps(self):
         return self.max_rps * self.speed_limit_factor
 
-    async def control_loop(self):
-        self.control_loop_running = True
-        while self.control_loop_running:
-            pwm = self.pid.update()
-            # limit pwm to max_pwm; account for negative pwm
-            pw = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
-            if pwm >= 0:
-                self.in1.duty_u16(pwm)
-                self.in2.duty_u16(0)
-            else:
-                self.in1.duty_u16(0)
-                self.in2.duty_u16(-pwm)
-            await asyncio.sleep(self.pid.dt)
+    def control_loop(self):
+        pwm = self.pid.update()
+        # limit pwm to max_pwm; account for negative pwm
+        pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
+        if pwm >= 0:
+            self.in1.duty_u16(pwm)
+            self.in2.duty_u16(0)
+        else:
+            self.in1.duty_u16(0)
+            self.in2.duty_u16(-pwm)
         self.in1.duty_u16(0)
         self.in2.duty_u16(0)
+
+    def start_control_loop(self, interval_ms=20):
+        self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_loop)
+
+    
