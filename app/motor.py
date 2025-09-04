@@ -267,10 +267,11 @@ class Motor:
             self.in2.duty_u16(-pwm)
 
     def start_control_loop(self, interval_ms=20):
-        #self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
+        # self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
         self.irq_pin.irq(trigger=Pin.IRQ_RISING, handler=self.control_irq_hard, hard = True)
 
     def stop_control_loop(self, interval_ms=20):
-        self.irq_timer.deinit()
+        # self.irq_timer.deinit()
+        self.irq_pin.irq(trigger=0, handler=None)
 
     
