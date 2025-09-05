@@ -46,8 +46,8 @@ class Car:
 
         self.gearing_ratio = 1
 
-    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
-        self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
+    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin):
+        self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin)
         self.speed_target = 0
         self.motor.start_control_loop()
 

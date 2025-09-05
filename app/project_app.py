@@ -1,5 +1,5 @@
 import time
-from ble_central import BLE_Server
+from app.ble_server import BLE_Server
 from car import Car
 
 _MOTOR_IN1 = 12
