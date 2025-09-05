@@ -35,7 +35,7 @@ _IRQ_SET_SECRET = const(30)
 
 
 
-class BLE_Central:
+class BLE_Server:
     def __init__(self, name="PicoW_Car", controls_callback = None):
         self.led = machine.Pin("LED", machine.Pin.OUT)
         self.last_led_toggle = 0
@@ -76,11 +76,11 @@ class BLE_Central:
 
     def _irq(self, event, data):
         if event == _IRQ_CENTRAL_CONNECT:
-            conn_handle, _, _ = data
+            conn_handle, addr_type, addr = data
             self._connections.add(conn_handle)
             self.connected = True
             self.led.on()
-            print("Connected:", conn_handle)
+            print("Connected:", addr)
 
         elif event == _IRQ_CENTRAL_DISCONNECT:
             conn_handle, _, _ = data

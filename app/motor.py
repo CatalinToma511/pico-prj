@@ -232,7 +232,7 @@ class MotorPID():
 
 
 class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, MOTOR_PWM_FREQ=2000):
+    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=2000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
@@ -240,9 +240,9 @@ class Motor:
         self.max_pwm = int(65535 * 0.95) # limiting according to IBT-4 datasheet
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
-        self.debug_pin = Pin(4, Pin.OUT)
-        self.irq_timer = Timer()
-        self.irq_pin = Pin(5)
+        self.debug_pin = Pin(debug_pin, Pin.OUT)
+        self.irq_timer = Timer(debug_pin)
+        self.irq_pin = Pin(pwm_irq_pin)
         self.irq_pwm = PWM(self.irq_pin, freq=50, duty_u16=10)
         self.pwm = 0
 

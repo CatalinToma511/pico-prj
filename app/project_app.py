@@ -1,34 +1,35 @@
-import asyncio
 import time
-from ble_central import BLE_Central
+from ble_central import BLE_Server
 from car import Car
 
-MOTOR_IN1 = 12
-MOTOR_IN2 = 13
-MOTOR_ENC_A = 17
-MOTOR_ENC_B = 16
-STEERING_PIN = 2
-GEARBOX_SHIFT_PIN = 1
-HORN_PIN = 0
-VOLTAGE_PIN = 26
-MPU_BUS_ID = 0
-MPU_SCL_PIN = 21
-MPU_SDA_PIN = 20
-VL53L0X_BUS_ID = 0
-VL53L0X_SCL_PIN = 21
-VL53L0X_SDA_PIN = 20
+_MOTOR_IN1 = 12
+_MOTOR_IN2 = 13
+_MOTOR_ENC_A = 17
+_MOTOR_ENC_B = 16
+_MOTOR_DEBUG_PIN = 4
+_MOTOR_PWM_IRQ_PIN = 5
+_STEERING_PIN = 2
+_GEARBOX_SHIFT_PIN = 1
+_HORN_PIN = 3
+_VOLTAGE_PIN = 26
+_MPU_BUS_ID = 0
+_MPU_SCL_PIN = 21
+_MPU_SDA_PIN = 20
+_VL53L0X_BUS_ID = 0
+_VL53L0X_SCL_PIN = 21
+_VL53L0X_SDA_PIN = 20
 
 def run():
     try:
         my_car = Car()
-        my_car.config_motor(MOTOR_IN1, MOTOR_IN2, MOTOR_ENC_A, MOTOR_ENC_B)
-        my_car.config_steering(STEERING_PIN)
-        my_car.config_gearbox(GEARBOX_SHIFT_PIN)
-        my_car.config_horn(HORN_PIN)
-        my_car.config_voltage_reader(VOLTAGE_PIN)
-        my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
-        my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
-        ble = BLE_Central("PicoW_BLE", controls_callback=my_car.process_data)
+        my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B, _MOTOR_DEBUG_PIN, _MOTOR_PWM_IRQ_PIN)
+        my_car.config_steering(_STEERING_PIN)
+        my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
+        my_car.config_horn(_HORN_PIN)
+        my_car.config_voltage_reader(_VOLTAGE_PIN)
+        my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
+        my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
+        ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
         ble.advertise()
 
         while True:
@@ -40,29 +41,3 @@ def run():
     except Exception as e:
         print(f'Err runing main loop: {e}')
         my_car.stop_car_activity()
-
-
-
-# async def main_task():
-#     ble = BLE_Central("PicoW_BLE")
-#     my_car = Car()
-#     my_car.config_motor(MOTOR_IN1, MOTOR_IN2, MOTOR_ENC_A, MOTOR_ENC_B)
-#     my_car.config_steering(STEERING_PIN)
-#     my_car.config_gearbox(GEARBOX_SHIFT_PIN)
-#     my_car.config_horn(HORN_PIN)
-#     my_car.config_voltage_reader(VOLTAGE_PIN)
-#     my_car.config_mpu6050(MPU_BUS_ID, MPU_SCL_PIN, MPU_SDA_PIN)
-#     my_car.config_distance_sensor(VL53L0X_BUS_ID, VL53L0X_SCL_PIN, VL53L0X_SDA_PIN)
-#     tasks = [
-#         asyncio.create_task(ble.connection_task()),
-#         asyncio.create_task(ble.no_connection_blink()),
-#         asyncio.create_task(ble.characteristic_listener(ble.controls_characteristic, my_car.process_data)),
-#         asyncio.create_task(ble.send_parameters(ble.parameters_characteristic, my_car.get_parameters_encoded)),
-#         asyncio.create_task(my_car.aquire_sensors_data()),
-#         asyncio.create_task(my_car.motor_control_loop()),
-#         asyncio.create_task(my_car.update()),
-#     ]
-#     await asyncio.gather(*tasks) # type: ignore
-
-# def run():
-#     asyncio.run(main_task())
