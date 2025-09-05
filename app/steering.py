@@ -3,12 +3,12 @@ from servo import Servo
 
 class Steering:
     def __init__(self, steering_servo_pin, center = 91., left = 125., right = 58.):
-        self.steering_servo = Servo(steering_servo_pin)
+        self.servo = Servo(steering_servo_pin)
         self.center = center
         self.left = left
         self.right = right
         self.set_steering_position(0)
-        self.steer_position = 0
+        self.position = 0
 
 
     def set_steering_position(self, new_pos, max_left_pos=-128, max_right_pos=127, center_pos=0):
@@ -24,7 +24,7 @@ class Steering:
             print(f'[Steering]: Invalid position (remote input): {new_pos}')
         # validating
         if self.left <= angle <= self.right or self.right <= angle <= self.left:
-            self.steering_servo.set_angle(angle)
-            self.steer_position = new_pos
+            self.servo.set_angle(angle)
+            self.position = new_pos
         else:
             print(f'[Steering]: Invalid angle (servo output): {angle}')

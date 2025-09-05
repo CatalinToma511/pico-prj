@@ -23,6 +23,7 @@ class Car:
         self.wheel_speed = 0
         self.speed_mmps = 0
         self.steering_target = None
+        self.steering_angle = 0
         self.max_steering_change = 0
         self.max_speed_rps = 0
 
@@ -53,7 +54,7 @@ class Car:
     def config_steering(self, steering_pin, max_steering_change=30):
         self.steering = Steering(steering_pin)
         self.max_steering_change = max_steering_change
-        self.steering_target = self.steering.steer_position
+        self.steering_target = self.steering.position
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
@@ -187,6 +188,7 @@ class Car:
         # for now, no smooth steering
         if self.steering:
             self.steering.set_steering_position(self.steering_target)
+            self.steering_angle = int(self.steering.servo.angle)
 
     def get_parameters_encoded(self):
         data = [self.voltage,
@@ -195,7 +197,7 @@ class Car:
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
-                self.steering_target,
+                self.steering_angle,
                 int(self.aeb_max_safe_speed_rps)
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
