@@ -241,7 +241,7 @@ class Motor:
         self.max_rps = 666 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
         self.debug_pin = Pin(debug_pin, Pin.OUT)
-        self.irq_timer = Timer(debug_pin)
+        self.irq_timer = Timer()
         self.irq_pin = Pin(pwm_irq_pin)
         self.irq_pwm = PWM(self.irq_pin, freq=50, duty_u16=10)
         self.pwm = 0
