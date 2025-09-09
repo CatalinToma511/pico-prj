@@ -5,18 +5,31 @@ import time
 import os
 import utils
 import machine
+import ubinascii
 from network_manager import NetworkManager
 
 
 class updateManager:
     def __init__(self):
         self.wlan = network.WLAN(network.STA_IF)
+        
+        # Disable AP mode in case it’s active
+        ap = network.WLAN(network.AP_IF)
+        ap.active(False)
+
+        self.wlan.active(False)
+        time.sleep(1)
         self.wlan.active(True)
-        # self.wlan.config(pm=network.WLAN.PM_NONE)  # disable power management
-        time.sleep(1)  # wait for WLAN to initialize
+        time.sleep(1)
+
         self.config = utils.load_json_from_file('projectconfig.json')
         self.project_files = utils.load_json_from_file('projectfiles.json')
         self.headers = {'User-Agent': 'PiPicoW'}
+        token = '' # NOT TO WRITTEN HERE
+        self.headers = {
+            "Authorization": "token " + token,
+            "User-Agent": "pico-client"
+        }
         self.led = machine.Pin("LED", machine.Pin.OUT)
         self.nm = NetworkManager('networks')
         
@@ -74,7 +87,7 @@ class updateManager:
 
 
     def get_last_repo_update_time(self, tries = 3):
-        url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}&per_page=1'
+        url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/commits?path={self.config["path"]}&per_page=1'.replace(" ", "%20")
         for i in range(0, tries):
             try:
                 response = urequests.get(url, headers=self.headers)
@@ -89,7 +102,7 @@ class updateManager:
 
     def get_repo_tree(self):
         try:
-            url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/git/trees/{self.config["branch"]}:{self.config["path"]}?recursive=1'
+            url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/git/trees/{self.config["branch"]}:{self.config["path"]}?recursive=1'.replace(" ", "%20")
             response = urequests.get(url, headers=self.headers)
             if(response.status_code == 200):
                 data = ujson.loads(response.text)
@@ -121,11 +134,16 @@ class updateManager:
             os.mkdir(directory)
 
             for file in files:
-                download_url = f'https://raw.githubusercontent.com/{self.config["owner"]}/{self.config["repo"]}/{self.config["branch"]}/{self.config["path"]}/{file["path"]}'.replace(" ", "%20")
+                # download_url = f'https://raw.githubusercontent.com/{self.config["owner"]}/{self.config["repo"]}/{self.config["branch"]}/{self.config["path"]}/{file["path"]}'.replace(" ", "%20")
+                download_url = f'https://api.github.com/repos/{self.config["owner"]}/{self.config["repo"]}/contents/{self.config["path"]}/{file["path"]}?ref={self.config["branch"]}'.replace(" ", "%20")
                 print(f'Getting {download_url} ...')
                 response = urequests.get(download_url, headers=self.headers)
                 if(response.status_code == 200):
-                    utils.write_content_to_file(f'{directory}/{file["path"]}', response.text)
+                    data = ujson.loads(response.text)
+                    content_base64 = data['content']
+                    content_bytes = ubinascii.a2b_base64(content_base64)
+                    content_string = content_bytes.decode('utf-8')
+                    utils.write_content_to_file(f'{directory}/{file["path"]}', content_string)
                     print(f'{file["path"]} has been downloaded')
                 else:
                     raise Exception(f'failed to download {download_url}')

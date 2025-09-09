@@ -4,6 +4,7 @@ import time
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         # speed and time parameters
+        self.target_rps = 0
         self.target_cpi = 0
         self.last_count = 0
         self.last_rps = 0
@@ -24,6 +25,7 @@ class MotorPID():
         self.u0 = 3000
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1200 # rot/s^2
+        self.filtered_target_rps = 0
         self.filtered_target_cpi = 0 # filtered speed
         # alpha coef for filters
         self.speed_filter_alpha = 1
@@ -78,6 +80,7 @@ class MotorPID():
         if abs(rps) < self.min_speed:
             rps = 0
         self.target_cpi = int(rps) *  self.ppr / self.dt
+        self.target_rps = rps
 
     def update(self):
         # 1. calculate actual elapsed time since last update
@@ -101,16 +104,16 @@ class MotorPID():
         # 4. filtering speed to avoid harsh transitions
         # using asymmetrical transitions, one value for acceleration and one for braking
         target_ramp = 0
-        if self.filtered_target_cpi * self.target_cpi < 0: # if changing direction, break first
+        if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
             target_ramp = self.max_decel
         else:
             # if same direction, check if it need acceleration or decceleration
-            target_ramp = self.max_accel if abs(self.target_cpi) > abs(self.filtered_target_cpi) else self.max_decel
+            target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
         target_ramp *= real_dt
-        self.filtered_target_cpi += max(-target_ramp, min(target_ramp, self.target_cpi - self.filtered_target_cpi))
+        self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
         # 5. calculate parameters of PI control
-        err = self.filtered_target_cpi - current_rps
+        err = self.filtered_target_rps - current_rps
         # since motor cannot determine the exact speed, we use a deadband of 1 count, half above and half below
         if abs(err) < self.deadband/2:
             err = 0
@@ -125,14 +128,14 @@ class MotorPID():
         # => pwm_percent = (rps + 10) / 7.1 = pwm / 65535 * 100 =>
         # => pwm = (pwm_percent * 65535 / 100) = (rps + 10) / 7.1 * 65535 / 100
         # keep the abs(result) between u0 (min pwm at which motor rotates) and max pwm
-        pwm_ff = (self.filtered_target_cpi + 10) / 7.1 * 65535 / 100 * (self.kff/100)
+        pwm_ff = (self.filtered_target_rps + 10) / 7.1 * 65535 / 100 * (self.kff/100)
         pwm_ff = max(-65535, min(pwm_ff, 65535))
         if abs(pwm_ff) < self.u0:
             pwm_ff = 0
 
         # 7. calculate pwm based on feed-forward and PI control
         # if desired speed is below min_countable_speed, set pwm to 0
-        if abs(self.filtered_target_cpi) >= self.min_countable_speed:
+        if abs(self.filtered_target_rps) >= self.min_countable_speed:
             pwm = pwm_ff + P + self.I
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             pwm = int(max(-65535, min(pwm, 65535)))
