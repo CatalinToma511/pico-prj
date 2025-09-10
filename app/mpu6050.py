@@ -81,8 +81,10 @@ class MPU6050:
     def read_position(self):
         try:
             self.read_accelerometer()
-            roll = math.atan2(self.accel_y, self.accel_x) * (180.0 / math.pi)
-            pitch = math.atan2(-self.accel_z, math.sqrt(self.accel_y**2 + self.accel_x**2)) * (180.0 / math.pi)
+            # roll = math.atan2(self.accel_y, self.accel_x) * (180.0 / math.pi)
+            # pitch = math.atan2(-self.accel_z, math.sqrt(self.accel_y**2 + self.accel_x**2)) * (180.0 / math.pi)
+            roll = math.atan2(self.accel_y, self.accel_z) * (180.0 / math.pi)
+            pitch = math.atan2(-self.accel_x, math.sqrt(self.accel_y**2 + self.accel_z**2)) * (180.0 / math.pi)
             return int(roll), int(pitch)
         except Exception as e:
             print(f"Error reading position: {e}")
