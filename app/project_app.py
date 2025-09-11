@@ -19,6 +19,9 @@ _VL53L0X_BUS_ID = 0
 _VL53L0X_SCL_PIN = 21
 _VL53L0X_SDA_PIN = 20
 
+MAIN_PERIOD_MS = 25
+overtime_cnt = 0
+
 def run():
     try:
         my_car = Car()
@@ -33,11 +36,18 @@ def run():
         ble.advertise()
 
         while True:
+            time1 = time.ticks_ms()
             ble.blink_task()
             ble.send_parameters(my_car.get_parameters_encoded)
             my_car.aquire_sensors_data()
             my_car.update()
-            time.sleep_ms(20)
+            time2 = time.ticks_ms()
+            loop_exec_time = time.ticks_diff(time2, time1)
+            if loop_exec_time < MAIN_PERIOD_MS:
+                time.sleep_ms(MAIN_PERIOD_MS - loop_exec_time)
+            else:
+                overtime_cnt += 1
+
     except Exception as e:
         print(f'Err runing main loop: {e}')
         my_car.stop_car_activity()
