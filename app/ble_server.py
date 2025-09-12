@@ -2,6 +2,8 @@ import bluetooth
 import machine
 import time
 from micropython import const
+import utils
+
 _IRQ_CENTRAL_CONNECT = const(1)
 _IRQ_CENTRAL_DISCONNECT = const(2)
 _IRQ_GATTS_WRITE = const(3)
@@ -48,11 +50,12 @@ class BLE_Server:
         CONST_CONTROLS_SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0"
         CONST_CONTROLS_CHARACTERISTIC_UUID = "12345678-1234-5678-1234-56789abcdef1"
         CONST_PARAMTERES_CHARACTERISTIC_UUID = "72de3993-9b26-4ec8-89ac-fb17424769f3"
-        CONST_CHARACTERISTIC_USER_DESCRIPTION = 0x2901
+        CONST_VERSION_CHARACTERISTIC_UUID = "ae9328d3-fbad-48a5-9c34-eba3d6b19b76"
 
         self.CONTROLS_SERVICE_UUID = bluetooth.UUID(CONST_CONTROLS_SERVICE_UUID)
         self.CONTROLS_CHARACTERISTIC_UUID = bluetooth.UUID(CONST_CONTROLS_CHARACTERISTIC_UUID)
         self.PARAMETERS_CHARACTERISTIC_UUID = bluetooth.UUID(CONST_PARAMTERES_CHARACTERISTIC_UUID)
+        self.VERSIION_CHARACTERISTIC_UUID = bluetooth.UUID(CONST_PARAMTERES_CHARACTERISTIC_UUID)
 
         self._ble = bluetooth.BLE()
         self._ble.active(True)
@@ -65,11 +68,23 @@ class BLE_Server:
                  bluetooth.FLAG_READ | bluetooth.FLAG_WRITE | bluetooth.FLAG_NOTIFY),
                 (self.PARAMETERS_CHARACTERISTIC_UUID,
                  bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY),
+                (self.VERSIION_CHARACTERISTIC_UUID,
+                 bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY)
             ),
         )
 
         ((self._controls_handle,
-          self._parameters_handle),) = self._ble.gatts_register_services((controls_service,))
+          self._parameters_handle,
+          self._version_handle),) = self._ble.gatts_register_services((controls_service,))
+        
+        version = "N/A"
+        try:
+            project_files = utils.load_json_from_file('projectfiles.json')
+            version = project_files["last_modified"]
+        except Exception as e:
+            print("Error loading software version to ble")
+        
+        self._ble.gatts_write(self._version_handle, version.encode('utf-8'))
         
         self._connections = set()
         

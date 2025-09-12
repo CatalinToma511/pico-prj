@@ -46,6 +46,8 @@ class Car:
 
         self.gearing_ratio = 1
 
+        self.horn_state = 0
+
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin)
         self.speed_target = 0
@@ -106,12 +108,8 @@ class Car:
 
             # horn
             if self.horn:
-                horn_button = data[5]
-                if horn_button:
-                    self.horn.turn_on()
-                else:
-                    self.horn.turn_off()
-
+                self.horn_state = data[5]
+                
             # limit
             if self.motor:
                 speed_limit = data[6]
@@ -139,11 +137,8 @@ class Car:
                 # if battery level under 6.5V
                 # take account for situations when motor draws battery tension down
 
-                # !seems to cause issues, will check later a better method
-                # if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
-                #     self.stop_car_activity()
-                #     print("Battery voltage too low, going to sleep...")
-                #     machine.deepsleep()
+                if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
+                    self.horn_state = 1
 
             if self.mpu6050:
                 self.roll, self.pitch = self.mpu6050.read_position()
@@ -189,6 +184,12 @@ class Car:
         if self.steering:
             self.steering.set_steering_position(self.steering_target)
             self.steering_angle = int(self.steering.servo.angle)
+
+        if self.horn:
+            if self.horn_state:
+                self.horn.turn_on()
+            else:
+                self.horn.turn_off()
 
     def get_parameters_encoded(self):
         data = [self.voltage,
