@@ -23,8 +23,8 @@ class MotorPID():
         # motor parameters
         self.min_speed = 20
         self.u0 = 3000
-        self.max_accel = 600 # rot/s^2
-        self.max_decel = 1200 # rot/s^2
+        self.max_accel = 900 # rot/s^2
+        self.max_decel = 1800 # rot/s^2
         self.filtered_target_rps = 0
         self.filtered_target_cpi = 0 # filtered speed
         # alpha coef for filters

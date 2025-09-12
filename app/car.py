@@ -172,6 +172,8 @@ class Car:
             # speed control and limit
             speed_target_rps = self.motor.convert_speed_percent_to_rps(self.speed_target)
             if self.aeb:
+                if speed_target_rps > self.aeb_max_safe_speed_rps:
+                    self.horn_state = True
                 self.aeb_max_safe_speed()
                 speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
             self.motor.set_speed_rps(speed_target_rps)
