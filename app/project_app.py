@@ -19,7 +19,10 @@ _VL53L0X_BUS_ID = 0
 _VL53L0X_SCL_PIN = 21
 _VL53L0X_SDA_PIN = 20
 
-MAIN_PERIOD_MS = 20
+MAIN_PERIOD_MS = 10
+TELEMETRY_INTERVAL_MS = 100
+ACQUIRE_SENSOR_INTERVAL_MS = 25
+CAR_UPDATE_INTERVAL_MS = 10
 overtime_cnt = 0
 
 def run():
@@ -35,14 +38,28 @@ def run():
         ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
         ble.advertise()
 
+        last_telemetry_event_time = 0
+        last_acquire_sensor_event_time = 0
+        last_car_update_event_time = 0
         while True:
-            time1 = time.ticks_ms()
+            time_now = time.ticks_ms()
             ble.blink_task()
-            # ble.send_parameters(my_car.get_parameters_encoded)
-            my_car.aquire_sensors_data()
-            my_car.update()
-            time2 = time.ticks_ms()
-            loop_exec_time = time.ticks_diff(time2, time1)
+
+            if time.ticks_diff(time_now, last_telemetry_event_time) > TELEMETRY_INTERVAL_MS:
+                ble.send_parameters(my_car.get_parameters_encoded)
+                last_telemetry_event_time = time_now
+            
+            if time.ticks_diff(time_now, last_acquire_sensor_event_time) > ACQUIRE_SENSOR_INTERVAL_MS:
+                my_car.acquire_sensors_data()
+                last_acquire_sensor_event_time = time_now
+            
+            if time.ticks_diff(time_now, last_car_update_event_time) > CAR_UPDATE_INTERVAL_MS:
+                my_car.update()
+                last_car_update_event_time = time_now
+
+            loop_end_time = time.ticks_ms()
+            loop_exec_time = time.ticks_diff(loop_end_time, time_now)
+            
             if loop_exec_time < MAIN_PERIOD_MS:
                 time.sleep_ms(MAIN_PERIOD_MS - loop_exec_time)
             else:

@@ -17,6 +17,6 @@ class DistanceSensor:
     def read(self, low_pass_filter = True):
         distance = self.vl53l0x.read() + self.distance_offset #type: ignore
         if low_pass_filter is True:
-            distance = distance * 0.7 + self.old_distance * 0.3
+            distance = distance * 0.4 + self.old_distance * 0.6
         self.old_distance = distance
         return distance

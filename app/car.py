@@ -128,7 +128,7 @@ class Car:
         except Exception as e:
             print(f"Error processing data: {e}")
 
-    def aquire_sensors_data(self):
+    def acquire_sensors_data(self):
         try:
             if self.voltage_reader:
                 # read voltage in decavolts to avoid using float
