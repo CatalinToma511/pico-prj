@@ -65,7 +65,7 @@ class BLE_Server:
             self.CONTROLS_SERVICE_UUID,
             (
                 (self.CONTROLS_CHARACTERISTIC_UUID,
-                 bluetooth.FLAG_READ | bluetooth.FLAG_WRITE | bluetooth.FLAG_NOTIFY),
+                 bluetooth.FLAG_READ | bluetooth.FLAG_WRITE | bluetooth.FLAG_NOTIFY | bluetooth.FLAG_WRITE_NO_RESPONSE),
                 (self.PARAMETERS_CHARACTERISTIC_UUID,
                  bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY),
                 (self.VERSION_CHARACTERISTIC_UUID,
