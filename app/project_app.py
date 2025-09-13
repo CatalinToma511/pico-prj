@@ -23,7 +23,7 @@ MAIN_PERIOD_MS = 10
 TELEMETRY_INTERVAL_MS = 100
 ACQUIRE_SENSOR_INTERVAL_MS = 25
 CAR_UPDATE_INTERVAL_MS = 10
-overtime_cnt = 0
+
 
 def run():
     try:
@@ -41,6 +41,7 @@ def run():
         last_telemetry_event_time = 0
         last_acquire_sensor_event_time = 0
         last_car_update_event_time = 0
+        overtime_cnt = 0
         while True:
             time_now = time.ticks_ms()
             ble.blink_task()
@@ -56,7 +57,7 @@ def run():
             if time.ticks_diff(time_now, last_car_update_event_time) > CAR_UPDATE_INTERVAL_MS:
                 my_car.update()
                 last_car_update_event_time = time_now
-                
+
             loop_end_time = time.ticks_ms()
             loop_exec_time = time.ticks_diff(loop_end_time, time_now)
             
@@ -64,6 +65,7 @@ def run():
                 time.sleep_ms(MAIN_PERIOD_MS - loop_exec_time)
             else:
                 overtime_cnt += 1
+                print(f'overtime reached: {loop_end_time}')
 
     except Exception as e:
         print(f'Err runing main loop: {e}')
