@@ -39,7 +39,7 @@ class MotorPID():
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
         # minimum values
-        min_pulses_per_iteration = 3
+        min_pulses_per_iteration = 1
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
         # preallocating variables for hard irq
