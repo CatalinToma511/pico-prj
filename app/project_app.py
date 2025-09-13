@@ -50,9 +50,9 @@ def run():
                 ble.send_parameters(my_car.get_parameters_encoded)
                 last_telemetry_event_time = time_now
 
-            # if time.ticks_diff(time_now, last_acquire_sensor_event_time) > ACQUIRE_SENSOR_INTERVAL_MS:
-            #     my_car.acquire_sensors_data()
-            #     last_acquire_sensor_event_time = time_now
+            if time.ticks_diff(time_now, last_acquire_sensor_event_time) > ACQUIRE_SENSOR_INTERVAL_MS:
+                my_car.acquire_sensors_data()
+                last_acquire_sensor_event_time = time_now
 
             if time.ticks_diff(time_now, last_car_update_event_time) > CAR_UPDATE_INTERVAL_MS:
                 my_car.update()
