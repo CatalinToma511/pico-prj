@@ -38,7 +38,7 @@ def run():
         while True:
             time1 = time.ticks_ms()
             ble.blink_task()
-            ble.send_parameters(my_car.get_parameters_encoded)
+            # ble.send_parameters(my_car.get_parameters_encoded)
             my_car.aquire_sensors_data()
             my_car.update()
             time2 = time.ticks_ms()
