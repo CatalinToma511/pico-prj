@@ -65,7 +65,7 @@ def run():
                 time.sleep_ms(MAIN_PERIOD_MS - loop_exec_time)
             else:
                 overtime_cnt += 1
-                print(f'overtime reached: {loop_end_time}')
+                print(f'overtime reached: {loop_exec_time}')
 
     except Exception as e:
         print(f'Err runing main loop: {e}')
