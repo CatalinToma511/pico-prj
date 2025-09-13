@@ -11,7 +11,7 @@ class MotorPID():
         self.last_time = 0
         self.last_pwm = 0
         # default values for ff+PI
-        self.default_kp = 130
+        self.default_kp = 150
         self.default_ki = 600
         self.default_kff = 85
         # init values for paramters
@@ -23,8 +23,8 @@ class MotorPID():
         # motor parameters
         self.min_speed = 20
         self.u0 = 3000
-        self.max_accel = 900 # rot/s^2
-        self.max_decel = 1800 # rot/s^2
+        self.max_accel = 600 # rot/s^2
+        self.max_decel = 1500 # rot/s^2
         self.filtered_target_rps = 0
         self.filtered_target_cpi = 0 # filtered speed
         # alpha coef for filters
