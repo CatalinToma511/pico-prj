@@ -24,7 +24,7 @@ class Car:
         self.speed_mmps = 0
         self.steering_target = 0
         self.steering_servo_angle = 0
-        self.steering_alpha = 0.5
+        self.steering_alpha = 0.4
         self.max_steering_change = 0
         self.max_speed_rps = 0
 

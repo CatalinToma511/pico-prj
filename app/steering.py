@@ -3,7 +3,7 @@ from servo import Servo
 
 class Steering:
     def __init__(self, steering_servo_pin, center = 90., left = 125., right = 55.):
-        self.servo = Servo(steering_servo_pin)
+        self.servo = Servo(steering_servo_pin, frequency=200)
         self.center = center
         self.left = left
         self.right = right
