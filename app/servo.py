@@ -15,6 +15,7 @@ class Servo:
     
     def set_angle(self, angle):
         if 0 <= angle <= 180:
+            angle = int(angle)
             pulse_width_ms = int(self.min_pulse_ms + (angle / 180) * (self.max_pulse_ms - self.min_pulse_ms))
             self.servo_pin.duty_ns(pulse_width_ms * 1_000)
             self.ms = pulse_width_ms

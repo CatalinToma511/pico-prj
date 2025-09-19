@@ -182,8 +182,8 @@ class Car:
             self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
             self.max_speed_rps = int(self.motor.get_max_speed_rps())
         # for now, no smooth steering
-        if self.steering and self.steering_target:
-            new_steering_pos = self.steering_target * self.steering_alpha + self.steering.position * (1 - self.steering_alpha)
+        if self.steering:
+            new_steering_pos = int(self.steering_target * self.steering_alpha + self.steering.position * (1 - self.steering_alpha))
             self.steering.set_steering_position(new_steering_pos)
             self.steering_servo_angle = int(self.steering.servo.angle)
 
