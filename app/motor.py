@@ -18,11 +18,11 @@ class MotorPID():
         self.kp = 0
         self.ki = 0
         self.kff = 0
-        self.dt = 0.020 # seconds
+        self.dt = 0.050 # seconds
         self.I = 0
         # motor parameters
         self.min_speed = 20
-        self.u0 = 3000
+        self.u0 = 2500
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1500 # rot/s^2
         self.filtered_target_rps = 0
@@ -42,23 +42,6 @@ class MotorPID():
         min_pulses_per_iteration = 1
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
-        # preallocating variables for hard irq
-        self.current_count = 0
-        self.diff_count = 0
-        self.dt_ms = 20
-        self.current_rps = 0
-        self.err = 0
-        self.err_i = 0
-        self.P = 0
-        self.pwm = 0
-        self.pwm_ff = 0
-        self.target_cpi_ramp = 0
-        self.max_accel_cpi = 360
-        self.max_decel_cpi = 720
-        self.kp2_default = 78
-        self.ki2_default = 360
-        self.kp2 = 0
-        self.ki2 = 0
         # logging, may be useful for later
         # self.total_time = 0
         # self.log_data = []
@@ -147,53 +130,6 @@ class MotorPID():
         # self.total_time += self.dt
         # self.log_data.append((self.total_time, self.target_rps, self.filtered_target_rps, raw_rps, current_rps, (pwm/65535*100), err, err_i))
         return pwm
-    
-    def update_hard_irq(self):
-        self.current_count = self.total_pulse_count
-        self.diff_count = self.current_count - self.last_count
-        self.last_count = self.current_count
-
-        self.target_cpi_ramp = 0
-        if self.filtered_target_cpi * self.target_cpi < 0: # if changing direction, break first
-            self.target_cpi_ramp = self.max_decel_cpi
-        else:
-            # if same direction, check if it need acceleration or decceleration
-            self.target_cpi_ramp = self.max_accel_cpi if abs(self.target_cpi) > abs(self.filtered_target_cpi) else self.max_decel_cpi
-
-        self.filtered_target_cpi += max(-self.target_cpi_ramp, min(self.target_cpi_ramp, self.target_cpi - self.filtered_target_cpi))
-
-        # P = rps_dif * kp                 convertit in cps = rps_dif * ppr
-        # P = (cps_dif * ppr) * kp         convertit in cpi = cps / timp_ms
-        # P = (cpi_dif / dt) * ppr * kp    dt = 20ms
-        # P = cpi_dif * kp * ppr / dt
-        # kp2 = kp * ppr / dt              kp2 = 78
-        # P = cpi_dif * kp2
-        #
-        # err_i = rps_dif * dt                 dt in ms
-        # err_i = (cps_dif * ppr) * dt
-        # err_i = (cpi_dif / dt * ppr) * dt
-        # I gain = erri * ki
-        # I gain = (cpi_dif / dt * ppr) * dt * ki
-        # I gain = (cpi_dif * dt) * ki * ppr / dt
-        # ki2 = ki * ppr / dt
-        self.err = self.filtered_target_cpi - self.diff_count
-        self.err_i = self.err * self.dt_ms
-        self.P = self.err * self.kp2
-        self.I += self.err_i * self.ki2
-        self.I = int(max(-65535, min(self.I, 65535)))
-
-        # rps = cps * ppr
-        # rps = cpi / dt * ppr
-        # cpi = rps / dt * ppr
-        self.pwm_ff = (self.filtered_target_cpi + 10) * self.kff * 553 // 1000
-        self.pwm_ff = max(-65535, min(self.pwm_ff, 65535))
-        if abs(self.pwm_ff) < self.u0:
-            self.pwm_ff = 0
-
-        self.pwm = self.pwm_ff + self.P + self.I
-        self.pwm = int(max(-65535, min(self.pwm, 65535)))
-
-        return self.pwm
 
     def set_mode(self, mode):
         # mode 0: using Feed Forward
@@ -201,32 +137,24 @@ class MotorPID():
             self.kff = self.default_kff
             self.kp = 0
             self.ki = 0
-            self.kp2 = 0
-            self.ki2 = 0
             self.I = 0
         # mode 1: using Feed Forward + P
         elif mode == 1:
             self.kff = self.default_kff
             self.kp = self.default_kp
             self.ki = 0
-            self.kp2 = self.kp2_default
-            self.ki2 = 0
             self.I = 0
         # mode 2: using Feed Forward + P + I
         elif mode == 2:
             self.kff = self.default_kff
             self.kp = self.default_kp
             self.ki = self.default_ki
-            self.kp2 = self.kp2_default
-            self.ki2 = self.ki2_default
             self.I = 0
         # mode 3: using P + I:
         elif mode == 3:
             self.kff = 0
             self.kp = self.default_kp
             self.ki = self.default_ki
-            self.kp2 = self.kp2_default
-            self.ki2 = self.ki2_default
             self.I = 0
         else:
             print(f"[MotorPID] Invalid mode: {mode}")
@@ -245,8 +173,6 @@ class Motor:
         self.speed_limit_factor = 1
         self.debug_pin = Pin(debug_pin, Pin.OUT)
         self.irq_timer = Timer()
-        self.irq_pin = Pin(pwm_irq_pin)
-        self.irq_pwm = PWM(self.irq_pin, freq=50, duty_u16=10)
         self.pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
@@ -290,27 +216,10 @@ class Motor:
             self.in2.duty_u16(-pwm)
         self.debug_pin.off()
 
-    def control_irq_hard(self, pin):
-        try:
-            self.debug_pin.on()
-            self.pwm = self.pid.update_hard_irq()
-            self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
-            if self.pwm >= 0:
-                self.in1.duty_u16(self.pwm)
-                self.in2.duty_u16(0)
-            else:
-                self.in1.duty_u16(0)
-                self.in2.duty_u16(-self.pwm)
-            self.debug_pin.off()
-        except Exception as e:
-            print(f"IRQ Exception: {e}")
-
     def start_control_loop(self, interval_ms=20):
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
-        # self.irq_pin.irq(trigger=Pin.IRQ_RISING, handler=self.control_irq_hard, hard = True)
 
     def stop_control_loop(self, interval_ms=20):
         self.irq_timer.deinit()
-        # self.irq_pin.irq(trigger=0, handler=None)
 
     
