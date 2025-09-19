@@ -22,8 +22,9 @@ class Car:
         self.motor_rps = 0
         self.wheel_speed = 0
         self.speed_mmps = 0
-        self.steering_target = None
-        self.steering_angle = 0
+        self.steering_target = 0
+        self.steering_servo_angle = 0
+        self.steering_alpha = 0.5
         self.max_steering_change = 0
         self.max_speed_rps = 0
 
@@ -53,10 +54,8 @@ class Car:
         self.speed_target = 0
         self.motor.start_control_loop()
 
-    def config_steering(self, steering_pin, max_steering_change=30):
+    def config_steering(self, steering_pin):
         self.steering = Steering(steering_pin)
-        self.max_steering_change = max_steering_change
-        self.steering_target = self.steering.position
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
@@ -183,9 +182,10 @@ class Car:
             self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
             self.max_speed_rps = int(self.motor.get_max_speed_rps())
         # for now, no smooth steering
-        if self.steering:
-            self.steering.set_steering_position(self.steering_target)
-            self.steering_angle = int(self.steering.servo.angle)
+        if self.steering and self.steering_target:
+            new_steering_pos = self.steering_target * self.steering_alpha + self.steering.position * (1 - self.steering_alpha)
+            self.steering.set_steering_position(new_steering_pos)
+            self.steering_servo_angle = int(self.steering.servo.angle)
 
         if self.horn:
             if self.horn_state:
@@ -200,7 +200,7 @@ class Car:
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
-                self.steering_angle,
+                self.steering_servo_angle,
                 int(self.aeb_max_safe_speed_rps)
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
