@@ -5,7 +5,6 @@ class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         # speed and time parameters
         self.target_rps = 0
-        self.target_cpi = 0
         self.last_count = 0
         self.last_rps = 0
         self.last_time = 0
@@ -60,9 +59,8 @@ class MotorPID():
         self.direction = 1 if self.pulse_pin_a.value() != self.pulse_pin_b.value() else -1
 
     def set_target_rps(self, rps):
-        if abs(rps) < self.min_speed:
+        if abs(rps) < self.min_countable_speed:
             rps = 0
-        self.target_cpi = int(rps) *  self.ppr / self.dt
         self.target_rps = rps
 
     def update(self):
