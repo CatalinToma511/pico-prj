@@ -31,7 +31,6 @@ class MotorPID():
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
         self.total_pulse_count = 0
-        self.direction = 1
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
@@ -49,14 +48,17 @@ class MotorPID():
         self.mode = 0
         self.set_mode(self.mode)
 
-        
     def pin_a_irq(self, pin):
-        self.total_pulse_count += 1
-        self.direction = 1 if self.pulse_pin_a.value() == self.pulse_pin_b.value() else -1
+        if self.pulse_pin_a.value() == self.pulse_pin_b.value():
+            self.total_pulse_count += 1
+        else:
+            self.total_pulse_count += -1
 
     def pin_b_irq(self, pin):
-        self.total_pulse_count += 1
-        self.direction = 1 if self.pulse_pin_a.value() != self.pulse_pin_b.value() else -1
+        if self.pulse_pin_a.value() != self.pulse_pin_b.value():
+            self.total_pulse_count += 1
+        else:
+            self.total_pulse_count -= 1
 
     def set_target_rps(self, rps):
         if abs(rps) < self.min_countable_speed:
@@ -78,7 +80,7 @@ class MotorPID():
         self.last_count = current_count
 
         # 3. calculate current speed in rps
-        raw_rps = self.direction * (1 / real_dt) * elapsed_counts / self.ppr
+        raw_rps = elapsed_counts / self.ppr * (1 / real_dt)
         current_rps = raw_rps * self.speed_filter_alpha + self.last_rps * (1 - self.speed_filter_alpha)
         self.last_rps = current_rps
 
