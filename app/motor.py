@@ -163,7 +163,7 @@ class MotorPID():
 
 
 class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=250):
+    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=900):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
