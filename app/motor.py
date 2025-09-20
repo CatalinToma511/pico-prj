@@ -153,8 +153,8 @@ class MotorPID():
         # mode 3: using P + I:
         elif mode == 3:
             self.kff = 0
-            self.kp = self.default_kp
-            self.ki = self.default_ki
+            self.kp = 250
+            self.ki = 1250
             self.I = 0
         else:
             print(f"[MotorPID] Invalid mode: {mode}")
