@@ -40,7 +40,7 @@ class Car:
         self.aeb = False
         self.aeb_safety_distance_mm = 500
         self.aeb_max_safe_speed_mmps = 500
-        self.aeb_max_safe_speed_rps = 666
+        self.aeb_max_safe_speed_rps = 1000
         self.drive_train_backlash_mm = 30
 
         self.wheel_diameter_mm = 82

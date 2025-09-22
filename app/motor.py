@@ -21,7 +21,7 @@ class MotorPID():
         self.I = 0
         # motor parameters
         self.min_speed = 20
-        self.min_pwm = 2500
+        self.min_pwm = 3000
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1500 # rot/s^2
         self.filtered_target_rps = 0
@@ -115,7 +115,8 @@ class MotorPID():
         # 7. calculate pwm based on feed-forward and PI control
         # if desired speed is below min_countable_speed, set pwm to 0
         if abs(self.filtered_target_rps) >= self.min_countable_speed:
-            pwm = pwm_ff + P + self.I + self.min_pwm
+            pwm0 = self.min_pwm if self.filtered_target_rps >= 0 else -self.min_pwm
+            pwm = pwm0 + pwm_ff + P + self.I
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             pwm = int(max(-65535, min(pwm, 65535)))
         else:
@@ -142,7 +143,7 @@ class MotorPID():
             self.I = 0
         # mode 2: using Feed Forward + P + I
         elif mode == 2:
-            self.kff = 0.85
+            self.kff = 85
             self.kp = 250
             self.ki = 650
             self.I = 0
@@ -164,7 +165,7 @@ class Motor:
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
-        self.max_pwm = int(65535 * 0.95) # limiting according to IBT-4 datasheet
+        self.max_pwm = int(65535 * 0.98) # limiting according to IBT-4 datasheet
         self.max_rps = 800 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
         self.debug_pin = Pin(debug_pin, Pin.OUT)
