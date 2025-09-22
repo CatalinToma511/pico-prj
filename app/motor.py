@@ -6,7 +6,7 @@ class MotorPID():
         # speed and time parameters
         self.target_rps = 0
         self.last_count = 0
-        self.last_rps = 0
+        self.current_rps = 0
         self.last_time = 0
         self.last_pwm = 0
         # default values for ff+PI
@@ -78,7 +78,7 @@ class MotorPID():
         self.last_count = current_count
 
         # 3. calculate current speed in rps
-        current_rps = elapsed_counts / self.ppr * (1 / real_dt)
+        self.current_rps = elapsed_counts / self.ppr * (1 / real_dt)
 
         # 4. filtering speed to avoid harsh transitions
         # using asymmetrical transitions, one value for acceleration and one for braking
@@ -92,7 +92,7 @@ class MotorPID():
         self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
         # 5. calculate parameters of PI control
-        err = self.filtered_target_rps - current_rps
+        err = self.filtered_target_rps - self.current_rps
         # since motor cannot determine the exact speed, we use a deadband of 1 count, half above and half below
         if abs(err) < self.deadband/2:
             err = 0
@@ -194,7 +194,7 @@ class Motor:
         self.pid.set_target_rps(int(set_point_rps))
 
     def get_speed_rps(self):
-        return self.pid.last_rps
+        return self.pid.current_rps
 
     def get_max_speed_rps(self):
         return self.max_rps * self.speed_limit_factor
