@@ -105,8 +105,6 @@ class MotorPID():
         # keep the abs(result) between u0 (min pwm at which motor rotates) and max pwm
         pwm_ff = (self.filtered_target_rps + 10) / 7.1 * 65535 / 100 * (self.kff/100)
         pwm_ff = max(-65535, min(pwm_ff, 65535))
-        if abs(pwm_ff) < self.min_pwm:
-            pwm_ff = 0
 
         # 7. calculate pwm based on feed-forward and PI control
         # if desired speed is below min_countable_speed, set pwm to 0
