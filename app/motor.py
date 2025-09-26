@@ -9,15 +9,11 @@ class MotorPID():
         self.current_rps = 0
         self.last_time = 0
         self.last_pwm = 0
-        # default values for ff+PI
-        self.default_kp = 150
-        self.default_ki = 600
-        self.default_kff = 85
         # init values for paramters
         self.kp = 0
         self.ki = 0
         self.kff = 0
-        self.dt = 0.050 # seconds
+        self.dt = 0.100 # seconds
         self.I = 0
         # motor parameters
         self.min_speed = 20
@@ -137,7 +133,7 @@ class MotorPID():
             self.I = 0
         # mode 1: using Feed Forward + P
         elif mode == 1:
-            self.kff = self.default_kff
+            self.kff = 85
             self.kp = 250
             self.ki = 0
             self.I = 0
@@ -166,7 +162,7 @@ class Motor:
         self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
         self.max_pwm = int(65535 * 0.98) # limiting according to IBT-4 datasheet
-        self.max_rps = 800 # max rps of the motor, 40000 rpm / 60
+        self.max_rps = 600 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
         self.debug_pin = Pin(debug_pin, Pin.OUT)
         self.irq_timer = Timer()
@@ -213,10 +209,10 @@ class Motor:
             self.in2.duty_u16(-pwm)
         self.debug_pin.off()
 
-    def start_control_loop(self, interval_ms=20):
+    def start_control_loop(self, interval_ms=10):
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
-    def stop_control_loop(self, interval_ms=20):
+    def stop_control_loop(self):
         self.irq_timer.deinit()
 
     
