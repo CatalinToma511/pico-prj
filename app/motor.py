@@ -127,7 +127,7 @@ class MotorPID():
     def set_mode(self, mode):
         # mode 0: using Feed Forward
         if mode == 0:
-            self.kff = 1
+            self.kff = 100
             self.kp = 0
             self.ki = 0
             self.I = 0
