@@ -4,7 +4,7 @@ import time
 import micropython
 
 micropython.alloc_emergency_exception_buf(100)
-GPIO_IN = const(0x40014004)  # GPIO input register
+GPIO_IN = const(0xd0000004)  # GPIO input register
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
