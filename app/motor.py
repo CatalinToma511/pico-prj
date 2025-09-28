@@ -47,14 +47,10 @@ class MotorPID():
         self.set_mode(self.mode)
 
     def pin_a_irq(self, pin):
-        a = self.pulse_pin_a.value()
-        b = self.pulse_pin_b.value()
-        self.total_pulse_count += 1 - 2 * (a ^ b)   # +1 if equal, -1 if not
+        self.total_pulse_count += 1 - 2 * (self.pulse_pin_a.value() ^ self.pulse_pin_b.value())   # +1 if equal, -1 if not
 
     def pin_b_irq(self, pin):
-        a = self.pulse_pin_a.value()
-        b = self.pulse_pin_b.value()
-        self.total_pulse_count += 1 - 2 * (a ^ b ^ 1)   # reversed sense for B
+        self.total_pulse_count += 1 - 2 * (self.pulse_pin_a.value() ^ self.pulse_pin_b.value() ^ 1)   # reversed sense for B
 
     def set_target_rps(self, rps):
         if abs(rps) < self.min_countable_speed:
@@ -209,7 +205,7 @@ class Motor:
             self.in2.duty_u16(-pwm)
         self.debug_pin.off()
 
-    def start_control_loop(self, interval_ms=10):
+    def start_control_loop(self, interval_ms=50):
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
     def stop_control_loop(self):
