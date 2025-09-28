@@ -4,7 +4,6 @@ import time
 import micropython
 
 micropython.alloc_emergency_exception_buf(100)
-GPIO_IN = const(0xd0000004)  # GPIO input register
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
@@ -30,8 +29,6 @@ class MotorPID():
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
         self.total_pulse_count = 0
-        self.enc_pin_a_gpio = enc_a_pin
-        self.enc_pin_b_gpio = enc_b_pin
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
@@ -50,13 +47,13 @@ class MotorPID():
         self.set_mode(self.mode)
 
     def pin_a_irq(self, pin):
-        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
-        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+        a = self.pulse_pin_a.value()
+        b = self.pulse_pin_b.value()
         self.total_pulse_count += 1 - 2 * (a ^ b)   # +1 if equal, -1 if not
 
     def pin_b_irq(self, pin):
-        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
-        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+        a = self.pulse_pin_a.value()
+        b = self.pulse_pin_b.value()
         self.total_pulse_count += 1 - 2 * (a ^ b ^ 1)   # reversed sense for B
 
     def set_target_rps(self, rps):
