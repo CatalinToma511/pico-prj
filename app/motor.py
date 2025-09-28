@@ -1,5 +1,9 @@
+import machine
 from machine import Pin, PWM, Timer
 import time
+import micropython
+
+GPIO_IN = const(0x40014004)  # GPIO input register
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
@@ -25,6 +29,8 @@ class MotorPID():
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
         self.total_pulse_count = 0
+        self.enc_pin_a_gpio = enc_a_pin
+        self.enc_pin_b_gpio = enc_b_pin
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
@@ -42,17 +48,17 @@ class MotorPID():
         self.mode = 0
         self.set_mode(self.mode)
 
+    @micropython.viper
     def pin_a_irq(self, pin):
-        if self.pulse_pin_a.value() == self.pulse_pin_b.value():
-            self.total_pulse_count += 1
-        else:
-            self.total_pulse_count += -1
+        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
+        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+        self.total_pulse_count += 1 - 2 * (a ^ b)   # +1 if equal, -1 if not
 
+    @micropython.viper
     def pin_b_irq(self, pin):
-        if self.pulse_pin_a.value() != self.pulse_pin_b.value():
-            self.total_pulse_count += 1
-        else:
-            self.total_pulse_count -= 1
+        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
+        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+        self.total_pulse_count += 1 - 2 * (a ^ b ^ 1)   # reversed sense for B
 
     def set_target_rps(self, rps):
         if abs(rps) < self.min_countable_speed:
@@ -160,7 +166,7 @@ class Motor:
         self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
         self.max_pwm = int(65535 * 0.98) # limiting according to IBT-4 datasheet
-        self.max_rps = 600 # max rps of the motor, 40000 rpm / 60
+        self.max_rps = 700 # max rps of the motor, 40000 rpm / 60
         self.speed_limit_factor = 1
         self.debug_pin = Pin(debug_pin, Pin.OUT)
         self.irq_timer = Timer()
