@@ -49,16 +49,14 @@ class MotorPID():
         self.mode = 0
         self.set_mode(self.mode)
 
-    @micropython.viper
-    def pin_a_irq(self, pin: ptr32):
-        a: int = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
-        b: int = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+    def pin_a_irq(self, pin):
+        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
+        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
         self.total_pulse_count += 1 - 2 * (a ^ b)   # +1 if equal, -1 if not
 
-    @micropython.viper
-    def pin_b_irq(self, pin: ptr32):
-        a: int = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
-        b: int = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
+    def pin_b_irq(self, pin):
+        a = (machine.mem32[GPIO_IN] >> self.enc_pin_a_gpio()) & 1
+        b = (machine.mem32[GPIO_IN] >> self.enc_pin_b_gpio()) & 1
         self.total_pulse_count += 1 - 2 * (a ^ b ^ 1)   # reversed sense for B
 
     def set_target_rps(self, rps):
