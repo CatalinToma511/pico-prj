@@ -3,6 +3,7 @@ from machine import Pin, PWM, Timer
 import time
 import micropython
 
+micropython.alloc_emergency_exception_buf(100)
 GPIO_IN = const(0x40014004)  # GPIO input register
 
 class MotorPID():
