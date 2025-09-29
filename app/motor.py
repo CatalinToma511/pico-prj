@@ -17,8 +17,11 @@ class MotorPID():
         self.kp = 0
         self.ki = 0
         self.kff = 0
-        self.dt = 0.100 # seconds
+        self.dt = 0.020 # seconds
         self.I = 0
+        # custom paramters
+        self.stall_count = 0
+        self.stall_pause_iterations = 0
         # motor parameters
         self.min_speed = 20
         self.min_pwm = 3000
@@ -29,6 +32,7 @@ class MotorPID():
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
         self.total_pulse_count = 0
+        self.pulse_count_list = []
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
@@ -58,6 +62,11 @@ class MotorPID():
         self.target_rps = rps
 
     def update(self):
+        # if motor is stalled, pause the control for a few iterations
+        if self.stall_pause_iterations > 0:
+            self.stall_pause_iterations -= 1
+            return 0
+        
         # 1. calculate actual elapsed time since last update
         time_now = time.ticks_ms()
         real_dt = (time_now - self.last_time) / 1000
@@ -66,15 +75,7 @@ class MotorPID():
             real_dt = self.dt
         self.last_time = time_now
 
-        # 2. read counts from the encoder
-        current_count = self.total_pulse_count
-        elapsed_counts = current_count - self.last_count
-        self.last_count = current_count
-
-        # 3. calculate current speed in rps
-        self.current_rps = elapsed_counts / self.ppr * (1 / real_dt)
-
-        # 4. filtering speed to avoid harsh transitions
+        # 2. filtering speed to avoid harsh transitions
         # using asymmetrical transitions, one value for acceleration and one for braking
         target_ramp = 0
         if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
@@ -85,11 +86,41 @@ class MotorPID():
         target_ramp *= real_dt
         self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
+        # 3. read counts from the encoder
+        current_count = self.total_pulse_count
+        elapsed_counts = current_count - self.last_count
+        self.last_count = current_count
+        self.pulse_count_list.append(elapsed_counts)
+        if len(self.pulse_count_list) > 5:
+            self.pulse_count_list.pop(0)
+
+        # average the counts if low count rate and speed is not 0
+        if self.filtered_target_rps != 0 and elapsed_counts < 5:
+            pulse_sum = 0
+            i = 0
+            while pulse_sum < 5 and i < len(self.pulse_count_list):
+                pulse_sum += self.pulse_count_list[-1-i]
+                i += 1
+            elapsed_counts = pulse_sum / i
+
+        # 4. calculate current speed in rps
+        self.current_rps = elapsed_counts / self.ppr * (1 / real_dt)
+
         # 5. calculate parameters of PI control
         err = self.filtered_target_rps - self.current_rps
-        # since motor cannot determine the exact speed, we use a deadband of 1 count, half above and half below
-        if abs(err) < self.deadband/2:
-            err = 0
+
+        # check for stall
+        if self.current_rps == 0 and self.filtered_target_rps != 0:
+            self.stall_count += 1
+            if self.stall_count * real_dt > 1: # if stalled for more than 0.5s, pause control
+                print("[MotorPID] Motor stalled, pausing control for 1s")
+                self.stall_pause_iterations = int(1 / self.dt)
+                self.stall_count = 0
+                self.I = 0
+                return 0
+            err *= self.stall_count # increase the error to try to overcome the stall
+            
+        # rest of the PI
         err_i = err * real_dt
         P = err * self.kp
         self.I += err_i * self.ki
@@ -206,6 +237,7 @@ class Motor:
         self.debug_pin.off()
 
     def start_control_loop(self, interval_ms=50):
+        self.pid.dt = interval_ms * 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
     def stop_control_loop(self):
