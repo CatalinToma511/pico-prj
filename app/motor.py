@@ -39,8 +39,7 @@ class MotorPID():
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
         # minimum values
-        min_pulses_per_iteration = 1
-        self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
+        self.min_countable_speed = (5 / self.ppr) # rps, below this speed the speed reading is not reliable
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
         # logging, may be useful for later
         # self.total_time = 0
@@ -110,9 +109,9 @@ class MotorPID():
         err = self.filtered_target_rps - self.current_rps
 
         # check for stall
-        if self.current_rps == 0 and self.filtered_target_rps != 0:
+        if self.current_rps == 0 and elapsed_counts != 0:
                 self.stall_count += 1
-                if self.stall_count * real_dt > 1: # if stalled for more than 0.5s, pause control
+                if self.stall_count * self.dt > 1: # if stalled for more than 0.5s, pause control
                     print("[MotorPID] Motor stalled, pausing control for 1s")
                     self.stall_pause_iterations = int(1 / self.dt)
                     self.stall_count = 0
