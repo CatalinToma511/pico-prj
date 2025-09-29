@@ -110,8 +110,7 @@ class MotorPID():
         err = self.filtered_target_rps - self.current_rps
 
         # check for stall
-        if self.current_rps == 0:
-            if self.filtered_target_rps != 0:
+        if self.current_rps == 0 and self.filtered_target_rps != 0:
                 self.stall_count += 1
                 if self.stall_count * real_dt > 1: # if stalled for more than 0.5s, pause control
                     print("[MotorPID] Motor stalled, pausing control for 1s")
@@ -120,8 +119,8 @@ class MotorPID():
                     self.I = 0
                     return 0
                 err *= self.stall_count # increase the error to try to overcome the stall
-            else:
-                self.stall_count = 0 # do not count if speed target is 0
+        else:
+            self.stall_count = 0 # do not count if speed target is 0
             
         # rest of the PI
         err_i = err * real_dt
