@@ -19,16 +19,18 @@ class MotorPID():
         self.kff = 0
         self.dt = 0.020 # seconds
         self.I = 0
-        # custom paramters
-        self.stall_count = 0
-        self.stall_pause_iterations = 0
-        self.stall_boost = 100
-        # motor parameters
         self.min_speed = 20
-        self.min_pwm = 3000
+        self.min_pwm = 4000
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1500 # rot/s^2
         self.filtered_target_rps = 0
+        # stall paramters
+        self.stall_count = 0
+        self.stall_pause_iterations = 0
+        self.stall_boost = 100 # how much pwm is added per second of stall
+        self.stall_pause_time = 2 # how much time the motor is paused if stalled, in seconds
+        self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
+        # motor parameters
         # alpha coef for filters
         self.pwm_filter_alpha = 0.7
         # encoder parameters and interrupts
