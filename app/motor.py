@@ -22,6 +22,7 @@ class MotorPID():
         # custom paramters
         self.stall_count = 0
         self.stall_pause_iterations = 0
+        self.stall_boost = 100
         # motor parameters
         self.min_speed = 20
         self.min_pwm = 3000
@@ -107,25 +108,24 @@ class MotorPID():
 
         # 5. calculate parameters of PI control
         err = self.filtered_target_rps - self.current_rps
-
-        # check for stall
-        if self.current_rps == 0 and elapsed_counts != 0:
-                self.stall_count += 1
-                if self.stall_count * self.dt > 1: # if stalled for more than 0.5s, pause control
-                    print("[MotorPID] Motor stalled, pausing control for 1s")
-                    self.stall_pause_iterations = int(1 / self.dt)
-                    self.stall_count = 0
-                    self.I = 0
-                    return 0
-                err *= self.stall_count # increase the error to try to overcome the stall
-        else:
-            self.stall_count = 0 # do not count if speed target is 0
-            
-        # rest of the PI
         err_i = err * real_dt
         P = err * self.kp
         self.I += err_i * self.ki
         self.I = int(max(-65535, min(self.I, 65535))) # anti windup
+
+        # check for stall
+        pwm_stall_boost = 0
+        if self.current_rps == 0 and self.filtered_target_rps != 0:
+            self.stall_count += 1
+            if self.stall_count * self.dt > 1: # if stalled for more than 1s, pause control
+                print("[MotorPID] Motor stalled, pausing control for 1s")
+                self.stall_pause_iterations = int(1 / self.dt)
+                self.stall_count = 0
+                self.I = 0
+                return 0
+            pwm_stall_boost = self.stall_count * self.stall_boost
+        else:
+            self.stall_count = 0 # do not count if speed target is 0
 
         # 6. calculate feed-forward
         # motor model was calculated at a past point and is:
@@ -140,7 +140,7 @@ class MotorPID():
         # if desired speed is below min_countable_speed, set pwm to 0
         if abs(self.filtered_target_rps) >= self.min_countable_speed:
             pwm0 = self.min_pwm if self.filtered_target_rps >= 0 else -self.min_pwm
-            pwm = pwm0 + pwm_ff + P + self.I
+            pwm = pwm0 + pwm_ff + P + self.I + pwm_stall_boost
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             pwm = int(max(-65535, min(pwm, 65535)))
         else:
@@ -184,7 +184,7 @@ class MotorPID():
 
 
 class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=900):
+    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=10000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
@@ -226,22 +226,21 @@ class Motor:
 
     def control_irq(self, tmr):
         self.debug_pin.on()
-        pwm = self.pid.update()
+        self.pwm = self.pid.update()
         # limit pwm to max_pwm; account for negative pwm
-        pwm = int(max(-self.max_pwm, min(pwm, self.max_pwm)))
-        if pwm >= 0:
-            self.in1.duty_u16(pwm)
+        self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
+        if self.pwm >= 0:
+            self.in1.duty_u16(self.pwm)
             self.in2.duty_u16(0)
         else:
             self.in1.duty_u16(0)
-            self.in2.duty_u16(-pwm)
+            self.in2.duty_u16(-self.pwm)
+        self.pwm = abs(self.pwm)
         self.debug_pin.off()
 
-    def start_control_loop(self, interval_ms=50):
+    def start_control_loop(self, interval_ms=20):
         self.pid.dt = interval_ms * 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
     def stop_control_loop(self):
         self.irq_timer.deinit()
-
-    

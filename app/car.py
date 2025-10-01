@@ -201,7 +201,7 @@ class Car:
                 self.motor_rps,
                 self.speed_mmps,
                 self.steering_servo_angle,
-                int(self.aeb_max_safe_speed_rps)
+                self.motor.pwm if self.motor else 0
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
         return encoded_data
