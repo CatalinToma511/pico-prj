@@ -27,7 +27,7 @@ class MotorPID():
         # stall paramters
         self.stall_count = 0
         self.stall_pause_iterations = 0
-        self.stall_boost = 100 # how much pwm is added per second of stall
+        self.stall_boost = 1000 # how much pwm is added per second of stall
         self.stall_pause_time = 2 # how much time the motor is paused if stalled, in seconds
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # motor parameters
@@ -125,7 +125,7 @@ class MotorPID():
                 self.stall_count = 0
                 self.I = 0
                 return 0
-            pwm_stall_boost = self.stall_count * self.stall_boost
+            pwm_stall_boost = self.stall_count * self.stall_boost * self.dt
         else:
             self.stall_count = 0 # do not count if speed target is 0
 
@@ -171,13 +171,13 @@ class MotorPID():
         elif mode == 2:
             self.kff = 85
             self.kp = 250
-            self.ki = 650
+            self.ki = 700
             self.I = 0
         # mode 3: using P + I:
         elif mode == 3:
             self.kff = 0
             self.kp = 250
-            self.ki = 1250
+            self.ki = 1300
             self.I = 0
         else:
             print(f"[MotorPID] Invalid mode: {mode}")
