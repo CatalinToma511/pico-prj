@@ -126,6 +126,8 @@ class MotorPID():
                 self.I = 0
                 return 0
             pwm_stall_boost = self.stall_count * self.stall_boost * self.dt
+            if self.filtered_target_rps < 0:
+                pwm_stall_boost = -pwm_stall_boost
         else:
             self.stall_count = 0 # do not count if speed target is 0
 
