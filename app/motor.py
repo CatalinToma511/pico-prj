@@ -63,9 +63,9 @@ class MotorPID():
 
     def update(self):
         # if motor is stalled, pause the control for a few iterations
-        if self.stall_pause_iterations > 0:
-            self.stall_pause_iterations -= 1
-            return 0
+        # if self.stall_pause_iterations > 0:
+        #     self.stall_pause_iterations -= 1
+        #     return 0
         
         # 1. calculate actual elapsed time since last update
         time_now = time.ticks_ms()
