@@ -239,7 +239,7 @@ class Motor:
         self.debug_pin.off()
 
     def start_control_loop(self, interval_ms=20):
-        self.pid.dt = interval_ms * 1000
+        self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
     def stop_control_loop(self):
