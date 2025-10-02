@@ -42,7 +42,7 @@ class MotorPID():
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
         # minimum values
-        self.min_countable_speed = (5 / self.ppr) # rps, below this speed the speed reading is not reliable
+        self.min_countable_speed = (0 / self.ppr) # rps, below this speed the speed reading is not reliable
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
         # logging, may be useful for later
         # self.total_time = 0
