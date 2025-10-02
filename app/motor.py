@@ -146,7 +146,10 @@ class MotorPID():
             pwm0 = self.min_pwm if self.filtered_target_rps >= 0 else -self.min_pwm
             pwm = pwm0 + pwm_ff + P + self.I + pwm_stall_boost
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
-            pwm = int(max(self.min_pwm, min(pwm, 65535))) if pwm >= 0 else int(min(-self.min_pwm, max(pwm, -65535)))
+            if pwm > 0:
+                pwm = max(self.min_pwm, min(pwm, 65535))
+            elif pwm < 0:
+                pwm = min(-self.min_pwm, max(pwm, -65535))
         else:
             pwm = 0
         self.last_pwm = pwm
