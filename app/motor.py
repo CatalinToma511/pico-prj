@@ -142,7 +142,7 @@ class MotorPID():
 
         # 7. calculate pwm based on feed-forward and PI control
         # if desired speed is below min_countable_speed, set pwm to 0
-        if abs(self.filtered_target_rps) >= self.min_countable_speed:
+        if abs(self.filtered_target_rps) != 0:
             pwm0 = self.min_pwm if self.filtered_target_rps >= 0 else -self.min_pwm
             pwm = pwm0 + pwm_ff + P + self.I + pwm_stall_boost
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
