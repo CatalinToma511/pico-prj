@@ -45,7 +45,7 @@ class MPU6050:
         self.i2c.writeto_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, bytes([new_accel_cfg]))
 
         #calibration
-        self.calibrate_accelerometer()
+        #self.calibrate_accelerometer()
         
         
     def read_accelerometer_raw(self):
