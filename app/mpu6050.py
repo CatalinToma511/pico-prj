@@ -1,6 +1,7 @@
 import machine
 import ustruct
 import math
+import time
 
 MPU6050_ADDR = 0x68
 MPU6050_REG_CONFIG = 0x1A
@@ -28,6 +29,8 @@ class MPU6050:
         
         # wake up
         self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
+
+        time.sleep(0.5)
         
         # adjust sample rate
         cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_CONFIG, 1)
