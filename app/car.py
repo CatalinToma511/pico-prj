@@ -5,6 +5,7 @@ from mpu6050 import MPU6050
 from horn import Horn
 from voltagereader import VoltageReader
 from distance_sensor import DistanceSensor
+from suspension import Suspension
 import machine
 import struct
 
@@ -17,6 +18,7 @@ class Car:
         self.voltage_reader = None
         self.mpu6050 = None
         self.distance_sensor = None
+        self.suspension = None
 
         self.speed_target = 0
         self.motor_rps = 0
@@ -80,6 +82,19 @@ class Car:
             print(f"Error initializing distance sensor: {e}")
             self.distance_sensor = None
 
+    def config_suspension(self, config):
+        self.suspension = Suspension()
+        try:
+            for entry in config:
+                self.suspension.config_servo(entry['corner'],
+                                            entry['servo_pin'],
+                                            entry['center'],
+                                            entry['min_angle'],
+                                            entry['max_angle']
+                                            )
+        except Exception as e:
+            print(f"Error configuring suspension: {e}")
+
     def process_data(self, data):
         try:
             # restart the Pico if needed
@@ -123,6 +138,11 @@ class Car:
             if self.motor and self.motor.pid:
                 mode = data[8]
                 self.motor.pid.set_mode(mode)
+
+            # suspension
+            if self.suspension:
+                suspension_gain = data[9] * 5
+                self.suspension.set_base_gain(suspension_gain)
 
         except Exception as e:
             print(f"Error processing data: {e}")

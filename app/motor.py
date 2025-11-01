@@ -21,8 +21,8 @@ class MotorPID():
         self.I = 0
         self.min_speed = 20
         self.min_pwm = 2000
-        self.max_accel = 600 # rot/s^2
-        self.max_decel = 1500 # rot/s^2
+        self.max_accel = 100 # rot/s^2
+        self.max_decel = 600 # rot/s^2
         self.filtered_target_rps = 0
         # stall paramters
         self.stall_count = 0
