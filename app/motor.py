@@ -19,7 +19,7 @@ class MotorPID():
         self.kff = 0
         self.dt = 0.020 # seconds
         self.I = 0
-        self.min_pwm = 2000
+        self.min_pwm = 1500
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1200 # rot/s^2
         self.filtered_target_rps = 0
