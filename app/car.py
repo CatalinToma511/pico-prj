@@ -140,7 +140,7 @@ class Car:
                 self.motor.pid.set_mode(mode)
 
             # suspension
-            if self.suspension and data[9]:
+            if self.suspension and data[9] is not None:
                 suspension_gain = data[9] - 30
                 self.suspension.set_base_gain(suspension_gain)
 

@@ -27,7 +27,7 @@ class MotorPID():
         # stall paramters
         self.stall_count = 0
         self.stall_pause_iterations = 0
-        self.stall_boost = 0 # how much pwm is added per second of stall
+        self.stall_boost = 1000 # how much pwm is added per second of stall
         self.stall_pause_time = 2 # how much time the motor is paused if stalled, in seconds
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # motor parameters
@@ -65,9 +65,9 @@ class MotorPID():
 
     def update(self):
         # if motor is stalled, pause the control for a few iterations
-        # if self.stall_pause_iterations > 0:
-        #     self.stall_pause_iterations -= 1
-        #     return 0
+        if self.stall_pause_iterations > 0:
+            self.stall_pause_iterations -= 1
+            return 0
         
         # 1. calculate actual elapsed time since last update
         time_now = time.ticks_ms()
@@ -97,10 +97,10 @@ class MotorPID():
             self.pulse_count_list.pop(0)
 
         # average the counts if low count rate and speed is not 0
-        if self.filtered_target_rps != 0 and elapsed_counts < 5:
+        if self.filtered_target_rps != 0 and elapsed_counts < 6:
             pulse_sum = 0
             i = 0
-            while pulse_sum < 5 and i < len(self.pulse_count_list):
+            while pulse_sum < 6 and i < len(self.pulse_count_list):
                 pulse_sum += self.pulse_count_list[-1-i]
                 i += 1
             elapsed_counts = pulse_sum / i
@@ -119,13 +119,13 @@ class MotorPID():
         pwm_stall_boost = 0
         if self.current_rps == 0 and self.filtered_target_rps != 0:
             self.stall_count += 1
-            if self.stall_count * self.dt > 1: # if stalled for more than 1s, pause control
+            if self.stall_count * self.dt > self.stall_max_time: # if stalled for more than 1s, pause control
                 print("[MotorPID] Motor stalled, pausing control for 1s")
-                self.stall_pause_iterations = int(1 / self.dt)
+                self.stall_pause_iterations = int(self.stall_pause_time / self.dt)
                 self.stall_count = 0
                 self.I = 0
                 return 0
-            pwm_stall_boost = self.stall_count * self.stall_boost * self.dt
+            pwm_stall_boost = self.stall_boost / (self.stall_count * self.dt)
             if self.filtered_target_rps < 0:
                 pwm_stall_boost = -pwm_stall_boost
         else:
