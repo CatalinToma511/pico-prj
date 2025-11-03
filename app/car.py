@@ -141,7 +141,7 @@ class Car:
 
             # suspension
             if self.suspension and data[9]:
-                suspension_gain = data[9]
+                suspension_gain = data[9] - 20
                 self.suspension.set_base_gain(suspension_gain)
 
         except Exception as e:
