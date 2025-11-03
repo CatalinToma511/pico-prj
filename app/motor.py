@@ -27,7 +27,7 @@ class MotorPID():
         # stall paramters
         self.stall_count = 0
         self.stall_pause_iterations = 0
-        self.stall_boost = 1000 # how much pwm is added per second of stall
+        self.stall_boost = 300 # how much pwm is added per second of stall
         self.stall_pause_time = 2 # how much time the motor is paused if stalled, in seconds
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # motor parameters
