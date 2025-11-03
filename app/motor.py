@@ -19,7 +19,6 @@ class MotorPID():
         self.kff = 0
         self.dt = 0.020 # seconds
         self.I = 0
-        self.min_speed = 20
         self.min_pwm = 2000
         self.max_accel = 600 # rot/s^2
         self.max_decel = 1200 # rot/s^2
@@ -242,7 +241,7 @@ class Motor:
         self.pwm = abs(self.pwm)
         self.debug_pin.off()
 
-    def start_control_loop(self, interval_ms=20):
+    def start_control_loop(self, interval_ms=50):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
 
