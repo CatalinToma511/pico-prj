@@ -213,6 +213,9 @@ class Car:
             else:
                 self.horn.turn_off()
 
+        if self.suspension:
+            self.suspension.update()
+
     def get_parameters_encoded(self):
         data = [self.voltage,
                 self.roll,
