@@ -86,11 +86,11 @@ class Car:
         self.suspension = Suspension()
         try:
             for entry in config:
-                self.suspension.config_servo(entry['corner'],
-                                            entry['servo_pin'],
-                                            entry['center'],
-                                            entry['min_angle'],
-                                            entry['max_angle']
+                self.suspension.config_servo(entry[0],
+                                            entry[1],
+                                            entry[2],
+                                            entry[3],
+                                            entry[4]
                                             )
         except Exception as e:
             print(f"Error configuring suspension: {e}")
