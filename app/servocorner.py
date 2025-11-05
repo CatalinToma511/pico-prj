@@ -6,7 +6,7 @@ class ServoCorner:
         self.center = center
         self.top_limit = top_limit
         self.bottom_limit = bottom_limit
-        self._set_angle(center)
+        self._set_angle(top_limit)
 
     def _set_angle(self, angle):
         if self.bottom_limit <= angle <= self.top_limit or self.top_limit <= angle <= self.bottom_limit:
