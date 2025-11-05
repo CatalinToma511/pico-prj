@@ -15,4 +15,4 @@ class ServoCorner:
     def set_gain(self, gain):
         if self.bottom_limit < self.top_limit:
             gain = -gain
-        self._set_angle(self.center + gain)
+        self._set_angle(self.bottom_limit + gain)

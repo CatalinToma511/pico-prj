@@ -141,7 +141,7 @@ class Car:
 
             # suspension
             if self.suspension and data[9] is not None:
-                suspension_gain = data[9] - 30
+                suspension_gain = data[9]
                 self.suspension.set_base_gain(suspension_gain)
 
         except Exception as e:
