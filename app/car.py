@@ -104,7 +104,7 @@ class Car:
 
             # speed
             spd = data[0] - data[1] #RT - LT
-            self.speed_target = int(spd/255 * 100)
+            self.speed_target = spd/255 * 100
                 
             # steering
             l_joystick_x = data[2] - 128
