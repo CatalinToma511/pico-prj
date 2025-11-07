@@ -202,7 +202,7 @@ class Motor:
         self.dither_irq_pin = Pin(pwm_irq_pin)
         self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 500)
         self.dither_low = 500
-        self.dither_high = 65535 // 4
+        self.dither_high = 65535 // 2
         self.actual_pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
@@ -263,7 +263,7 @@ class Motor:
         self.debug_pin.off()
         
 
-    def start_control_loop(self, interval_ms=10):
+    def start_control_loop(self, interval_ms=20):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
         self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
