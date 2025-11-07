@@ -201,8 +201,8 @@ class Motor:
         self.dir_is_front = 1 # 1 = forward, 0 = backward
         self.dither_irq_pin = Pin(pwm_irq_pin)
         self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 1000)
-        self.dither_low = 1000
-        self.dither_high = 65535 // 10
+        self.dither_low = 500
+        self.dither_high = 65535 // 5
         self.actual_pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
