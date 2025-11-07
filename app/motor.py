@@ -200,9 +200,10 @@ class Motor:
         self.pwm = 0
         self.dir_is_front = 1 # 1 = forward, 0 = backward
         self.dither_irq_pin = Pin(pwm_irq_pin)
-        self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 100)
+        self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 50)
         self.dither_low = 500
-        self.dither_high = 65535 // 2
+        self.dither_high = 65535 // 10
+        self.dither_treshold = 3000
         self.actual_pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
@@ -246,7 +247,7 @@ class Motor:
         #     self.in2.duty_u16(-self.pwm)
         self.dir_is_front = 1 if self.pwm >= 0 else 0
 
-        if self.dither_low < abs(self.pwm) < self.dither_high:
+        if 0 < abs(self.pwm) < self.dither_treshold:
             dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
             self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
            
