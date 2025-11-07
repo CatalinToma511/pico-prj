@@ -246,8 +246,8 @@ class Motor:
         #     self.in2.duty_u16(-self.pwm)
         self.dir_is_front = 1 if self.pwm >= 0 else 0
 
-        if self.pwm < self.dither_high:
-            dither_duty = (self.pwm - self.dither_low) / (self.dither_high - self.dither_low) * 65535
+        if abs(self.pwm) < self.dither_high:
+            dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
             self.pwm_dither_irq_pin.duty_u16(dither_duty)
             self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
         else:
