@@ -248,10 +248,10 @@ class Motor:
 
         if self.dither_low < abs(self.pwm) < self.dither_high:
             dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
-            self.pwm_dither_irq_pin.duty_u16(dither_duty)
-            self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
+            self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
+           
         else:
-            self.dither_irq_pin.irq(handler=None)
+            self.pwm_dither_irq_pin.duty_u16(0)
             if self.pwm >= 0:
                 self.in1.duty_u16(self.pwm)
                 self.in2.duty_u16(0)
@@ -266,15 +266,17 @@ class Motor:
     def start_control_loop(self, interval_ms=10):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
+        self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
 
     def stop_control_loop(self):
         self.irq_timer.deinit()
 
     def pwm_dither_cb(self, _irq_pin):
-        if _irq_pin.value() == 1:
+        if self.dither_irq_pin.value() == 1:
             self.actual_pwm = self.dither_high
         else:
             self.actual_pwm = self.dither_low
+
         if self.dir_is_front == 1:
             self.in1.duty_u16(self.actual_pwm)
             self.in2.duty_u16(0)
