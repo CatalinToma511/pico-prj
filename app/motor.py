@@ -263,7 +263,7 @@ class Motor:
         self.debug_pin.off()
         
 
-    def start_control_loop(self, interval_ms=20):
+    def start_control_loop(self, interval_ms=50):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
         # self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
