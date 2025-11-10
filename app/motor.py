@@ -187,7 +187,7 @@ class MotorPID():
 
 
 class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=10000):
+    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=200):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
@@ -198,13 +198,13 @@ class Motor:
         self.debug_pin = Pin(debug_pin, Pin.OUT)
         self.irq_timer = Timer()
         self.pwm = 0
-        self.dir_is_front = 1 # 1 = forward, 0 = backward
-        self.dither_irq_pin = Pin(pwm_irq_pin)
-        self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 50)
-        self.dither_low = 500
-        self.dither_high = 65535 // 10
-        self.dither_treshold = 3000
-        self.actual_pwm = 0
+        # self.dir_is_front = 1 # 1 = forward, 0 = backward
+        # self.dither_irq_pin = Pin(pwm_irq_pin)
+        # self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 50)
+        # self.dither_low = 500
+        # self.dither_high = 65535 // 10
+        # self.dither_treshold = 3000
+        # self.actual_pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
         if 0 < speed_limit_factor <= 1:
@@ -239,26 +239,25 @@ class Motor:
         self.pwm = self.pid.update()
         # limit pwm to max_pwm; account for negative pwm
         self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
-        # if self.pwm >= 0:
-        #     self.in1.duty_u16(self.pwm)
-        #     self.in2.duty_u16(0)
-        # else:
-        #     self.in1.duty_u16(0)
-        #     self.in2.duty_u16(-self.pwm)
-        self.dir_is_front = 1 if self.pwm >= 0 else 0
-
-        if 0 < abs(self.pwm) < self.dither_treshold:
-            dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
-            self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
-           
+        if self.pwm >= 0:
+            self.in1.duty_u16(self.pwm)
+            self.in2.duty_u16(0)
         else:
-            self.pwm_dither_irq_pin.duty_u16(0)
-            if self.pwm >= 0:
-                self.in1.duty_u16(self.pwm)
-                self.in2.duty_u16(0)
-            else:
-                self.in1.duty_u16(0)
-                self.in2.duty_u16(-self.pwm)
+            self.in1.duty_u16(0)
+            self.in2.duty_u16(-self.pwm)
+        # self.dir_is_front = 1 if self.pwm >= 0 else 0
+        # if 0 < abs(self.pwm) < self.dither_treshold:
+        #     dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
+        #     self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
+           
+        # else:
+        #     self.pwm_dither_irq_pin.duty_u16(0)
+        #     if self.pwm >= 0:
+        #         self.in1.duty_u16(self.pwm)
+        #         self.in2.duty_u16(0)
+        #     else:
+        #         self.in1.duty_u16(0)
+        #         self.in2.duty_u16(-self.pwm)
 
         self.pwm = abs(self.pwm)
         self.debug_pin.off()
@@ -267,20 +266,20 @@ class Motor:
     def start_control_loop(self, interval_ms=20):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
-        self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
+        # self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
 
     def stop_control_loop(self):
         self.irq_timer.deinit()
 
-    def pwm_dither_cb(self, _irq_pin):
-        if self.dither_irq_pin.value() == 1:
-            self.actual_pwm = self.dither_high
-        else:
-            self.actual_pwm = self.dither_low
+    # def pwm_dither_cb(self, _irq_pin):
+    #     if self.dither_irq_pin.value() == 1:
+    #         self.actual_pwm = self.dither_high
+    #     else:
+    #         self.actual_pwm = self.dither_low
 
-        if self.dir_is_front == 1:
-            self.in1.duty_u16(self.actual_pwm)
-            self.in2.duty_u16(0)
-        else:
-            self.in1.duty_u16(0)
-            self.in2.duty_u16(self.actual_pwm)
+    #     if self.dir_is_front == 1:
+    #         self.in1.duty_u16(self.actual_pwm)
+    #         self.in2.duty_u16(0)
+    #     else:
+    #         self.in1.duty_u16(0)
+    #         self.in2.duty_u16(self.actual_pwm)
