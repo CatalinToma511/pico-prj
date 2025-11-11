@@ -2,12 +2,12 @@ This project aims to control a remote controlled car better than what most hobby
 
 
 
-Overview
+Overview:
 This is a BLE commanded RC car, operated via a desktop app that uses a Xbox Controller for user input. It features multiple motor control modes for precise speed control and safety systems such as automatic emergency brake (AEB) and roll-over risk warning. The platform showcases modular software and hardware integration, demonstrating real-time control, sensor feedback, and robust off-road performance. The system also provides over-the-air (OTA) updates via Wi-Fi, automatically checking for newer software versions at startup when known networks with internet access are available.
 
 
 
-Features
+Features:
 - Multiple motor control modes:
   - Feed-Forward (FF): applies expected voltage to the motor for a certain speed without feedback
   - Proportional-Integrator (PI): dynamically adjusts the voltage of the motor to maintain a certain speed under varying load
@@ -21,7 +21,7 @@ Features
 
 
 
-Software
+Software:
 The software was written in MicroPython instead of C/C++ due to it being easier to be modified with OTA updates, while a C implementation requires connection microcontroller to the desktop eash time a modification is needed. Thanks to the processor used by the Pico 2 W, the loss in performance is minimal. Each subsystem is encapsulated in its own module.
 
 At start-up, it runs the OTA updates routine. First, it checks for nearby known Wi-Fi network. Those are stored locally and encrypted. For each of those, it checks if they have internet connection. When a internet connection is made, using GitHub API it checks if the last software timestamp is the same as the one in the specified git path, accounting for both updates and roll-backs. If the timestamp differs, then it downloads all the files found at that path. If the download is successful, the new files replace the old ones. Any error aborts the rutine and runs the current software.
@@ -34,7 +34,7 @@ The library used for the distance sensor is a slightly modified version of Kevin
 
 
 
-Hardware components
+Hardware components:
 - Microcontroller: Raspberry Pi Pico 2 W
   
 - Motor + Drive System:
