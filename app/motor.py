@@ -240,7 +240,7 @@ class Motor:
         self.pwm = self.pid.update()
 
         # limit pwm to max_pwm; account for negative pwm
-        # self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
+        self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
 
         # if self.pwm >= 0:
         #     self.in1.duty_u16(self.pwm)
@@ -253,8 +253,8 @@ class Motor:
         if 0 < abs(self.pwm) < self.dither_treshold:
             self.dither_low = self.pwm - self.dither_diff
             if self.dither_low < 0:
-                self.dither_low = 0
                 self.dither_high = self.pwm + self.dither_diff + abs(self.dither_low)
+                self.dither_low = 0
             else:
                 self.dither_high = self.pwm + self.dither_diff
             dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
