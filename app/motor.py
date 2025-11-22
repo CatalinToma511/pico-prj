@@ -250,14 +250,17 @@ class Motor:
         #     self.in2.duty_u16(-self.pwm)
 
         self.dir_is_front = 1 if self.pwm >= 0 else 0
-        if 0 < abs(self.pwm) < self.dither_treshold:
+        self.pwm = abs(self.pwm)
+
+        if 0 < self.pwm < self.dither_treshold:
             self.dither_low = self.pwm - self.dither_diff
             if self.dither_low < 0:
                 self.dither_high = self.pwm + self.dither_diff + abs(self.dither_low)
                 self.dither_low = 0
             else:
                 self.dither_high = self.pwm + self.dither_diff
-            dither_duty = (abs(self.pwm) - self.dither_low) / (self.dither_high - self.dither_low) * 65535
+            #dither_duty = (self.pwm - self.dither_low) / (self.dither_high - self.dither_low) * 65535
+            dither_duty = 65535/2
             self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
            
         else:
@@ -269,7 +272,7 @@ class Motor:
                 self.in1.duty_u16(0)
                 self.in2.duty_u16(-self.pwm)
 
-        self.pwm = abs(self.pwm)
+        
         self.debug_pin.off()
         
 
