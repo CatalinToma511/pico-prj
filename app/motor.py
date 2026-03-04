@@ -242,57 +242,22 @@ class Motor:
         # limit pwm to max_pwm; account for negative pwm
         self.pwm = int(max(-self.max_pwm, min(self.pwm, self.max_pwm)))
 
-        # if self.pwm >= 0:
-        #     self.in1.duty_u16(self.pwm)
-        #     self.in2.duty_u16(0)
-        # else:
-        #     self.in1.duty_u16(0)
-        #     self.in2.duty_u16(-self.pwm)
+        if self.pwm >= 0:
+            self.in1.duty_u16(self.pwm)
+            self.in2.duty_u16(0)
+        else:
+            self.in1.duty_u16(0)
+            self.in2.duty_u16(-self.pwm)
 
         self.dir_is_front = 1 if self.pwm >= 0 else 0
         self.pwm = abs(self.pwm)
 
-        if 0 < self.pwm < self.dither_treshold:
-            self.dither_low = self.pwm - self.dither_diff
-            if self.dither_low < 0:
-                self.dither_high = self.pwm + self.dither_diff + abs(self.dither_low)
-                self.dither_low = 0
-            else:
-                self.dither_high = self.pwm + self.dither_diff
-            #dither_duty = (self.pwm - self.dither_low) / (self.dither_high - self.dither_low) * 65535
-            dither_duty = 65535/2
-            self.pwm_dither_irq_pin.duty_u16(int(dither_duty))
-           
-        else:
-            self.pwm_dither_irq_pin.duty_u16(0)
-            if self.pwm >= 0:
-                self.in1.duty_u16(self.pwm)
-                self.in2.duty_u16(0)
-            else:
-                self.in1.duty_u16(0)
-                self.in2.duty_u16(-self.pwm)
-
-        
         self.debug_pin.off()
         
 
     def start_control_loop(self, interval_ms=50):
         self.pid.dt = interval_ms / 1000
         self.irq_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.control_irq)
-        self.dither_irq_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self.pwm_dither_cb, hard = True)
 
     def stop_control_loop(self):
         self.irq_timer.deinit()
-
-    def pwm_dither_cb(self, _irq_pin):
-        if self.dither_irq_pin.value() == 1:
-            self.actual_pwm = self.dither_high
-        else:
-            self.actual_pwm = self.dither_low
-
-        if self.dir_is_front == 1:
-            self.in1.duty_u16(self.actual_pwm)
-            self.in2.duty_u16(0)
-        else:
-            self.in1.duty_u16(0)
-            self.in2.duty_u16(self.actual_pwm)
