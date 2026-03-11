@@ -187,7 +187,7 @@ class MotorPID():
 
 
 class Motor:
-    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=10000):
+    def __init__(self, in1, in2, enc_a, enc_b, debug_pin, pwm_irq_pin, MOTOR_PWM_FREQ=1000):
         self.in1 = PWM(Pin(in1), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.in2 = PWM(Pin(in2), freq = MOTOR_PWM_FREQ, duty_u16 = 0)
         self.pid = MotorPID(enc_a, enc_b)
@@ -198,14 +198,6 @@ class Motor:
         self.debug_pin = Pin(debug_pin, Pin.OUT)
         self.irq_timer = Timer()
         self.pwm = 0
-        self.dir_is_front = 1 # 1 = forward, 0 = backward
-        self.dither_irq_pin = Pin(pwm_irq_pin)
-        self.pwm_dither_irq_pin = PWM(self.dither_irq_pin, freq = 200)
-        self.dither_diff = 65535 * .05
-        self.dither_treshold = 65535 * .08
-        self.dither_low = 0
-        self.dither_high = 0
-        self.actual_pwm = 0
 
     def set_speed_limit_factor(self, speed_limit_factor):
         if 0 < speed_limit_factor <= 1:
