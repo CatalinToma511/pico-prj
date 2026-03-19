@@ -41,7 +41,7 @@ def run():
         my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
         suspension_cfg = [('fl', _FL_SERVO_PIN, 90, 130, 57),
                           ('fr', _FR_SERVO_PIN, 90, 47, 120),
-                          ('rl', _RL_SERVO_PIN, 90, 57, 126),
+                          ('rl', _RL_SERVO_PIN, 90, 55, 126),
                           ('rr', _RR_SERVO_PIN, 90, 117, 44)]
         my_car.config_suspension(suspension_cfg)
         ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
