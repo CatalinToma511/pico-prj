@@ -9,15 +9,15 @@ class Suspension:
         self.rr_servo = None
         self.gain = 0
     
-    def config_servo(self, corner, servo_pin, center = 90, min_angle = 100, max_angle = 80):
+    def config_servo(self, corner, servo_pin, center = 90, top_angle = 100, botton_angle = 80):
         if corner == 'fl':
-            self.fl_servo = ServoCorner(servo_pin, center, min_angle, max_angle)
+            self.fl_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
         elif corner == 'fr':
-            self.fr_servo = ServoCorner(servo_pin, center, min_angle, max_angle)
+            self.fr_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
         elif corner == 'rl':
-            self.rl_servo = ServoCorner(servo_pin, center, min_angle, max_angle)
+            self.rl_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
         elif corner == 'rr':
-            self.rr_servo = ServoCorner(servo_pin, center, min_angle, max_angle)
+            self.rr_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
 
     def set_base_gain(self, gain):
         self.gain = gain
