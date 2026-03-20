@@ -8,6 +8,7 @@ from distance_sensor import DistanceSensor
 from suspension import Suspension
 import machine
 import struct
+import time
 
 class Car:
     def __init__(self):
@@ -70,7 +71,10 @@ class Car:
 
     def config_mpu6050(self, bus_id, scl_pin, sda_pin):
         try:
+            time.sleep(0.5)
             self.mpu6050 = MPU6050(bus_id, scl_pin, sda_pin)
+            self.mpu6050.calibrate()
+            self.mpu6050.start_reading()
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")
             self.mpu6050 = None
