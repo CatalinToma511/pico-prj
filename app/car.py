@@ -218,8 +218,8 @@ class Car:
 
     def get_parameters_encoded(self):
         data = [self.voltage,
-                self.roll,
-                self.pitch,
+                int(self.roll),
+                int(self.pitch),
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
