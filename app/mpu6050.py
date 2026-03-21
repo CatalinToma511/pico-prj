@@ -63,7 +63,8 @@ class MPU6050:
         self.roll = 0
         self.yaw = 0
         self.last_update_time = 0
-        self.complementary_filter_alpha = 0.998
+        self.complementary_filter_alpha_stationary = 0.9980
+        self.complementary_filter_alpha_motion= 0.9998
         
         # wake up
         self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
@@ -171,10 +172,12 @@ class MPU6050:
             accel_roll, accel_pitch = self.read_accelerometer_position()
             self.read_gyroscope()
             dt = (self.time_now - self.last_update_time) / 1000.0
-            # self.roll += self.gyro_y * dt
-            # self.pitch += self.gyro_z * dt
-            self.roll = self.complementary_filter_alpha * (self.roll + self.gyro_y * dt) + (1 - self.complementary_filter_alpha) * accel_roll
-            self.pitch = self.complementary_filter_alpha * (self.pitch + self.gyro_z * dt) + (1 - self.complementary_filter_alpha) * accel_pitch
+            total_g = math.sqrt(self.accel_x**2 + self.accel_y**2 + self.accel_z**2)
+            alpha = self.complementary_filter_alpha_stationary
+            if total_g < 0.95 * G_CONSTANT or total_g > 1.05 * G_CONSTANT:
+                alpha = self.complementary_filter_alpha_motion
+            self.roll = alpha * (self.roll + self.gyro_y * dt) + (1 - alpha) * accel_roll
+            self.pitch = alpha * (self.pitch + self.gyro_z * dt) + (1 - alpha) * accel_pitch
             self.yaw += self.gyro_x * dt
             self.last_update_time = self.time_now
         except Exception as e:
