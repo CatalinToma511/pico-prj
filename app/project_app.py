@@ -40,8 +40,8 @@ def run():
         my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
         suspension_cfg = [('fl', _FL_SERVO_PIN, 90, 135, 60),
                           ('fr', _FR_SERVO_PIN, 90, 43, 118),
-                          ('rl', _RL_SERVO_PIN, 90, 57, 132),
-                          ('rr', _RR_SERVO_PIN, 90, 118, 43)]
+                          ('rl', _RL_SERVO_PIN, 90, 55, 130),
+                          ('rr', _RR_SERVO_PIN, 90, 116, 41)]
         my_car.config_suspension(suspension_cfg)
         my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
         ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
