@@ -63,8 +63,8 @@ class MPU6050:
         self.roll = 0
         self.yaw = 0
         self.last_update_time = 0
-        self.complementary_filter_alpha_stationary = 0.9980
-        self.complementary_filter_alpha_motion= 0.9998
+        self.complementary_filter_alpha_stationary = 1 #0.9980
+        self.complementary_filter_alpha_motion= 1 #0.9998
         
         # wake up
         self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
