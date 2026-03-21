@@ -34,6 +34,6 @@ class Suspension:
         if self.fr_servo:
             self.fr_servo.set_gain(self.fr_gain)
         if self.rl_servo:
-            self.rl_servo.set_gain(self.rl_servo)
+            self.rl_servo.set_gain(self.rl_gain)
         if self.rr_servo:
             self.rr_servo.set_gain(self.rr_gain) 
