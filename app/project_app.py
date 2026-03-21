@@ -38,8 +38,8 @@ def run():
         my_car.config_horn(_HORN_PIN)
         my_car.config_voltage_reader(_VOLTAGE_PIN)
         my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
-        suspension_cfg = [('fl', _FL_SERVO_PIN, 90, 140, 60),
-                          ('fr', _FR_SERVO_PIN, 90, 38, 118),
+        suspension_cfg = [('fl', _FL_SERVO_PIN, 90, 135, 60),
+                          ('fr', _FR_SERVO_PIN, 90, 43, 118),
                           ('rl', _RL_SERVO_PIN, 90, 55, 130),
                           ('rr', _RR_SERVO_PIN, 90, 118, 43)]
         my_car.config_suspension(suspension_cfg)
