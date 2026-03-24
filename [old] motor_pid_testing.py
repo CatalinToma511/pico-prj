@@ -2,37 +2,32 @@ from machine import Pin, PWM, Timer
 import machine
 import time
 
-machine.freq(250_000_000)
-
-
-
 # irq handlers
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
         self.target_rps = 0
         self.last_pulse = 0
         self.last_rps = 0
-        self.kp = 250
-        self.ki = 1100
-        self.dt = 0.025 # seconds
+        self.kp = 350
+        self.ki = 0
+        self.dt = 0.050 # seconds
         self.I = 0
         self.min_speed = 20
-        self.u0 = 3000
-        self.max_accel = 5 # rot/s per dt
+        self.u0 = 0
+        self.max_accel = 300 # rot/s^2
+        self.max_decel = 600 # rot/s^2
         self.filtered_target_rps = 0 # filtered speed
         self.total_time = 0
-        self.speed_filter_alpha = 0.7
-        
+        self.speed_filter_alpha = 0.8
 
         self.pulse_count = 0
-        self.direction = 1
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
 
-        min_pulses_per_iteration = 3
+        min_pulses_per_iteration = 1
         self.min_countable_speed = (min_pulses_per_iteration / self.ppr) * (1 / self.dt)
         self.deadband = 1 / (self.ppr * self.dt)
 
@@ -42,13 +37,12 @@ class MotorPID():
         self.log_data = []
         self.file = "data.csv"
         
+
     def pin_a_irq(self, pin):
-        self.pulse_count += 1
-        self.direction = 1 if self.pulse_pin_a.value() == self.pulse_pin_b.value() else -1
+        self.pulse_count += 1 - 2 * (self.pulse_pin_a.value() ^ self.pulse_pin_b.value())   # +1 if equal, -1 if not
 
     def pin_b_irq(self, pin):
-        self.pulse_count += 1
-        self.direction = 1 if self.pulse_pin_a.value() != self.pulse_pin_b.value() else -1
+        self.pulse_count += 1 - 2 * (self.pulse_pin_a.value() ^ self.pulse_pin_b.value() ^ 1)   # reversed sense for B
 
     def set_target_rps(self, rps):
         if abs(rps) < self.min_speed:
@@ -63,12 +57,19 @@ class MotorPID():
         self.last_pulse = current_count
 
         # calculate current speed
-        raw_rps = self.direction * (1 / self.dt) * elapsed_counts / self.ppr
+        raw_rps = (1 / self.dt) * elapsed_counts / self.ppr
         current_rps = raw_rps * self.speed_filter_alpha + self.last_rps * (1 - self.speed_filter_alpha)
         self.last_rps = current_rps
 
         #filtering speed
-        self.filtered_target_rps += max(-self.max_accel, min(self.max_accel, self.target_rps - self.filtered_target_rps))
+        target_ramp = 0
+        if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
+            target_ramp = self.max_decel
+        else:
+            # if same direction, check if it need acceleration or decceleration
+            target_ramp = self.max_accel if abs(self.target_rps) > abs(self.filtered_target_rps) else self.max_decel
+        target_ramp *= self.dt
+        self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
         # calculate parameters
         err = self.filtered_target_rps - current_rps
@@ -108,13 +109,13 @@ class MotorPID():
 
 
 try:
-    mp = MotorPID(2, 3)
-    mp.set_target_rps(100)
+    mp = MotorPID(3,2)
+    mp.set_target_rps(20)
     for i in range(0, int(2/mp.dt)):
         mp.update()
         time.sleep(mp.dt)
     
-    mp.set_target_rps(-50)
+    mp.set_target_rps(0)
     for i in range(0, int(2/mp.dt)):
         mp.update()
         time.sleep(mp.dt)
