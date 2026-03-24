@@ -232,7 +232,7 @@ class Motor:
         self.speed_limit_factor = 1
         self.debug_pin = None
         if DEBUG_PIN:
-            self.debug_pin = Pin(debug_pin, Pin.OUT)
+            self.debug_pin = Pin(DEBUG_PIN, Pin.OUT)
         self.irq_timer = Timer()
         self.pwm = 0
 

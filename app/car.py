@@ -52,8 +52,8 @@ class Car:
 
         self.horn_state = 0
 
-    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin):
-        self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b, debug_pin, pwm_irq_pin)
+    def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
+        self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
         self.speed_target = 0
         self.motor.start_control_loop()
 

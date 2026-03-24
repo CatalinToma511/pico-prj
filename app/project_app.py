@@ -6,8 +6,7 @@ _MOTOR_IN1 = 12
 _MOTOR_IN2 = 13
 _MOTOR_ENC_A = 17
 _MOTOR_ENC_B = 16
-_MOTOR_DEBUG_PIN = 4
-_MOTOR_PWM_IRQ_PIN = 5
+
 _STEERING_PIN = 2
 _GEARBOX_SHIFT_PIN = 3
 _HORN_PIN = 4
@@ -32,7 +31,7 @@ CAR_UPDATE_INTERVAL_MS = 10
 def run():
     try:
         my_car = Car()
-        my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B, _MOTOR_DEBUG_PIN, _MOTOR_PWM_IRQ_PIN)
+        my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
         my_car.config_steering(_STEERING_PIN)
         my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
         my_car.config_horn(_HORN_PIN)
