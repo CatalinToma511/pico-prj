@@ -73,7 +73,7 @@ class Car:
         try:
             time.sleep(0.5)
             self.mpu6050 = MPU6050(bus_id, scl_pin, sda_pin)
-            self.mpu6050.calibrate()
+            # self.mpu6050.calibrate()
             self.mpu6050.start_reading()
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")

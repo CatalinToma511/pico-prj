@@ -14,11 +14,11 @@ motor.pid.start_boost = 500
 
 motor.set_speed_rps(0)
 motor.start_control_loop(interval_ms = 10)
-motor.pid.logging = False
+motor.pid.logging = True
 
 time.sleep(0.01)
-motor.set_speed_rps(2)
-time.sleep(2)
+motor.set_speed_rps(50)
+time.sleep(3)
 motor.set_speed_rps(0)
 time.sleep(0.01)
 

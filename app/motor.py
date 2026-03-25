@@ -162,7 +162,6 @@ class MotorPID():
         self.pwm_boost = (pwm_stall_boost + pwm_start_boost) + self.pwm_boost * 0.8 # decay boost over time
 
         # 7. calculate pwm based on feed-forward and PI control
-        # if desired speed is below min_countable_speed, set pwm to 0
         if abs(self.filtered_target_rps) != 0:
             pwm0 = self.min_pwm if self.filtered_target_rps >= 0 else -self.min_pwm
             pwm = pwm_ff + P + self.I + self.pwm_boost
