@@ -23,8 +23,8 @@ class Suspension:
             self.rr_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
 
     def set_base_gain(self, gain):
-        # self.fl_gain = gain
-        # self.fr_gain = gain
+        self.fl_gain = gain
+        self.fr_gain = gain
         self.rl_gain = gain
         self.rr_gain = gain
     
