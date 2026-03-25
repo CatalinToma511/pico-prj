@@ -134,6 +134,8 @@ class MotorPID():
 
         # 6. calculate feed-forward
         pwm_ff = self.pwm_feed_forward(self.filtered_target_rps) * (self.kff/100)
+        if self.filtered_target_rps < 0:
+            pwm_ff = -pwm_ff
         pwm_ff = max(-65535, min(pwm_ff, 65535))
 
         # 7. check for stall
