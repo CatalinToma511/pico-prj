@@ -133,7 +133,7 @@ class MotorPID():
         self.I = int(max(-65535, min(self.I, 65535))) # anti windup
 
         # 6. calculate feed-forward
-        pwm_ff = self.pwm_feed_forward(self.filtered_target_rps) * (self.kff/100)
+        pwm_ff = self.pwm_feed_forward(abs(self.filtered_target_rps)) * (self.kff/100)
         if self.filtered_target_rps < 0:
             pwm_ff = -pwm_ff
         pwm_ff = max(-65535, min(pwm_ff, 65535))
