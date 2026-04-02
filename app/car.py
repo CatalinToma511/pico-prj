@@ -226,7 +226,7 @@ class Car:
         steering_angle = int(self.steering.servo.angle) if self.steering else 0
         roll = int(self.roll) if self.mpu6050 else 0
         pitch = int(self.pitch) if self.mpu6050 else 0
-        votlage = self.voltage if self.voltage_reader else 0
+        voltage = self.voltage if self.voltage_reader else 0
         motor_pwm = int(self.motor.pwm) if self.motor else 0
         data = [voltage,
                 roll,
@@ -234,8 +234,8 @@ class Car:
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
-                steering.servo.angle,
-                motor.pwm
+                steering_angle,
+                motor_pwm
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
         return encoded_data
