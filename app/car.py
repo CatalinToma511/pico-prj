@@ -59,6 +59,7 @@ class Car:
 
     def config_steering(self, steering_pin):
         self.steering = Steering(steering_pin)
+        self.steering.start_control_loop()
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
@@ -111,8 +112,10 @@ class Car:
             self.speed_target = spd/255 * 100
                 
             # steering
-            l_joystick_x = data[2] - 128
-            self.steering_target = int(l_joystick_x)
+            if self.steering:
+                l_joystick_x = data[2] - 128
+                steering_target = int(l_joystick_x)
+                self.steering.set_steering_position(steering_target)
 
             #gearbox
             if self.gearbox:
@@ -143,10 +146,14 @@ class Car:
                 mode = data[8]
                 self.motor.pid.set_mode(mode)
 
-            # suspension
+            # suspension base gain
             if self.suspension and data[9] is not None:
                 suspension_gain = data[9]
                 self.suspension.set_base_gain(suspension_gain)
+
+            # suspension manual control
+            if self.suspension and data[10] is not None and data[11] is not None:
+                pass    
 
         except Exception as e:
             print(f"Error processing data: {e}")
@@ -201,15 +208,10 @@ class Car:
                 speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
             self.motor.set_speed_rps(speed_target_rps)
 
-            # data to be sent to client
+            # data to be sent to remote control app
             self.motor_rps = int(self.motor.get_speed_rps())
             self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
             self.max_speed_rps = int(self.motor.get_max_speed_rps())
-        # for now, no smooth steering
-        if self.steering:
-            new_steering_pos = int(self.steering_target * self.steering_alpha + self.steering.position * (1 - self.steering_alpha))
-            self.steering.set_steering_position(new_steering_pos)
-            self.steering_servo_angle = int(self.steering.servo.angle)
 
         if self.horn:
             if self.horn_state:
@@ -221,14 +223,19 @@ class Car:
             self.suspension.update()
 
     def get_parameters_encoded(self):
-        data = [self.voltage,
-                int(self.roll),
-                int(self.pitch),
+        steering_angle = int(self.steering.servo.angle) if self.steering else 0
+        roll = int(self.roll) if self.mpu6050 else 0
+        pitch = int(self.pitch) if self.mpu6050 else 0
+        votlage = self.voltage if self.voltage_reader else 0
+        motor_pwm = int(self.motor.pwm) if self.motor else 0
+        data = [voltage,
+                roll,
+                pitch,
                 self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
-                self.steering_servo_angle,
-                self.motor.pwm if self.motor else 0
+                steering.servo.angle,
+                motor.pwm
                 ]
         encoded_data = struct.pack('>Bhhhhhbh', *data)
         return encoded_data
