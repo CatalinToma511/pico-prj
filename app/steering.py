@@ -22,7 +22,7 @@ class Steering:
         self.control_timer.init(period=update_interval_ms, mode=Timer.PERIODIC, callback=self.update)
 
 
-    def update(self):
+    def update(self, timer):
         angle = self.target_angle * self.filter_alpha + self.servo.angle * (1 - self.filter_alpha)
         # validating
         if self.left <= angle <= self.right or self.right <= angle <= self.left:
