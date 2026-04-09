@@ -32,15 +32,15 @@ def run():
     try:
         my_car = Car()
         my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
-        my_car.config_steering(_STEERING_PIN, 90, 180, 0)
+        my_car.config_steering(_STEERING_PIN, 86, 140, 38)
         my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
         my_car.config_horn(_HORN_PIN)
         my_car.config_voltage_reader(_VOLTAGE_PIN)
         my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
-        suspension_cfg = [('fl', _FL_SERVO_PIN, 135, 135, 60),
-                          ('fr', _FR_SERVO_PIN, 43, 43, 118),
-                          ('rl', _RL_SERVO_PIN, 72, 55, 130),
-                          ('rr', _RR_SERVO_PIN, 101, 117, 42)]
+        suspension_cfg = [('fl', _FL_SERVO_PIN, 135, 135, 70),
+                          ('fr', _FR_SERVO_PIN, 43, 43, 108),
+                          ('rl', _RL_SERVO_PIN, 55, 55, 130),
+                          ('rr', _RR_SERVO_PIN, 117, 117, 42)]
         my_car.config_suspension(suspension_cfg)
         my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
         ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
