@@ -32,7 +32,7 @@ def run():
     try:
         my_car = Car()
         my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
-        my_car.config_steering(_STEERING_PIN)
+        my_car.config_steering(_STEERING_PIN, 90, 180, 0)
         my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
         my_car.config_horn(_HORN_PIN)
         my_car.config_voltage_reader(_VOLTAGE_PIN)
