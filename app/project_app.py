@@ -40,7 +40,7 @@ def run():
         suspension_cfg = [('fl', _FL_SERVO_PIN, 135, 135, 70),
                           ('fr', _FR_SERVO_PIN, 43, 43, 108),
                           ('rl', _RL_SERVO_PIN, 55, 55, 130),
-                          ('rr', _RR_SERVO_PIN, 115, 115, 40)]
+                          ('rr', _RR_SERVO_PIN, 119, 119, 44)]
         my_car.config_suspension(suspension_cfg)
         my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
         ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
