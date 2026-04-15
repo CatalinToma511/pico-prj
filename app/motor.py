@@ -169,9 +169,9 @@ class MotorPID():
             pwm = pwm_ff + P + self.I + self.pwm_boost
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             if self.filtered_target_rps > 0:
-                pwm = int(max(0, min(pwm, 65535)))
+                pwm = int(max(pwm_ff, min(pwm, 65535)))
             else:
-                pwm = int(max(-65535, min(pwm, 0)))
+                pwm = int(max(-65535, min(pwm, -pwm_ff)))
         else:
             pwm = 0
         self.last_pwm = pwm
