@@ -229,7 +229,7 @@ class Motor:
         self.pid = MotorPID(enc_a, enc_b)
         self.control_loop_running = False
         self.max_pwm = int(65535 * 0.98) # limiting according to IBT-4 datasheet
-        self.max_rps = 700 # max rps of the motor, 40000 rpm / 60
+        self.max_rps = 280 # max rps of the motor, rpm / 60
         self.speed_limit_factor = 1
         self.debug_pin = None
         if DEBUG_PIN:
