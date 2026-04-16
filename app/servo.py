@@ -11,6 +11,7 @@ class Servo:
         self.pin = pin
         self.servo_pwm_pin = PWM(Pin(pin))
         self.servo_pwm_pin.freq(frequency)
+        self.current_pulse_width_us = 0
         self.servo_pwm_pin.duty_ns(0)
         self.max_step_us = self.max_pulse_us - self.min_pulse_us
         self.control_loop_interval_ms = control_loop_interval_ms
@@ -23,11 +24,13 @@ class Servo:
     
 
     def control_loop(self, timer):
-        current_pulse_width_us = self.servo_pwm_pin.duty_ns() // 1000
-        step_us = self.pulse_width_target_us - current_pulse_width_us
-        step_us = max(min(step_us, self.max_step_us), -self.max_step_us)
-        pulse_width_ns = (current_pulse_width_us + step_us) * 1000
-        self.servo_pwm_pin.duty_ns(int(pulse_width_ns))
+        delta_us = self.pulse_width_target_us - self.current_pulse_width_us
+        step_us = max(min(delta_us, self.max_step_us), -self.max_step_us)
+        pulse_width_us = self.current_pulse_width_us + step_us
+        pulse_width_us = max(min(pulse_width_us, self.max_pulse_us), self.min_pulse_us)
+        pulse_width_ns = int(pulse_width_us * 1000)
+        self.servo_pwm_pin.duty_ns(pulse_width_ns)
+        self.current_pulse_width_us = pulse_width_us
     
     
     def set_angle(self, angle):
