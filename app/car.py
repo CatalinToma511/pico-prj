@@ -59,7 +59,6 @@ class Car:
 
     def config_steering(self, steering_pin, center, max_left, max_right):
         self.steering = Steering(steering_pin, center=center, left=max_left, right=max_right)
-        self.steering.start_control_loop()
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
