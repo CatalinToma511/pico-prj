@@ -44,12 +44,13 @@ class Servo:
         
         pulse_width_us = self.min_pulse_us + (angle / 180) * (self.max_pulse_us - self.min_pulse_us)
         pulse_width_us = max(min(pulse_width_us, self.max_pulse_us), self.min_pulse_us)
+
+        # if control loop is not used or is the first time adjusting position from initialization, set the pulse width directly
+        if self.control_loop_interval_ms == 0 or self.pulse_width_target_us is None:
+            self.servo_pwm_pin.duty_ns(int(self.pulse_width_target_us * 1000))
+
         self.pulse_width_target_us = pulse_width_us
         self.angle = angle
-
-        # if control loop is not used, set the pulse width directly
-        if self.control_loop_interval_ms == 0:
-            self.servo_pwm_pin.duty_ns(int(self.pulse_width_target_us * 1000))
             
     
     def deactivate(self):
