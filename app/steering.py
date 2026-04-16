@@ -4,7 +4,7 @@ from machine import Timer
 
 class Steering:
     def __init__(self, steering_servo_pin, center = 90., left = 135., right = 45., max_left_pos=-128, max_right_pos=127, center_pos=0, pos_deadzone = 5):
-        self.servo = Servo(steering_servo_pin, frequency=100, speed_ms=1000, control_loop_interval_ms=10)
+        self.servo = Servo(steering_servo_pin, frequency=100, speed_ms=250, control_loop_interval_ms=10)
         self.position = 0
         # angles
         self.center = center
