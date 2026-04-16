@@ -45,8 +45,8 @@ class Steering:
         # mapping
         if self.max_left_pos <= target_position <= self.center_pos:
             # steering left
-            self.target_angle = self.center - abs(self.min_left_pos - self.left) / abs(self.max_left_pos) * (target_position - self.center_pos)
+            self.target_angle = self.min_left_pos - abs(self.center- self.left) / abs(self.max_left_pos) * (target_position - self.center_pos)
         elif self.center_pos < target_position <= self.max_right_pos:
             # steering right
-            self.target_angle = self.center - abs(self.min_right_pos - self.right) / abs(self.max_right_pos) * (target_position - self.center_pos)
+            self.target_angle = self.min_right_pos - abs(self.center - self.right) / abs(self.max_right_pos) * (target_position - self.center_pos)
         self.position = target_position
