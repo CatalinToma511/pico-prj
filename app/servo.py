@@ -3,7 +3,7 @@ from machine import Pin, PWM, Timer
 
 class Servo:
     def __init__(self, pin, min_pulse_us=500, max_pulse_us=2500, frequency=50, deadzone = 0, speed_ms = 0, control_loop_interval_ms = 0):
-        self.pulse_width_target_us = 0
+        self.pulse_width_target_us = None
         self.min_pulse_us = min_pulse_us
         self.max_pulse_us = max_pulse_us
         self.angle = 0
@@ -24,6 +24,8 @@ class Servo:
     
 
     def control_loop(self, timer):
+        if self.pulse_width_target_us is None:
+            return
         delta_us = self.pulse_width_target_us - self.current_pulse_width_us
         step_us = max(min(delta_us, self.max_step_us), -self.max_step_us)
         pulse_width_us = self.current_pulse_width_us + step_us
@@ -53,3 +55,4 @@ class Servo:
     def deactivate(self):
         self.control_loop_timer.deinit()
         self.servo_pwm_pin.duty_ns(0)
+        self.pulse_width_target_us = None
