@@ -16,7 +16,7 @@ class Steering:
         self.center_pos = center_pos
         # deadzone
         self.min_left_pos = center_pos
-        self.max_left_pos = center_pos
+        self.min_right_pos = center_pos
         self.pos_deadzone = pos_deadzone
         if self.max_left_pos < self.max_right_pos:
             self.min_left_pos = self.center_pos - self.pos_deadzone
