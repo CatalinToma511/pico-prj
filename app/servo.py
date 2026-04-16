@@ -3,7 +3,7 @@ from machine import Pin, PWM, Timer
 
 class Servo:
     def __init__(self, pin, min_pulse_us=500, max_pulse_us=2500, frequency=50, deadzone = 0, speed_ms = 0, control_loop_interval_ms = 0):
-        self.pulse_width_target_us = None
+        self.pulse_width_target_us = 0
         self.min_pulse_us = min_pulse_us
         self.max_pulse_us = max_pulse_us
         self.angle = 0
@@ -11,7 +11,7 @@ class Servo:
         self.pin = pin
         self.servo_pwm_pin = PWM(Pin(pin))
         self.servo_pwm_pin.freq(frequency)
-        self.current_pulse_width_us = 0
+        self.current_pulse_width_us = None
         self.servo_pwm_pin.duty_ns(0)
         self.max_step_us = self.max_pulse_us - self.min_pulse_us
         self.control_loop_interval_ms = control_loop_interval_ms
@@ -24,7 +24,7 @@ class Servo:
     
 
     def control_loop(self, timer):
-        if self.pulse_width_target_us is None:
+        if self.current_pulse_width_us is None:
             return
         delta_us = self.pulse_width_target_us - self.current_pulse_width_us
         step_us = max(min(delta_us, self.max_step_us), -self.max_step_us)
@@ -44,13 +44,13 @@ class Servo:
         
         pulse_width_us = self.min_pulse_us + (angle / 180) * (self.max_pulse_us - self.min_pulse_us)
         pulse_width_us = max(min(pulse_width_us, self.max_pulse_us), self.min_pulse_us)
+        self.pulse_width_target_us = int(pulse_width_us * 1000)
+        self.angle = angle
 
         # if control loop is not used or is the first time adjusting position from initialization, set the pulse width directly
-        if self.control_loop_interval_ms == 0 or self.pulse_width_target_us is None:
-            self.servo_pwm_pin.duty_ns(int(pulse_width_us * 1000))
-
-        self.pulse_width_target_us = pulse_width_us
-        self.angle = angle
+        if self.control_loop_interval_ms == 0 or self.current_pulse_width_us is None:
+            self.servo_pwm_pin.duty_ns(self.pulse_width_target_us)
+            self.current_pulse_width_us = self.pulse_width_target_us
             
     
     def deactivate(self):
