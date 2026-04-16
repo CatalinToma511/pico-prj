@@ -47,7 +47,7 @@ class Servo:
 
         # if control loop is not used or is the first time adjusting position from initialization, set the pulse width directly
         if self.control_loop_interval_ms == 0 or self.pulse_width_target_us is None:
-            self.servo_pwm_pin.duty_ns(int(self.pulse_width_target_us * 1000))
+            self.servo_pwm_pin.duty_ns(int(pulse_width_us * 1000))
 
         self.pulse_width_target_us = pulse_width_us
         self.angle = angle
