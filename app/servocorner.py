@@ -2,7 +2,7 @@ from servo import Servo
 
 class ServoCorner:
     def __init__(self, servo_pin, center = 90, top_limit = 80, bottom_limit= 100):
-        self.servo = Servo(servo_pin, frequency=100, speed_ms=5000, control_loop_interval_ms=10)
+        self.servo = Servo(servo_pin, frequency=100, speed_ms=5000, control_loop_interval_ms=5)
         self.center = center
         self.top_limit = top_limit
         self.bottom_limit = bottom_limit
