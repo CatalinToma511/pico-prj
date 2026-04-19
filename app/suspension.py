@@ -16,15 +16,17 @@ class Suspension:
         self.rr_gain = 0
         self.rl_gain = 0
     
+
     def config_servo(self, corner, servo_pin, center = 90, top_angle = 100, botton_angle = 80):
         if corner == 'fl':
-            self.fl_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
+            self.fl_servo = ServoCorner(servo_pin,  top_angle, botton_angle)
         elif corner == 'fr':
-            self.fr_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
+            self.fr_servo = ServoCorner(servo_pin,  top_angle, botton_angle)
         elif corner == 'rl':
-            self.rl_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
+            self.rl_servo = ServoCorner(servo_pin, top_angle, botton_angle)
         elif corner == 'rr':
-            self.rr_servo = ServoCorner(servo_pin, center, top_angle, botton_angle)
+            self.rr_servo = ServoCorner(servo_pin, top_angle, botton_angle)
+
 
     def set_base_gain(self, gain, corner = 'all'):
         if corner == 'fl' or corner == 'all':
@@ -46,6 +48,66 @@ class Suspension:
         if corner == 'rr' or corner == 'all':
             self.rr_gain = gain
     
+
+    def set_axis_gain(self, x_gain, y_gain):
+        # joysticks gives values between -128 and 127, but not full range, their range is a circle
+        # the usual formula would be for example something like FL = x_gain + y_gain
+        # but this works well only if the are of range would be described be a square, |x| + |y| <= 1
+        # since the actual range is a circle, for values inside circle but still with |x| + |y| > 1, we get gains > 1
+        # to correct this, we need to clamp the magnitude to 1 and scale the gains accordingly
+        # so, we are actually mapping L2 ball unit to L1 ball unit, getting the full range of gain values and direction
+
+        magnitude = (x_gain**2 + y_gain**2)**0.5
+        if magnitude > 1.0:
+            # normalize the gains to maintain the direction but limit the magnitude to 1
+            # this is because the joystick is not a perfect circle and can have distortion in inputs
+            x_gain /= magnitude
+            y_gain /= magnitude
+            magnitude = 1.0
+
+        norm = abs(x_gain) + abs(y_gain) # L1 norm of the input
+        norm = max(min(norm, 1.0), 1e-6) # clamp norm to limit to 1 and avoid division by zero
+
+        scale = magnitude / norm # scale factor to convert L2 ball to L1 ball
+        
+        fl_input_gain = (x_gain + y_gain) * scale
+        fr_input_gain = (-x_gain + y_gain) * scale
+        rl_input_gain = (x_gain + -y_gain) * scale
+        rr_input_gain = (-x_gain + -y_gain) * scale
+
+        correction = 0
+        max_total_gain = max(self.fl_base_gain + fl_input_gain,
+                       self.fr_base_gain + fr_input_gain,
+                       self.rl_base_gain + rl_input_gain,
+                       self.rr_base_gain + rr_input_gain)
+        min_total_gain = min(self.fl_base_gain + fl_input_gain,
+                        self.fr_base_gain + fr_input_gain,
+                        self.rl_base_gain + rl_input_gain,
+                        self.rr_base_gain + rr_input_gain)
+        
+        if max_total_gain > 1 and min_total_gain > 0:
+            # overflow
+            correction = 1 - max_total_gain
+        elif min_total_gain < 0 and max_total_gain < 1:
+            # underflow
+            correction = -min_total_gain
+        else:
+            # both overflow and underflow should not happen at the same time, but if they do, ignore correction
+            # each servo will take care of clamping its gain to its range
+            # here we can also abort using this inputs at all, but having a response may be useful for debugging and feedback
+            correction = 0
+
+        fl_input_gain += correction
+        fr_input_gain += correction
+        rl_input_gain += correction
+        rr_input_gain += correction
+
+        self.set_gain(fl_input_gain, corner='fl')
+        self.set_gain(fr_input_gain, corner='fr')
+        self.set_gain(rl_input_gain, corner='rl')
+        self.set_gain(rr_input_gain, corner='rr')
+
+
     def update(self):
         if self.fl_servo:
             self.fl_servo.set_base_gain(self.fl_base_gain)

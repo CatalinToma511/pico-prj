@@ -152,7 +152,9 @@ class Car:
 
             # suspension manual control
             if self.suspension and data[10] is not None and data[11] is not None:
-                pass    
+                suspension_x = data[10] - 128
+                suspension_y = data[11] - 128
+                self.suspension.set_axis_gain(suspension_x/128, suspension_y/128)
 
         except Exception as e:
             print(f"Error processing data: {e}")
