@@ -70,11 +70,11 @@ class Suspension:
 
         scale = magnitude / norm # scale factor to convert L2 ball to L1 ball
         
-        fl_input_gain = (x_gain + y_gain) * scale
-        fr_input_gain = (-x_gain + y_gain) * scale
-        rl_input_gain = (x_gain + -y_gain) * scale
-        rr_input_gain = (-x_gain + -y_gain) * scale
-
+        fl_input_gain = (-x_gain + -y_gain) * scale
+        fr_input_gain = (x_gain + -y_gain) * scale
+        rl_input_gain = (-x_gain + y_gain) * scale
+        rr_input_gain = (x_gain + y_gain) * scale
+    
         correction = 0
         max_total_gain = max(self.fl_base_gain + fl_input_gain,
                        self.fr_base_gain + fr_input_gain,

@@ -23,7 +23,7 @@ class ServoCorner:
         self._set_angle(set_point)
 
     def set_gain(self, gain_norm):
-        self.gain = max(min(gain_norm, 1.), 0.) * self.travel_coef
+        self.gain = max(min(gain_norm, 1.), -1.) * self.travel_coef
         self._update()
 
     def set_base_gain(self, base_gain_norm):
@@ -31,7 +31,7 @@ class ServoCorner:
         self._update()
 
     def add_gain(self, gain_norm):
-        self.gain += max(min(gain_norm, 1.), 0.) * self.travel_coef
+        self.gain += max(min(gain_norm, 1.), -1.) * self.travel_coef
         self._update()
     def get_total_gain(self):
         return self.base_gain + self.gain
