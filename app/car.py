@@ -147,14 +147,14 @@ class Car:
 
             # suspension base gain
             if self.suspension and data[9] is not None:
-                suspension_gain = data[9]
+                suspension_gain = data[9] / 255
                 self.suspension.set_base_gain(suspension_gain)
 
             # suspension manual control
             if self.suspension and data[10] is not None and data[11] is not None:
-                suspension_x = data[10] - 128
-                suspension_y = data[11] - 128
-                self.suspension.set_axis_gain(suspension_x/128, suspension_y/128)
+                suspension_x = (data[10] - 128) / 128
+                suspension_y = (data[11] - 128) / 128
+                self.suspension.set_axis_gain(suspension_x, suspension_y)
 
         except Exception as e:
             print(f"Error processing data: {e}")
