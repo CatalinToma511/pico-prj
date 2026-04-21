@@ -52,8 +52,8 @@ class Suspension:
     def set_axis_gain(self, x_gain, y_gain):
         # joysticks gives values between -128 and 127, but not full range, their range is a circle
         # the usual formula would be for example something like FL = x_gain + y_gain
-        # but this works well only if the are of range would be described be a square, |x| + |y| <= 1
-        # since the actual range is a circle, for values inside circle but still with |x| + |y| > 1, we get gains > 1
+        # but this works well only if the are of range would be described be a square, |x| + |y| <= 0.5
+        # since the actual range is a circle, for values inside circle but still with |x| + |y| > 0.5, we get gains > 1
         # to correct this, we need to clamp the magnitude to 1 and scale the gains accordingly
         # so, we are actually mapping L2 ball unit to L1 ball unit, getting the full range of gain values and direction
 
@@ -66,14 +66,15 @@ class Suspension:
             l2_norm = 1.0
 
         l1_norm = abs(x_gain) + abs(y_gain) # L1 norm of the input
-        scale = l2_norm / l1_norm / 2 # scale factor to convert L2 ball to L1 ball
+        l1_norm = max(l1_norm, 0.01) # prevent division by zero, if both x and y are zero, the gains will be zero anyway, so it does not affect the result
+        scale = 0.5 * l2_norm / l1_norm # scale factor to convert L2 ball to L1 ball
         # why divide by 2? so, each servo gets a gain in range [0, 1]. Since each corner is affected
         # the total range of the diamond shape must be also 1, so the corners needs to be (+/-0.5, +/-0.5) instead of (+/-1, +/-1)
         
         fl_input_gain = (x_gain + -y_gain) * scale
         fr_input_gain = (-x_gain + -y_gain) * scale
-        rl_input_gain = (-x_gain + y_gain) * scale
-        rr_input_gain = (x_gain + y_gain) * scale
+        rl_input_gain = (x_gain + y_gain) * scale
+        rr_input_gain = (-x_gain + y_gain) * scale
     
         correction = 0
         max_total_gain = max(self.fl_base_gain + fl_input_gain,
