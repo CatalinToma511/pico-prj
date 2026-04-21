@@ -57,18 +57,16 @@ class Suspension:
         # to correct this, we need to clamp the magnitude to 1 and scale the gains accordingly
         # so, we are actually mapping L2 ball unit to L1 ball unit, getting the full range of gain values and direction
 
-        magnitude = (x_gain**2 + y_gain**2)**0.5
-        if magnitude > 1.0:
+        l2_norm = (x_gain**2 + y_gain**2)**0.5
+        if l2_norm > 1.0:
             # normalize the gains to maintain the direction but limit the magnitude to 1
             # this is because the joystick is not a perfect circle and can have distortion in inputs
-            x_gain /= magnitude
-            y_gain /= magnitude
-            magnitude = 1.0
+            x_gain /= l2_norm
+            y_gain /= l2_norm
+            l2_norm = 1.0
 
-        norm = abs(x_gain) + abs(y_gain) # L1 norm of the input
-        norm = max(min(norm, 1.0), 1e-6) # clamp norm to limit to 1 and avoid division by zero
-
-        scale = magnitude / norm # scale factor to convert L2 ball to L1 ball
+        l1_norm = abs(x_gain) + abs(y_gain) # L1 norm of the input
+        scale = l2_norm / l1_norm # scale factor to convert L2 ball to L1 ball
         
         fl_input_gain = (-x_gain + -y_gain) * scale
         fr_input_gain = (x_gain + -y_gain) * scale
