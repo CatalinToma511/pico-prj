@@ -24,7 +24,7 @@ class Servo:
     
 
     def control_loop(self, timer):
-        if self.current_pulse_width_us is 0:
+        if self.current_pulse_width_us == 0:
             return
         delta_us = self.pulse_width_target_us - self.current_pulse_width_us
         step_us = max(min(delta_us, self.max_step_us), -self.max_step_us)
@@ -56,4 +56,5 @@ class Servo:
     def deactivate(self):
         self.control_loop_timer.deinit()
         self.servo_pwm_pin.duty_ns(0)
-        self.pulse_width_target_us = None
+        self.pulse_width_target_us = 0
+        self.current_pulse_width_us = 0
