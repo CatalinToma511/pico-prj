@@ -66,10 +66,12 @@ class Suspension:
             l2_norm = 1.0
 
         l1_norm = abs(x_gain) + abs(y_gain) # L1 norm of the input
-        scale = l2_norm / l1_norm # scale factor to convert L2 ball to L1 ball
+        scale = l2_norm / l1_norm / 2 # scale factor to convert L2 ball to L1 ball
+        # why divide by 2? so, each servo gets a gain in range [0, 1]. Since each corner is affected
+        # the total range of the diamond shape must be also 1, so the corners needs to be (+/-0.5, +/-0.5) instead of (+/-1, +/-1)
         
-        fl_input_gain = (-x_gain + -y_gain) * scale
-        fr_input_gain = (x_gain + -y_gain) * scale
+        fl_input_gain = (x_gain + -y_gain) * scale
+        fr_input_gain = (-x_gain + -y_gain) * scale
         rl_input_gain = (-x_gain + y_gain) * scale
         rr_input_gain = (x_gain + y_gain) * scale
     
