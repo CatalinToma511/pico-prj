@@ -38,8 +38,8 @@ class MotorPID():
         # encoder parameters and interrupts
         self.total_pulse_count = 0
         self.pulse_count_list = []
-        self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
-        self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
+        self.pulse_pin_a = Pin(enc_a_pin, Pin.IN, Pin.PULL_UP)
+        self.pulse_pin_b = Pin(enc_b_pin, Pin.IN, Pin.PULL_UP)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
         self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
         self.ppr = 12
