@@ -257,7 +257,7 @@ class Motor:
     # Positive speed goes forward, negative speed goes backwards
     def set_speed_rps(self, target_speed_rps):
         set_point_rps = (max(-self.max_rps, min(target_speed_rps, self.max_rps)))
-        self.pid.set_target_rps(int(set_point_rps))
+        self.pid.set_target_rps(set_point_rps)
 
     def get_speed_rps(self):
         return self.pid.current_rps
