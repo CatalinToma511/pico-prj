@@ -30,15 +30,18 @@ class MotorPID():
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # boost parameters
         self.pwm_boost = 0
-        self.stall_boost = 100
-        self.start_boost = 500
+        self.stall_boost = 200
+        self.start_boost = 600
         # motor parameters
         # alpha coef for filters
         self.pwm_filter_alpha = 1
         # encoder parameters and interrupts
         self.total_pulse_count = 0
         self.pulse_count_list = []
-        self.pulse_count_list_size = 35
+        self.pulse_count_list_size = 34
+        # 1 pulse = 1/12 rot ~ 0.029 cm distance, so aprox 0.34cm per pulse. at 100hz at 1cm/s, there is 0.34 pulses per update
+        # so, 3 updates for 1 pulse, that aproximates 30 iterations needed for 10 pulses
+        # so, for 10 pulses needed we can have a delay of even 34 iterations, which is good for low speed, but can be a jittered movement
         self.min_pulse_count = 10
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
