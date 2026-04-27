@@ -169,8 +169,8 @@ class MotorPID():
         # # 8. calculate boosts for start or stall
         # stall boost
         if self.stall_boost_enabled:
-            if self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
-                self.pwm_stall_boost = self.stall_boost / (self.stall_count * self.dt)
+            if self.stall_count * self.dt > 0.30: # if stalled for more than x seconds, start adding stall boost
+                self.pwm_stall_boost = self.stall_count * self.dt
             else:
                 self.pwm_stall_boost = 0
         # start boost
