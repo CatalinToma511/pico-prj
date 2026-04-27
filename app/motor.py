@@ -38,6 +38,8 @@ class MotorPID():
         # encoder parameters and interrupts
         self.total_pulse_count = 0
         self.pulse_count_list = []
+        self.pulse_count_list_size = 35
+        self.min_pulse_count = 10
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
         self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
@@ -110,14 +112,14 @@ class MotorPID():
         elapsed_counts = current_count - self.last_count
         self.last_count = current_count
         self.pulse_count_list.append(elapsed_counts)
-        if len(self.pulse_count_list) > 5:
+        if len(self.pulse_count_list) > self.pulse_count_list_size:
             self.pulse_count_list.pop(0)
 
         # average the counts if low count rate and speed is not 0
-        if self.filtered_target_rps != 0 and elapsed_counts < 6:
+        if self.filtered_target_rps != 0 and elapsed_counts < self.min_pulse_count:
             pulse_sum = 0
             i = 0
-            while pulse_sum < 6 and i < len(self.pulse_count_list):
+            while pulse_sum < self.min_pulse_count and i < len(self.pulse_count_list):
                 pulse_sum += self.pulse_count_list[-1-i]
                 i += 1
             elapsed_counts = pulse_sum / i
