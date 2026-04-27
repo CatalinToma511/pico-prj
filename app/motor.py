@@ -30,7 +30,8 @@ class MotorPID():
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # boost parameters
         self.pwm_boost = 0
-        self.stall_boost = 500
+        self.stall_boost = 600
+        self.boost_fall_alpha = 0.90
         self.start_boost = 600
         # motor parameters
         # alpha coef for filters
@@ -58,7 +59,6 @@ class MotorPID():
         self.old_filtered_target_rps = 0
         self.pwm_start_boost = 0
         self.pwm_stall_boost = 0
-        self.boost_fall_alpha = 0.90
         self.err = 0
         self.err_i = 0
         self.P = 0
