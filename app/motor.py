@@ -30,7 +30,7 @@ class MotorPID():
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # boost parameters
         self.pwm_boost = 0
-        self.stall_boost = 200
+        self.stall_boost = 300
         self.start_boost = 600
         # motor parameters
         # alpha coef for filters
@@ -158,7 +158,7 @@ class MotorPID():
         # 8. calculate boosts for start or stall
         pwm_stall_boost = 0
         pwm_start_boost = 0
-        if self.stall_boost_enabled and self.stall_count > 0.25 / self.dt: # if stalled for more than 0.25s, start adding stall boost
+        if self.stall_boost_enabled and self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
                 pwm_stall_boost += self.stall_boost / (self.stall_count * self.dt)
         if self.start_boost_enabled:
             if self.filtered_target_rps != 0 and old_filtered_target_rps == 0:
@@ -166,7 +166,9 @@ class MotorPID():
         boost = pwm_stall_boost + pwm_start_boost
         if self.filtered_target_rps < 0:
             boost = -boost
-        self.pwm_boost = (pwm_stall_boost + pwm_start_boost) + self.pwm_boost * 0.8 # decay boost over time
+        self.pwm_boost = (pwm_stall_boost + pwm_start_boost) + self.pwm_boost * 0.90 # decay boost over time
+        if abs(self.pwm_boost) < 10: # if boost is very low, set it to 0 to avoid jitter
+            self.pwm_boost = 0
 
         # 7. calculate pwm based on feed-forward and PI control
         if abs(self.filtered_target_rps) != 0:
