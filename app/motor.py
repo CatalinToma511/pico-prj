@@ -21,7 +21,7 @@ class MotorPID():
         self.I = 0
         self.min_pwm = 1500
         self.max_accel = 600 # rot/s^2
-        self.max_decel = 1200 # rot/s^2
+        self.max_decel = 900 # rot/s^2
         self.filtered_target_rps = 0
         # stall paramters
         self.stall_count = 0
@@ -30,7 +30,7 @@ class MotorPID():
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # boost parameters
         self.pwm_boost = 0
-        self.stall_boost = 300
+        self.stall_boost = 500
         self.start_boost = 600
         # motor parameters
         # alpha coef for filters
@@ -51,6 +51,13 @@ class MotorPID():
         # minimum values
         self.min_countable_speed = (0 / self.ppr) # rps, below this speed the speed reading is not reliable
         self.deadband = 1 / (self.ppr * self.dt) # how much counts per dt is considered noise
+        # another values, to avoid memory allocation each time
+        self.time_now = 0
+        self.real_dt = 0
+        self.old_target_rps = 0
+        self.pwm_start_boost = 0
+        self.pwm_stall_boost = 0
+        self.boost_fall_alpha = 0.90
         
         # logging, may be useful for later
         self.total_time = 0
@@ -91,16 +98,16 @@ class MotorPID():
             return 0
         
         # 1. calculate actual elapsed time since last update
-        time_now = time.ticks_ms()
-        real_dt = (time_now - self.last_time) / 1000
-        if self.last_time == 0 or real_dt >= 2 * self.dt:
+        self.time_now = time.ticks_ms()
+        self.real_dt = (self.time_now - self.last_time) / 1000
+        if self.last_time == 0 or self.real_dt >= 2 * self.dt:
             #avoid situation where dt is too big
             real_dt = self.dt
-        self.last_time = time_now
+        self.last_time = self.time_now
 
         # 2. filtering speed to avoid harsh transitions
         # using asymmetrical transitions, one value for acceleration and one for braking
-        old_filtered_target_rps = self.filtered_target_rps
+        self.old_filtered_target_rps = self.filtered_target_rps
         target_ramp = 0
         if self.filtered_target_rps * self.target_rps < 0: # if changing direction, break first
             target_ramp = self.max_decel
@@ -156,17 +163,24 @@ class MotorPID():
             return 0
 
         # 8. calculate boosts for start or stall
-        pwm_stall_boost = 0
-        pwm_start_boost = 0
-        if self.stall_boost_enabled and self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
-                pwm_stall_boost += self.stall_boost / (self.stall_count * self.dt)
+        # stall boost
+        if self.stall_boost_enabled:
+            if self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
+                self.pwm_stall_boost = self.stall_boost / (self.stall_count * self.dt)
+            else:
+                self.pwm_stall_boost = 0
+        # start boost
         if self.start_boost_enabled:
-            if self.filtered_target_rps != 0 and old_filtered_target_rps == 0:
-                pwm_start_boost += self.start_boost
-        boost = pwm_stall_boost + pwm_start_boost
+            if self.filtered_target_rps != 0 and self.old_filtered_target_rps == 0:
+                self.pwm_start_boost = self.start_boost
+            else:
+                self.pwm_start_boost = 0
+        # change boost based on direction, and decay it over time
         if self.filtered_target_rps < 0:
-            boost = -boost
-        self.pwm_boost = (pwm_stall_boost + pwm_start_boost) + self.pwm_boost * 0.90 # decay boost over time
+            self.pwm_boost = (self.pwm_stall_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
+        else:
+            self.pwm_boost = -(self.pwm_start_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
+
         if abs(self.pwm_boost) < 10: # if boost is very low, set it to 0 to avoid jitter
             self.pwm_boost = 0
 
