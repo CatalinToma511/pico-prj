@@ -37,16 +37,17 @@ class MotorPID():
         self.pwm_filter_alpha = 1
         # encoder parameters and interrupts
         self.total_pulse_count = 0
-        self.pulse_count_list = []
-        self.pulse_count_list_size = 34
         # 1 pulse = 1/12 rot ~ 0.029 cm distance, so aprox 0.34cm per pulse. at 100hz at 1cm/s, there is 0.34 pulses per update
         # so, 3 updates for 1 pulse, that aproximates 30 iterations needed for 10 pulses
         # so, for 10 pulses needed we can have a delay of even 34 iterations, which is good for low speed, but can be a jittered movement
+        self.pulse_count_list_size = 34
+        self.pulse_count_list = [0] * self.pulse_count_list_size
         self.min_pulse_count = 10
+        # encoder
         self.pulse_pin_a = Pin(enc_a_pin, Pin.IN)
         self.pulse_pin_b = Pin(enc_b_pin, Pin.IN)
-        self.pulse_pin_a.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_a_irq, hard = True)
-        self.pulse_pin_b.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=self.pin_b_irq, hard = True)
+        self.pulse_pin_a.irq(trigger=(Pin.IRQ_FALLING | Pin.IRQ_RISING), handler=self.pin_a_irq, hard = True)
+        self.pulse_pin_b.irq(trigger=(Pin.IRQ_FALLING | Pin.IRQ_RISING), handler=self.pin_b_irq, hard = True)
         self.ppr = 12
         # minimum values
         self.min_countable_speed = (0 / self.ppr) # rps, below this speed the speed reading is not reliable
@@ -125,14 +126,14 @@ class MotorPID():
         if len(self.pulse_count_list) > self.pulse_count_list_size:
             self.pulse_count_list.pop(0)
 
-        # average the counts if low count rate and speed is not 0
-        if self.filtered_target_rps != 0 and elapsed_counts < self.min_pulse_count:
-            pulse_sum = 0
-            i = 0
-            while pulse_sum < self.min_pulse_count and i < self.pulse_count_list_size:
-                pulse_sum += self.pulse_count_list[-1-i]
-                i += 1
-            elapsed_counts = pulse_sum / i
+        # # average the counts if low count rate and speed is not 0
+        # if self.filtered_target_rps != 0 and elapsed_counts < self.min_pulse_count:
+        #     pulse_sum = 0
+        #     i = 0
+        #     while pulse_sum < self.min_pulse_count and i < self.pulse_count_list_size:
+        #         pulse_sum += self.pulse_count_list[-1-i]
+        #         i += 1
+        #     elapsed_counts = pulse_sum / i
 
         # 4. calculate current speed in rps
         self.current_rps = elapsed_counts / self.ppr * (1 / real_dt)
