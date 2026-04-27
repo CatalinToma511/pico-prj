@@ -155,40 +155,40 @@ class MotorPID():
         pwm_ff = max(-65535, min(pwm_ff, 65535))
 
         # # 7. check for stall
-        # if self.current_rps == 0 and self.filtered_target_rps != 0:
-        #     self.stall_count += 1
-        # else:
-        #     self.stall_count = 0
-        # if self.stall_count * self.dt > self.stall_max_time: # if stalled for more than 1s, pause control
-        #     print("[MotorPID] Motor stalled, pausing control.")
-        #     self.stall_pause_iterations = int(self.stall_pause_time / self.dt)
-        #     self.stall_count = 0
-        #     self.I = 0
-        #     return 0
+        if self.current_rps == 0 and self.filtered_target_rps != 0:
+            self.stall_count += 1
+        else:
+            self.stall_count = 0
+        if self.stall_count * self.dt > self.stall_max_time: # if stalled for more than 1s, pause control
+            print("[MotorPID] Motor stalled, pausing control.")
+            self.stall_pause_iterations = int(self.stall_pause_time / self.dt)
+            self.stall_count = 0
+            self.I = 0
+            return 0
 
         # # 8. calculate boosts for start or stall
-        # # stall boost
-        # if self.stall_boost_enabled:
-        #     if self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
-        #         self.pwm_stall_boost = self.stall_boost / (self.stall_count * self.dt)
-        #     else:
-        #         self.pwm_stall_boost = 0
-        # # start boost
-        # if self.start_boost_enabled:
-        #     if self.filtered_target_rps != 0 and self.old_filtered_target_rps == 0:
-        #         self.pwm_start_boost = self.start_boost
-        #     else:
-        #         self.pwm_start_boost = 0
-        # # change boost based on direction, and decay it over time
-        # if self.filtered_target_rps < 0:
-        #     self.pwm_boost = (self.pwm_stall_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
-        # else:
-        #     self.pwm_boost = -(self.pwm_start_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
+        # stall boost
+        if self.stall_boost_enabled:
+            if self.stall_count > 0.20 / self.dt: # if stalled for more than x seconds, start adding stall boost
+                self.pwm_stall_boost = self.stall_boost / (self.stall_count * self.dt)
+            else:
+                self.pwm_stall_boost = 0
+        # start boost
+        if self.start_boost_enabled:
+            if self.filtered_target_rps != 0 and self.old_filtered_target_rps == 0:
+                self.pwm_start_boost = self.start_boost
+            else:
+                self.pwm_start_boost = 0
+        # change boost based on direction, and decay it over time
+        if self.filtered_target_rps < 0:
+            self.pwm_boost = (self.pwm_stall_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
+        else:
+            self.pwm_boost = -(self.pwm_start_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
 
-        # if abs(self.pwm_boost) < 10: # if boost is very low, set it to 0 to avoid jitter
-        #     self.pwm_boost = 0
+        if abs(self.pwm_boost) < 10: # if boost is very low, set it to 0 to avoid jitter
+            self.pwm_boost = 0
 
-        # 7. calculate pwm based on feed-forward and PI control
+        # 9. calculate pwm based on feed-forward and PI control
         if abs(self.filtered_target_rps) != 0:
             pwm = pwm_ff + self.P + self.I + self.pwm_boost
             pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
