@@ -69,6 +69,7 @@ Hardware components:
 
 
 Roadmap:
+- making a configuration file containg all the values needed by different modules (pins, factors etc.), similar to a car's CCF file
 - finding a way to connect the Xbox controller directlly to Pico W, without the need of a desktop app
 - self-leveing suspension algorithm
 - suspension mode for asistting suspension articulation in off-road

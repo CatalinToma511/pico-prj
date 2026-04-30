@@ -3,3 +3,6 @@ typings/
 .micropico
 data.csv
 networks
+.csv
+calculate_kv.py
+motor_tuning.py
