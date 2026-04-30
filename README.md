@@ -45,7 +45,7 @@ Hardware components:
 - Microcontroller: Raspberry Pi Pico 2 W
   
 - Motor + Drive System:
-  - 370 45 turns brushed DC motor (25000rpm@8.4V)
+  - 370 45 turns brushed DC motor (25000RPM @8.4V)
   - IBT-4 motor driver
   - Pololu Quadrature Encoder (12 CPR)
   - WPL 2-speed gearbox (servo-actuated)
