@@ -1,4 +1,7 @@
 from update_manager import updateManager
+import time
+
+time.sleep(2)
 
 uc = updateManager()
 uc.run()
