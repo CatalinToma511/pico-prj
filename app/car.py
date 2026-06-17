@@ -113,6 +113,7 @@ class Car:
                     self.motor.set_speed_rps(0)
                 if self.steering:
                     self.steering.set_steering_position(0)
+                return
 
             # speed
             spd = data[0] - data[1] #RT - LT
