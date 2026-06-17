@@ -110,8 +110,9 @@ class Car:
             if data == b'DISCONNECTED':
                 print("Client disconnected - stopping the car.")
                 if self.motor:
-                    self.motor.set_speed_rps(0)
+                    self.speed_target = 0
                 if self.steering:
+                    self.steering_target = 0
                     self.steering.set_steering_position(0)
                 return
 
