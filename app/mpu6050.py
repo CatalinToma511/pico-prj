@@ -148,6 +148,14 @@ class MPU6050:
                                 0 - gyro_sum_z / samples]
         except Exception as e:
             print(f"Error calibrating IMU: {e}")
+
+    def reset(self):
+        self.gyro_x = 0
+        self.gyro_y = 0
+        self.gyro_z = 0
+        self.pitch = 0
+        self.roll = 0
+        self.yaw = 0
         
 
     def read_accelerometer(self):
@@ -164,6 +172,17 @@ class MPU6050:
         self.gyro_y = self.gyro_y_raw * self.gyro_factors[1] + self.gyro_offsets[1]
         self.gyro_z = self.gyro_z_raw * self.gyro_factors[2] + self.gyro_offsets[2]
         return self.gyro_x, self.gyro_y, self.gyro_z
+    
+
+    def read_accelerometer_position(self):
+        try:
+            self.read_accelerometer()
+            roll = math.atan2(self.accel_z, self.accel_x) * (180.0 / math.pi)
+            pitch = math.atan2(-self.accel_y, math.sqrt(self.accel_x**2 + self.accel_z**2)) * (180.0 / math.pi)
+            return roll, pitch
+        except Exception as e:
+            print(f"Error reading position: {e}")
+            return 0, 0
 
 
     def update_position(self, timer):
@@ -193,16 +212,10 @@ class MPU6050:
         interval_ms = int(1000 / freq)
         self.read_timer.init(mode=Timer.PERIODIC, period=interval_ms, callback=self.update_position)
     
-    
-    def read_accelerometer_position(self):
-        try:
-            self.read_accelerometer()
-            roll = math.atan2(self.accel_z, self.accel_x) * (180.0 / math.pi)
-            pitch = math.atan2(-self.accel_y, math.sqrt(self.accel_x**2 + self.accel_z**2)) * (180.0 / math.pi)
-            return roll, pitch
-        except Exception as e:
-            print(f"Error reading position: {e}")
-            return 0, 0
 
     def read_position(self):
         return self.roll, self.pitch
+    
+
+    def force_stop(self):
+        self.read_timer.deinit()

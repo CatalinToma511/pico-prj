@@ -42,3 +42,7 @@ class Steering:
         if self.left <= angle <= self.right or self.right <= angle <= self.left:
             self.servo.set_angle(angle)
             self.position = target_position
+
+    
+    def force_stop(self):
+        self.servo.deactivate()

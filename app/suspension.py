@@ -122,3 +122,14 @@ class Suspension:
         if self.rr_servo:
             self.rr_servo.set_base_gain(self.rr_base_gain)
             self.rr_servo.set_gain(self.rr_gain) 
+
+
+    def force_stop(self):
+        if self.fl_servo:
+            self.fl_servo.force_stop()
+        if self.fr_servo:
+            self.fr_servo.force_stop()
+        if self.rl_servo:
+            self.rl_servo.force_stop()
+        if self.rr_servo:
+            self.rr_servo.force_stop()

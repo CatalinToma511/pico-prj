@@ -21,6 +21,7 @@ class Servo:
             # so, the max step is in us per control loop interval is 666 us divided by the speed in ms, multiplied by the control loop interval in ms
             self.max_step_us = 666 / speed_ms * self.control_loop_interval_ms
             self.control_loop_timer.init(period=self.control_loop_interval_ms, mode=Timer.PERIODIC, callback=self.control_loop)
+        self.is_active = True
     
 
     def control_loop(self, timer):
@@ -36,6 +37,8 @@ class Servo:
     
     
     def set_angle(self, angle):
+        if self.is_active == False:
+            return
         if abs(self.angle - angle) < self.deadzone:
             return
         if angle < 0 or angle > 180:
@@ -54,6 +57,7 @@ class Servo:
             
     
     def deactivate(self):
+        self.is_active = False
         self.control_loop_timer.deinit()
         self.servo_pwm_pin.duty_ns(0)
         self.pulse_width_target_us = 0

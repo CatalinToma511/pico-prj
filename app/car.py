@@ -104,7 +104,15 @@ class Car:
             # restart the Pico if needed
             if data == b'RESET':
                 print("Resetting the machine...")
+                self.stop_car_activity()
                 machine.reset()
+            
+            if data == b'DISCONNECTED':
+                print("Client disconnected - stopping the car.")
+                if self.motor:
+                    self.motor.set_speed_rps(0)
+                if self.steering:
+                    self.steering.set_steering_position(0)
 
             # speed
             spd = data[0] - data[1] #RT - LT
@@ -243,7 +251,15 @@ class Car:
     
     def stop_car_activity(self):
         if self.motor:
-            self.motor.stop_control_loop()
+            self.motor.force_stop()
+        if self.steering:
+            self.steering.force_stop()
+        if self.gearbox:
+            self.gearbox.force_stop()
+        if self.suspension:
+            self.suspension.force_stop()
         if self.horn:
-            self.horn.turn_off()
+            self.horn.force_stop()
+        if self.mpu6050:
+            self.mpu6050.force_stop()
         print("Car activity stopped.")

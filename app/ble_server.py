@@ -102,6 +102,8 @@ class BLE_Server:
             self._connections.discard(conn_handle)
             self.connected = False
             self.led.off()
+            if self.controls_callback:
+                self.controls_callback(b'DISCONNECTED')
             print("Disconnected")
             # Restart advertising so new connections are possible
             self.advertise()

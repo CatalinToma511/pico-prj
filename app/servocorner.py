@@ -35,3 +35,6 @@ class ServoCorner:
         self._update()
     def get_total_gain(self):
         return self.base_gain + self.gain
+    
+    def force_stop(self):
+        self.servo.deactivate()

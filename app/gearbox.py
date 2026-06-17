@@ -13,6 +13,7 @@ class Gearbox:
         self.gear = 0  # 0 for low gear, 1 for high gear
         self.set_gear(0)
 
+
     def set_gear(self, gear):
         if gear == 0:
             self.gear_shift_servo.set_angle(self.low_gear_angle)
@@ -25,5 +26,10 @@ class Gearbox:
         else:
             print(f'[Gearbox] Invalid gear: {gear}')
 
+
     def get_gearing_ratio(self):
         return self.gearing_ratio
+    
+
+    def force_stop(self):
+        self.gear_shift_servo.deactivate()

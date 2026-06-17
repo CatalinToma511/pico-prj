@@ -16,3 +16,6 @@ class Horn:
         # self.horn_pwm.duty_u16(0)
         self.horn_pin.off()
         pass
+
+    def force_stop(self):
+        self.turn_off()

@@ -319,3 +319,10 @@ class Motor:
 
     def stop_control_loop(self):
         self.irq_timer.deinit()
+
+    
+    def force_stop(self):
+        self.pid.set_target_rps(0)
+        self.stop_control_loop()
+        self.in1.duty_u16(0)
+        self.in2.duty_u16(0)
