@@ -3,38 +3,38 @@ import ustruct
 import math
 import time
 
-MPU6050_ADDR = 0x68
-MPU6050_REG_CONFIG = 0x1A
-MPU6050_REG_ACCEL_CONFIG = 0x1C
-MPU6050_REG_GYRO_CONFIG = 0x1B
-MPU6050_REG_ACCEL_XOUT_H = 0x3B
-MPU6050_REG_GYRO_XOUT_H = 0x43
-MPU6050_REG_PWR_MGMT_1 = 0x6B
-MPU6050_REG_SMPRT_DIV = 0x19
-DLPF_CFG_MASK_INVERSE = 0xF8
-DLPF_CFG_MASK = 0x07
-DLPF_CFG_0 = 0x00 # Accelerometer: bandwidth=260Hz, delay=0.98ms | Gyroscope: bandwidth=256Hz, delay=0.98ms, Fs=8kHz
-DLPF_CFG_1 = 0x01 # Accelerometer: bandwidth=184Hz, delay=2.0ms | Gyroscope: bandwidth=188Hz, delay=1.9ms, Fs=1kHz
-DLPF_CFG_2 = 0x02 # Accelerometer: bandwidth=94Hz, delay=3.0ms | Gyroscope: bandwidth=98Hz, delay=2.8ms, Fs=1kHz
-DLPF_CFG_3 = 0x03 # Accelerometer: bandwidth=44Hz, delay=4.9ms | Gyroscope: bandwidth=42Hz, delay=4.8ms, Fs=1kHz
-DLPF_CFG_4 = 0x04 # Accelerometer: bandwidth=21Hz, delay=8.5ms | Gyroscope: bandwidth=20Hz, delay=8.3ms, Fs=1kHz
-DLPF_CFG_5 = 0x05 # Accelerometer: bandwidth=10Hz, delay=13.8ms | Gyroscope: bandwidth=10Hz, delay=13.4ms, Fs=1kHz
-DLPF_CFG_6 = 0x06 # Accelerometer: bandwidth=5Hz, delay=19.0ms | Gyroscope: bandwidth=5Hz, delay=18.6ms, Fs=1kHz
+MPU6050_ADDR = const(0x68)
+MPU6050_REG_CONFIG = const(0x1A)
+MPU6050_REG_ACCEL_CONFIG = const(0x1C)
+MPU6050_REG_GYRO_CONFIG = const(0x1B)
+MPU6050_REG_ACCEL_XOUT_H = const(0x3B)
+MPU6050_REG_GYRO_XOUT_H = const(0x43)
+MPU6050_REG_PWR_MGMT_1 = const(0x6B)
+MPU6050_REG_SMPRT_DIV = const(0x19)
+DLPF_CFG_MASK_INVERSE = const(0xF8)
+DLPF_CFG_MASK = const(0x07)
+DLPF_CFG_0 = const(0x00) # Accelerometer: bandwidth=260Hz, delay=0.98ms | Gyroscope: bandwidth=256Hz, delay=0.98ms, Fs=8kHz
+DLPF_CFG_1 = const(0x01) # Accelerometer: bandwidth=184Hz, delay=2.0ms | Gyroscope: bandwidth=188Hz, delay=1.9ms, Fs=1kHz
+DLPF_CFG_2 = const(0x02) # Accelerometer: bandwidth=94Hz, delay=3.0ms | Gyroscope: bandwidth=98Hz, delay=2.8ms, Fs=1kHz
+DLPF_CFG_3 = const(0x03) # Accelerometer: bandwidth=44Hz, delay=4.9ms | Gyroscope: bandwidth=42Hz, delay=4.8ms, Fs=1kHz
+DLPF_CFG_4 = const(0x04) # Accelerometer: bandwidth=21Hz, delay=8.5ms | Gyroscope: bandwidth=20Hz, delay=8.3ms, Fs=1kHz
+DLPF_CFG_5 = const(0x05) # Accelerometer: bandwidth=10Hz, delay=13.8ms | Gyroscope: bandwidth=10Hz, delay=13.4ms, Fs=1kHz
+DLPF_CFG_6 = const(0x06) # Accelerometer: bandwidth=5Hz, delay=19.0ms | Gyroscope: bandwidth=5Hz, delay=18.6ms, Fs=1kHz
 ACC_SEN_TABLE = [16384, 8192, 4096, 2048] # LSB sensitivity for ±2g, ±4g, ±8g, ±16g; smallest change in acceleration that can be detected
-AFS_SEL_MASK = 0x18
-AFS_SEL_MASK_INVERSE = 0xE7
-AFS_SEL_0 = 0x00 # Scale range: ±2g
-AFS_SEL_1 = 0x01 # Scale range: ±4g
-AFS_SEL_2 = 0x02 # Scale range: ±8g
-AFS_SEL_3 = 0x03 # Scale range: ±16g
+AFS_SEL_MASK = const(0x18)
+AFS_SEL_MASK_INVERSE = const(0xE7)
+AFS_SEL_0 = const(0x00) # Scale range: ±2g
+AFS_SEL_1 = const(0x01) # Scale range: ±4g
+AFS_SEL_2 = const(0x02) # Scale range: ±8g
+AFS_SEL_3 = const(0x03) # Scale range: ±16g
 GYRO_SEN_TABLE = [131, 65.5, 32.8, 16.4] # LSB sensitivity for ±250°/s, ±500°/s, ±1000°/s, ±2000°/s; smallest change in angular velocity that can be detected
-FS_SEL_MASK = 0x18
-FS_SEL_MASK_INVERSE = 0xE7
-FS_SEL_0 = 0x00 # Scale range: ±250°/s
-FS_SEL_1 = 0x01 # Scale range: ±500°/s
-FS_SEL_2 = 0x02 # Scale range: ±1000°/s
-FS_SEL_3 = 0x03 # Scale range: ±2000°/s
-G_CONSTANT = 9.81
+FS_SEL_MASK = const(0x18)
+FS_SEL_MASK_INVERSE = const(0xE7)
+FS_SEL_0 = const(0x00) # Scale range: ±250°/s
+FS_SEL_1 = const(0x01) # Scale range: ±500°/s
+FS_SEL_2 = const(0x02) # Scale range: ±1000°/s
+FS_SEL_3 = const(0x03) # Scale range: ±2000°/s
+G_CONSTANT = const(9.81)
 
 class MPU6050:
     def __init__(self, bus_id, scl_pin, sda_pin, addr = MPU6050_ADDR):
@@ -63,8 +63,8 @@ class MPU6050:
         self.roll = 0
         self.yaw = 0
         self.last_update_time = 0
-        self.complementary_filter_alpha_stationary = 0.9800
-        self.complementary_filter_alpha_motion= 0.9998
+        self.complementary_filter_alpha_stationary = const(0.9200)
+        self.complementary_filter_alpha_motion= const(0.9998)
         
         # wake up
         self.i2c.writeto_mem(self.addr, MPU6050_REG_PWR_MGMT_1, bytes([0]))
