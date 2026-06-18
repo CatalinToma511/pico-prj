@@ -30,7 +30,6 @@ class Suspension:
         # suspension can change roll by -13 to +13 deg, pitch by -5 to +5, and gain is from 0.0 to 1.0
         self.kp_roll = 0.01
         self.kp_pitch = 0.005
-        self.rear_multiplier = 1.2
 
     def set_imu(self, imu):
         self.imu = imu
@@ -130,9 +129,20 @@ class Suspension:
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
             self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction + pitch_correction)
             self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
-            self.rl_tilt_gain = self.rl_tilt_gain + (-roll_correction - pitch_correction) * self.rear_multiplier
+            # for the rear, analize if tilt is more alligned with roll/pitch axis or diagonal
+            rl_diag_correction = roll_correction + pitch_correction
+            rl_axis_correction = -roll_correction - pitch_correction
+            rr_diag_correction = -roll_correction + pitch_correction
+            rr_axis_correction = roll_correction - pitch_correction
+            r = abs(roll)
+            p = abs(pitch)
+            diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
+            axis_weight = 1.0 - diag_weight
+            rl_gain = diag_weight * rl_diag_correction + axis_weight * rl_axis_correction
+            rr_gain = diag_weight * rr_diag_correction + axis_weight * rr_axis_correction
+            self.rl_tilt_gain = self.rl_tilt_gain + rl_gain
             self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
-            self.rr_tilt_gain = self.rr_tilt_gain + (roll_correction - pitch_correction) * self.rear_multiplier
+            self.rr_tilt_gain = self.rr_tilt_gain + rr_gain
             self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
             # set the gain to each corner
             self.fl_gain = self.fl_tilt_gain
