@@ -28,8 +28,8 @@ class Suspension:
         self.mode = 0
         self.incline_epsilon = 0.5 # degrees of acceptable incline, above this suspension tries to compensate
         # suspension can change roll by -13 to +13 deg, pitch by -5 to +5, and gain is from 0.0 to 1.0
-        self.kp_roll = 0.03
-        self.kp_pitch = 0.1
+        self.kp_roll = 0.003
+        self.kp_pitch = 0.01
         self.roll_corr = 0
         self.pitch_corr = 0
 
@@ -126,8 +126,6 @@ class Suspension:
                 roll, pitch = -1, -1
             roll_correction = self.kp_roll * roll
             pitch_correction = self.kp_pitch * pitch
-            self.roll_corr = roll
-            self.pitch_corr = pitch
             # add correction to each corner
             self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction + pitch_correction)
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
