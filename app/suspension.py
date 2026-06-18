@@ -131,9 +131,9 @@ class Suspension:
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
             self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction + pitch_correction)
             self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
-            self.rl_tilt_gain = self.fr_tilt_gain # self.rl_tilt_gain + (-roll_correction - pitch_correction)
+            self.rl_tilt_gain = self.rl_tilt_gain + (-roll_correction - pitch_correction)
             self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
-            self.rr_tilt_gain = self.fl_tilt_gain # self.rr_tilt_gain + (roll_correction - pitch_correction)
+            self.rr_tilt_gain = self.rr_tilt_gain + (roll_correction - pitch_correction)
             self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
             # set the gain to each corner
             self.fl_gain = self.fl_tilt_gain
