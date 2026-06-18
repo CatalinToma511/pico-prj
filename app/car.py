@@ -264,4 +264,5 @@ class Car:
             self.horn.force_stop()
         if self.imu:
             self.imu.force_stop()
+        time.sleep(0.5)
         print("Car activity stopped.")

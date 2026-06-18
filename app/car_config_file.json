@@ -1,0 +1,94 @@
+{
+    "motor": {
+        "in1": 12,
+        "in2": 13,
+        "enc_a": 17,
+        "enc_b": 16,
+        "pwm_freq": 300,
+        "max_rps": 420,
+        "loop_ms": 10,
+        "kp": 250,
+        "ki": 1250,
+        "kff": 95,
+        "acc": 600,
+        "dec": 900,
+        "start_b": 600,
+        "stall_b": 650,
+        "stall_t": 2,
+        "stall_p": 2,
+        "pls_cnt": 17,
+        "min_p_cnt": 5
+    },
+    "steering": {
+        "pin": 2,
+        "freq": 100,
+        "speed": 250,
+        "loop_ms": 10,
+        "center": 90,
+        "left": 135,
+        "right": 45,
+        "max_left_pos": -128,
+        "max_right_pos": 127,
+        "center_pos": 0,
+        "deadzone": 5
+    },
+    "gearbox": {
+        "pin": 3,
+        "low_angle": 9,
+        "high_angle":108,
+        "low_ratio": 29.922,
+        "high_ratio": 11,
+        "axle_ratio": 2.333
+    },
+    "horn": {
+        "pin": 4,
+        "freq": 0
+    },
+    "voltage_reader": {
+        "pin": 26,
+        "R1": 998000,
+        "R2": 470000,
+        "factor": 1.075,
+        "vref": 3.3
+    },
+    "suspension": {
+        "speed": 250,
+        "freq": 100,
+        "loop_ms": 5,
+        "kp_roll": 0.01,
+        "kp_pitch": 0.005,
+        "incl_e": 0.25,
+        "corners": {
+            "fl": {
+                "pin": 8,
+                "top": 137,
+                "btm": 72
+            },
+            "fr": {
+                "pin": 9,
+                "top": 45,
+                "btm": 111
+            },
+            "rl": {
+                "pin": 10,
+                "top": 42,
+                "btm": 117
+            },
+            "rr": {
+                "pin": 11,
+                "top": 132,
+                "btm": 57
+            }
+        }
+    },
+    "mpu6050": {
+        "bus": 0,
+        "scl": 21,
+        "sda": 20,
+        "addr": "0x68",
+        "smp_rate_div": 9,
+        "dlp_cfg": 2,
+        "afs_sel": 3,
+        "fs_sel": 0
+    }
+}
