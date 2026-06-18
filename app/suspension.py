@@ -123,12 +123,10 @@ class Suspension:
             roll, pitch = 0, 0
             if self.imu:
                 roll, pitch = self.imu.read_position()
-                roll = roll if abs(roll) > self.incline_epsilon else 0
-                pitch = pitch if abs(pitch) > self.incline_epsilon else 0
             roll_correction = self.kp_roll * roll
             pitch_correction = self.kp_pitch * pitch
-            self.roll_corr = roll_correction
-            self.pitch_corr = pitch_correction
+            self.roll_corr = roll
+            self.pitch_corr = pitch
             # add correction to each corner
             self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction + pitch_correction)
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
