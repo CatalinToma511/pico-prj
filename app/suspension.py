@@ -137,7 +137,7 @@ class Suspension:
             r = abs(roll)
             p = abs(pitch)
             diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
-            daig_weight = diag_weight ** (1/2) # amplify the diagonal bias
+            diag_weight = diag_weight ** (1/2) # amplify the diagonal bias
             axis_weight = 1.0 - diag_weight
             rl_gain = diag_weight * rl_diag_correction + axis_weight * rl_axis_correction
             rr_gain = diag_weight * rr_diag_correction + axis_weight * rr_axis_correction
