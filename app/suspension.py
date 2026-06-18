@@ -33,7 +33,6 @@ class Suspension:
         self.kp_roll = 0.0075
         self.kp_pitch = 0.003
         self.diag_weight = 0
-        self.diag_weight_exponent = 0.5
         self.axis_weight = 0
 
 
@@ -142,7 +141,6 @@ class Suspension:
             r = abs(self.roll)
             p = abs(self.pitch)
             self.diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
-            self.diag_weight = self.diag_weight ** self.diag_weight_exponent # amplify the diagonal bias
             self.axis_weight = 1.0 - self.diag_weight
             rl_gain = self.diag_weight * rl_diag_correction + self.axis_weight * rl_axis_correction
             rr_gain = self.diag_weight * rr_diag_correction + self.axis_weight * rr_axis_correction
