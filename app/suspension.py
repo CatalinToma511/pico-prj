@@ -26,10 +26,17 @@ class Suspension:
         self.rl_tilt_gain = 0
         self.update_timer = Timer()
         self.mode = 0
+        self.roll = 0
+        self.pitch = 0
+        self.tilt_alpha = 0.9
         self.incline_epsilon = 0.25 # degrees of acceptable incline, above this suspension tries to compensate
         # suspension can change roll by -13 to +13 deg, pitch by -5 to +5, and gain is from 0.0 to 1.0
         self.kp_roll = 0.01
         self.kp_pitch = 0.005
+        self.diag_weight = 0
+        self.diag_weight_exponent = 0.5
+        self.axis_weight = 0
+
 
     def set_imu(self, imu):
         self.imu = imu
@@ -117,13 +124,14 @@ class Suspension:
             self.rr_gain = self.rr_input_gain
 
         elif self.mode == 1:
-            roll, pitch = 0, 0
             if self.imu:
-                roll, pitch = self.imu.read_position()
-                roll = roll if abs(roll) > self.incline_epsilon else 0
-                pitch = pitch if abs(pitch) > self.incline_epsilon else 0
-            roll_correction = self.kp_roll * roll
-            pitch_correction = self.kp_pitch * pitch
+                imu_roll, imu_pitch = self.imu.read_position()
+                self.roll = self.tilt_alpha * self.roll + (1 - self.tilt_alpha) * imu_roll
+                self.pitch = self.tilt_alpha * self.pitch + (1 - self.tilt_alpha) * imu_pitch
+                self.roll = self.roll if abs(self.roll) > self.incline_epsilon else 0
+                self.pitch = self.pitch if abs(self.pitch) > self.incline_epsilon else 0
+            roll_correction = self.kp_roll * self.roll
+            pitch_correction = self.kp_pitch * self.pitch
             # add correction to each corner
             self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction + pitch_correction)
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
@@ -134,13 +142,13 @@ class Suspension:
             rl_axis_correction = -roll_correction - pitch_correction
             rr_diag_correction = -roll_correction + pitch_correction
             rr_axis_correction = roll_correction - pitch_correction
-            r = abs(roll)
-            p = abs(pitch)
-            diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
-            diag_weight = diag_weight ** (1/2) # amplify the diagonal bias
-            axis_weight = 1.0 - diag_weight
-            rl_gain = diag_weight * rl_diag_correction + axis_weight * rl_axis_correction
-            rr_gain = diag_weight * rr_diag_correction + axis_weight * rr_axis_correction
+            r = abs(self.roll)
+            p = abs(self.pitch)
+            self.diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
+            self.diag_weight = self.diag_weight ** self.diag_weight_exponent # amplify the diagonal bias
+            self.axis_weight = 1.0 - self.diag_weight
+            rl_gain = self.diag_weight * rl_diag_correction + self.axis_weight * rl_axis_correction
+            rr_gain = self.diag_weight * rr_diag_correction + self.axis_weight * rr_axis_correction
             self.rl_tilt_gain = self.rl_tilt_gain + rl_gain
             self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
             self.rr_tilt_gain = self.rr_tilt_gain + rr_gain
