@@ -3,7 +3,7 @@ from machine import Timer
 
 class Suspension:
     def __init__(self):
-        self.mpu = None
+        self.imu = None
         self.fl_servo = None
         self.fr_servo = None
         self.rl_servo = None
@@ -33,7 +33,7 @@ class Suspension:
 
     def set_imu(self, imu):
         if imu:
-            self.mpu = imu
+            self.imu = imu
 
     def start_control_loop(self):
         self.update_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update)
@@ -109,39 +109,6 @@ class Suspension:
         self.fr_input_gain = (-x_gain + -y_gain) * scale
         self.rl_input_gain = (x_gain + y_gain) * scale
         self.rr_input_gain = (-x_gain + y_gain) * scale
-    
-        correction = 0
-        max_total_gain = max(self.fl_base_gain + self.fl_input_gain,
-                       self.fr_base_gain + self.fr_input_gain,
-                       self.rl_base_gain + self.rl_input_gain,
-                       self.rr_base_gain + self.rr_input_gain)
-        min_total_gain = min(self.fl_base_gain + self.fl_input_gain,
-                        self.fr_base_gain + self.fr_input_gain,
-                        self.rl_base_gain + self.rl_input_gain,
-                        self.rr_base_gain + self.rr_input_gain)
-        
-        if max_total_gain > 1 and min_total_gain > 0:
-            # overflow
-            correction = 1 - max_total_gain
-        elif min_total_gain < 0 and max_total_gain < 1:
-            # underflow
-            correction = -min_total_gain
-        else:
-            # both overflow and underflow should not happen at the same time, but if they do, ignore correction
-            # each servo will take care of clamping its gain to its range
-            # here we can also abort using this inputs at all, but having a response may be useful for debugging and feedback
-            correction = 0
-
-        self.fl_input_gain += correction
-        self.fr_input_gain += correction
-        self.rl_input_gain += correction
-        self.rr_input_gain += correction
-
-        # self.set_gain(fl_input_gain, corner='fl')
-        # self.set_gain(fr_input_gain, corner='fr')
-        # self.set_gain(rl_input_gain, corner='rl')
-        # self.set_gain(rr_input_gain, corner='rr')
-
 
     def update(self, tmr):
         if self.mode == 0:
@@ -152,9 +119,10 @@ class Suspension:
 
         elif self.mode == 1:
             roll, pitch = 0, 0
-            if self.mpu:
-                roll = self.mpu.roll if abs(self.mpu.roll) > self.incline_epsilon else 0
-                pitch = self.mpu.pitch if abs(self.mpu.pitch) > self.incline_epsilon else 0
+            if self.imu:
+                roll, pitch = self.imu.read_position()
+                roll = roll if abs(roll) > self.incline_epsilon else 0
+                pitch = pitch if abs(pitch) > self.incline_epsilon else 0
             roll_correction = self.kp_roll * roll
             pitch_correction = self.kp_pitch * pitch
             # add correction to each corner
