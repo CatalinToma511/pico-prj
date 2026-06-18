@@ -122,8 +122,8 @@ class Suspension:
             roll, pitch = 0, 0
             if self.imu:
                 roll, pitch = self.imu.read_position()
-            else:
-                roll, pitch = -1, -1
+                roll = roll if abs(roll) > self.incline_epsilon else 0
+                pitch = pitch if abs(pitch) > self.incline_epsilon else 0
             roll_correction = self.kp_roll * roll
             pitch_correction = self.kp_pitch * pitch
             # add correction to each corner
