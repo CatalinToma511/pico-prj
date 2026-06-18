@@ -1,8 +1,9 @@
 from servocorner import ServoCorner
+from machine import Timer
 
 class Suspension:
-    def __init__(self, mpu = None):
-        self.mpu = mpu
+    def __init__(self):
+        self.mpu = None
         self.fl_servo = None
         self.fr_servo = None
         self.rl_servo = None
@@ -15,7 +16,27 @@ class Suspension:
         self.fl_gain = 0
         self.rr_gain = 0
         self.rl_gain = 0
-    
+        self.fr_input_gain = 0
+        self.fl_input_gain = 0
+        self.rr_input_gain = 0
+        self.rl_input_gain = 0
+        self.fr_tilt_gain = 0
+        self.fl_tilt_gain = 0
+        self.rr_tilt_gain = 0
+        self.rl_tilt_gain = 0
+        self.update_timer = Timer()
+        self.mode = 0
+        self.incline_epsilon = 0.5 # degrees of acceptable incline, above this suspension tries to compensate
+        # suspension can change roll by -13 to +13 deg, pitch by -5 to +5, and gain is from 0.0 to 1.0
+        self.kp_roll = 0.03
+        self.kp_pitch = 0.1
+
+    def set_imu(self, imu):
+        if imu:
+            self.mpu = imu
+
+    def start_control_loop(self):
+        self.update_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update)
 
     def config_servo(self, corner, servo_pin, center = 90, top_angle = 100, botton_angle = 80):
         if corner == 'fl':
@@ -27,6 +48,19 @@ class Suspension:
         elif corner == 'rr':
             self.rr_servo = ServoCorner(servo_pin, top_angle, botton_angle)
 
+    def set_mode(self, mode):
+        self.mode = mode
+        # reseting the gains
+        if mode == 0:
+            self.fl_input_gain = 0
+            self.fr_input_gain = 0
+            self.rl_input_gain = 0
+            self.rr_input_gain = 0
+        elif mode == 1:
+            self.fl_tilt_gain = 0
+            self.fr_tilt_gain = 0
+            self.rl_tilt_gain = 0
+            self.rr_tilt_gain = 0
 
     def set_base_gain(self, gain, corner = 'all'):
         if corner == 'fl' or corner == 'all':
@@ -71,20 +105,20 @@ class Suspension:
         # why divide by 2? so, each servo gets a gain in range [0, 1]. Since each corner is affected
         # the total range of the diamond shape must be also 1, so the corners needs to be (+/-0.5, +/-0.5) instead of (+/-1, +/-1)
         
-        fl_input_gain = (x_gain + -y_gain) * scale
-        fr_input_gain = (-x_gain + -y_gain) * scale
-        rl_input_gain = (x_gain + y_gain) * scale
-        rr_input_gain = (-x_gain + y_gain) * scale
+        self.fl_input_gain = (x_gain + -y_gain) * scale
+        self.fr_input_gain = (-x_gain + -y_gain) * scale
+        self.rl_input_gain = (x_gain + y_gain) * scale
+        self.rr_input_gain = (-x_gain + y_gain) * scale
     
         correction = 0
-        max_total_gain = max(self.fl_base_gain + fl_input_gain,
-                       self.fr_base_gain + fr_input_gain,
-                       self.rl_base_gain + rl_input_gain,
-                       self.rr_base_gain + rr_input_gain)
-        min_total_gain = min(self.fl_base_gain + fl_input_gain,
-                        self.fr_base_gain + fr_input_gain,
-                        self.rl_base_gain + rl_input_gain,
-                        self.rr_base_gain + rr_input_gain)
+        max_total_gain = max(self.fl_base_gain + self.fl_input_gain,
+                       self.fr_base_gain + self.fr_input_gain,
+                       self.rl_base_gain + self.rl_input_gain,
+                       self.rr_base_gain + self.rr_input_gain)
+        min_total_gain = min(self.fl_base_gain + self.fl_input_gain,
+                        self.fr_base_gain + self.fr_input_gain,
+                        self.rl_base_gain + self.rl_input_gain,
+                        self.rr_base_gain + self.rr_input_gain)
         
         if max_total_gain > 1 and min_total_gain > 0:
             # overflow
@@ -98,18 +132,71 @@ class Suspension:
             # here we can also abort using this inputs at all, but having a response may be useful for debugging and feedback
             correction = 0
 
-        fl_input_gain += correction
-        fr_input_gain += correction
-        rl_input_gain += correction
-        rr_input_gain += correction
+        self.fl_input_gain += correction
+        self.fr_input_gain += correction
+        self.rl_input_gain += correction
+        self.rr_input_gain += correction
 
-        self.set_gain(fl_input_gain, corner='fl')
-        self.set_gain(fr_input_gain, corner='fr')
-        self.set_gain(rl_input_gain, corner='rl')
-        self.set_gain(rr_input_gain, corner='rr')
+        # self.set_gain(fl_input_gain, corner='fl')
+        # self.set_gain(fr_input_gain, corner='fr')
+        # self.set_gain(rl_input_gain, corner='rl')
+        # self.set_gain(rr_input_gain, corner='rr')
 
 
-    def update(self):
+    def update(self, tmr):
+        if self.mode == 0:
+            self.fl_gain = self.fl_input_gain
+            self.fr_gain = self.fr_input_gain
+            self.rl_gain = self.rl_input_gain
+            self.rr_gain = self.rr_input_gain
+
+        elif self.mode == 1:
+            roll, pitch = 0, 0
+            if self.mpu:
+                roll = self.mpu.roll if abs(self.mpu.roll) > self.incline_epsilon else 0
+                pitch = self.mpu.pitch if abs(self.mpu.pitch) > self.incline_epsilon else 0
+            roll_correction = self.kp_roll * roll
+            pitch_correction = self.kp_pitch * pitch
+            # add correction to each corner
+            self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction + pitch_correction)
+            self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
+            self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction + pitch_correction)
+            self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
+            self.rl_tilt_gain = self.rl_tilt_gain + (-roll_correction - pitch_correction)
+            self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
+            self.rr_tilt_gain = self.rr_tilt_gain + (roll_correction - pitch_correction)
+            self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
+            # set the gain to each corner
+            self.fl_gain = self.fl_tilt_gain
+            self.fr_gain = self.fr_tilt_gain
+            self.rl_gain = self.rl_tilt_gain
+            self.rr_gain = self.rr_tilt_gain
+
+        # correcting possible overflow or underflow due to having both base gain and another gain
+        correction = 0
+        max_total_gain = max(self.fl_base_gain + self.fl_gain,
+                       self.fr_base_gain + self.fr_gain,
+                       self.rl_base_gain + self.rl_gain,
+                       self.rr_base_gain + self.rr_gain)
+        min_total_gain = min(self.fl_base_gain + self.fl_gain,
+                        self.fr_base_gain + self.fr_gain,
+                        self.rl_base_gain + self.rl_gain,
+                        self.rr_base_gain + self.rr_gain)
+        if max_total_gain > 1 and min_total_gain > 0:
+            # overflow
+            correction = 1 - max_total_gain
+        elif min_total_gain < 0 and max_total_gain < 1:
+            # underflow
+            correction = -min_total_gain
+        else:
+            # both overflow and underflow should not happen at the same time, but if they do, ignore correction
+            # each servo will take care of clamping its gain to its range
+            correction = 0
+        self.fl_input_gain += correction
+        self.fr_input_gain += correction
+        self.rl_input_gain += correction
+        self.rr_input_gain += correction
+
         if self.fl_servo:
             self.fl_servo.set_base_gain(self.fl_base_gain)
             self.fl_servo.set_gain(self.fl_gain)
@@ -125,6 +212,8 @@ class Suspension:
 
 
     def force_stop(self):
+        if self.update_timer:
+            self.update_timer.deinit()
         if self.fl_servo:
             self.fl_servo.force_stop()
         if self.fr_servo:

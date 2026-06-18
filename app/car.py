@@ -17,7 +17,7 @@ class Car:
         self.steering = None
         self.horn = None
         self.voltage_reader = None
-        self.mpu6050 = None
+        self.imu = None
         self.distance_sensor = None
         self.suspension = None
 
@@ -72,12 +72,12 @@ class Car:
     def config_mpu6050(self, bus_id, scl_pin, sda_pin):
         try:
             time.sleep(0.5)
-            self.mpu6050 = MPU6050(bus_id, scl_pin, sda_pin)
+            self.imu = MPU6050(bus_id, scl_pin, sda_pin)
             # self.mpu6050.calibrate()
-            self.mpu6050.start_reading()
+            self.imu.start_reading()
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")
-            self.mpu6050 = None
+            self.imu = None
 
     def config_distance_sensor(self, bus_id, scl_pin, sda_pin):
         try:
@@ -87,8 +87,8 @@ class Car:
             self.distance_sensor = None
 
     def config_suspension(self, config):
-        self.suspension = Suspension()
         try:
+            self.suspension = Suspension()
             for entry in config:
                 self.suspension.config_servo(entry[0],
                                             entry[1],
@@ -96,8 +96,11 @@ class Car:
                                             entry[3],
                                             entry[4]
                                             )
+            self.suspension.set_imu(self.imu)
+            self.suspension.start_control_loop()
         except Exception as e:
             print(f"Error configuring suspension: {e}")
+            self.suspension = None
 
     def process_data(self, data):
         try:
@@ -145,12 +148,12 @@ class Car:
                 speed_limit = data[6]
                 self.motor.set_speed_limit_factor(speed_limit / 100)
 
-            # aeb:
-            if self.motor and self.distance_sensor:
-                aeb_state = data[7]
-                self.aeb = bool(aeb_state)
+            # suspension mode:
+            if self.suspension and data[7] is not None:
+                suspension_mode = data[7]
+                self.suspension.mode = suspension_mode
 
-            # control mode
+            # motor control mode
             if self.motor and self.motor.pid:
                 mode = data[8]
                 self.motor.pid.set_mode(mode)
@@ -181,8 +184,8 @@ class Car:
                 if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
                     self.horn_state = 1
 
-            if self.mpu6050:
-                self.roll, self.pitch = self.mpu6050.read_position()
+            if self.imu:
+                self.roll, self.pitch = self.imu.read_position()
 
             if self.distance_sensor:
                     self.distance_mm = int(self.distance_sensor.read())
@@ -230,13 +233,10 @@ class Car:
             else:
                 self.horn.turn_off()
 
-        if self.suspension:
-            self.suspension.update()
-
     def get_parameters_encoded(self):
         steering_angle = int(self.steering.servo.angle) if self.steering else 0
-        roll = int(self.roll) if self.mpu6050 else 0
-        pitch = int(self.pitch) if self.mpu6050 else 0
+        roll = int(self.roll) if self.imu else 0
+        pitch = int(self.pitch) if self.imu else 0
         voltage = self.voltage if self.voltage_reader else 0
         motor_pwm = int(self.motor.pwm) if self.motor else 0
         data = [voltage,
@@ -262,6 +262,6 @@ class Car:
             self.suspension.force_stop()
         if self.horn:
             self.horn.force_stop()
-        if self.mpu6050:
-            self.mpu6050.force_stop()
+        if self.imu:
+            self.imu.force_stop()
         print("Car activity stopped.")
