@@ -235,10 +235,8 @@ class Car:
 
     def get_parameters_encoded(self):
         steering_angle = int(self.steering.servo.angle) if self.steering else 0
-        # roll = int(self.roll) if self.imu else 0
-        # pitch = int(self.pitch) if self.imu else 0
-        roll = int(self.suspension.roll_corr * 10) if self.suspension else 0
-        pitch = int(self.suspension.pitch_corr * 10) if self.suspension else 0
+        roll = int(self.roll) if self.imu else 0
+        pitch = int(self.pitch) if self.imu else 0
         voltage = self.voltage if self.voltage_reader else 0
         motor_pwm = int(self.motor.pwm) if self.motor else 0
         data = [voltage,
