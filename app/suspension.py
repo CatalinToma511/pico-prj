@@ -34,8 +34,7 @@ class Suspension:
         self.pitch_corr = 0
 
     def set_imu(self, imu):
-        if imu:
-            self.imu = imu
+        self.imu = imu
 
     def start_control_loop(self):
         self.update_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update)
