@@ -193,7 +193,7 @@ class MPU6050:
             dt = (self.time_now - self.last_update_time) / 1000.0
             total_g = math.sqrt(self.accel_x**2 + self.accel_y**2 + self.accel_z**2)
             alpha = self.complementary_filter_alpha_stationary
-            if total_g < 0.99 * G_CONSTANT or total_g > 1.01 * G_CONSTANT:
+            if total_g < 0.97 * G_CONSTANT or total_g > 1.03 * G_CONSTANT:
                 alpha = self.complementary_filter_alpha_motion
             self.roll = alpha * (self.roll + self.gyro_y * dt) + (1 - alpha) * accel_roll
             self.pitch = alpha * (self.pitch + self.gyro_z * dt) + (1 - alpha) * accel_pitch
