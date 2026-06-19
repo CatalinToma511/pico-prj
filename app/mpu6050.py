@@ -119,7 +119,7 @@ class MPU6050:
         self.gyro_z_raw = ustruct.unpack('>h', data[4:6])[0] / self.gyro_sensitivity
         return self.gyro_x_raw, self.gyro_y_raw, self.gyro_z_raw
     
-    def calibrate(self, samples = 100):
+    def calibrate(self, samples = 1000):
         try:
             acc_sum_x, acc_sum_y, acc_sum_z = 0.0, 0.0, 0.0
             gyro_sum_x, gyro_sum_y, gyro_sum_z = 0.0, 0.0, 0.0
@@ -193,7 +193,7 @@ class MPU6050:
             dt = (self.time_now - self.last_update_time) / 1000.0
             total_g = math.sqrt(self.accel_x**2 + self.accel_y**2 + self.accel_z**2)
             alpha = self.complementary_filter_alpha_stationary
-            if total_g < 0.97 * G_CONSTANT or total_g > 1.03 * G_CONSTANT:
+            if total_g < 0.95 * G_CONSTANT or total_g > 1.05 * G_CONSTANT:
                 alpha = self.complementary_filter_alpha_motion
             self.roll = alpha * (self.roll + self.gyro_y * dt) + (1 - alpha) * accel_roll
             self.pitch = alpha * (self.pitch + self.gyro_z * dt) + (1 - alpha) * accel_pitch
