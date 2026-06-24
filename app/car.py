@@ -239,6 +239,11 @@ class Car:
         pitch = int(self.pitch) if self.imu else 0
         voltage = self.voltage if self.voltage_reader else 0
         motor_pwm = int(self.motor.pwm) if self.motor else 0
+        fl_gain = int(self.suspension.fl_gain * 100) if self.suspension else 0
+        fr_gain = int(self.suspension.fr_gain * 100) if self.suspension else 0
+        rl_gain = int(self.suspension.rl_gain * 100) if self.suspension else 0
+        rr_gain = int(self.suspension.rr_gain * 100) if self.suspension else 0
+
         data = [voltage,
                 roll,
                 pitch,
@@ -246,9 +251,13 @@ class Car:
                 self.motor_rps,
                 self.speed_mmps,
                 steering_angle,
-                motor_pwm
+                motor_pwm,
+                fl_gain,
+                fr_gain,
+                rl_gain,
+                rr_gain
                 ]
-        encoded_data = struct.pack('>Bhhhhhbh', *data)
+        encoded_data = struct.pack('>Bhhhhhbhhhhh', *data)
         return encoded_data
     
     def stop_car_activity(self):
