@@ -7,12 +7,18 @@ micropython.alloc_emergency_exception_buf(100)
 
 class MotorPID():
     def __init__(self, enc_a_pin, enc_b_pin):
+        # output
+        self.pwm = 0
+        self.pwm_ff = 0
         # speed and time parameters
         self.target_rps = 0
+        self.current_count = 0
         self.last_count = 0
         self.current_rps = 0
         self.last_time = 0
         self.last_pwm = 0
+        self.pulse_sum = 0
+        self.pulse_iterator = 0
         # init values for paramters
         self.kp = 0
         self.ki = 0
@@ -30,6 +36,7 @@ class MotorPID():
         self.stall_max_time = 2 # how much time the motor is allowed to be stalled before pausing, in seconds
         # boost parameters
         self.pwm_boost = 0
+        self.new_boost = 0
         self.stall_boost = 650
         self.boost_fall_alpha = 0.85
         self.start_boost = 600
@@ -122,24 +129,24 @@ class MotorPID():
         self.filtered_target_rps += max(-target_ramp, min(target_ramp, self.target_rps - self.filtered_target_rps))
 
         # 3. read counts from the encoder
-        current_count = self.total_pulse_count
-        elapsed_counts = current_count - self.last_count
-        self.last_count = current_count
-        self.pulse_count_list.append(elapsed_counts)
+        self.current_count = self.total_pulse_count
+        self.elapsed_counts = self.current_count - self.last_count
+        self.last_count = self.current_count
+        self.pulse_count_list.append(self.elapsed_counts)
         if len(self.pulse_count_list) > self.pulse_count_list_size:
             self.pulse_count_list.pop(0)
 
         # average the counts if low count rate and speed is not 0
-        if self.filtered_target_rps != 0 and elapsed_counts < self.min_pulse_count:
-            pulse_sum = 0
-            i = 0
-            while pulse_sum < self.min_pulse_count and i < self.pulse_count_list_size:
-                pulse_sum += self.pulse_count_list[-1-i]
-                i += 1
-            elapsed_counts = pulse_sum / i
+        if self.filtered_target_rps != 0 and self.elapsed_counts < self.min_pulse_count:
+            self.pulse_sum = 0
+            self.pulse_iterator = 0
+            while abs(pulse_sum) < self.min_pulse_count and self.pulse_iterator < self.pulse_count_list_size:
+                pulse_sum += self.pulse_count_list[-1 - self.pulse_iterator]
+                self.pulse_iterator += 1
+            self.elapsed_counts = self.pulse_sum / self.pulse_iterator
 
         # 4. calculate current speed in rps
-        self.current_rps = elapsed_counts / self.ppr * (1 / self.real_dt)
+        self.current_rps = self.elapsed_counts / self.ppr * (1 / self.real_dt)
 
         # 5. calculate parameters of PI control
         self.err = self.filtered_target_rps - self.current_rps
@@ -149,10 +156,10 @@ class MotorPID():
         self.I = int(max(-65535, min(self.I, 65535))) # anti windup
 
         # 6. calculate feed-forward
-        pwm_ff = self.pwm_feed_forward(abs(self.filtered_target_rps)) * (self.kff/100)
+        self.pwm_ff = self.pwm_feed_forward(abs(self.filtered_target_rps)) * (self.kff/100)
         if self.filtered_target_rps < 0:
-            pwm_ff = -pwm_ff
-        pwm_ff = max(-65535, min(pwm_ff, 65535))
+            self.pwm_ff = -self.pwm_ff
+        self.pwm_ff = max(-65535, min(self.pwm_ff, 65535))
 
         # # 7. check for stall
         if self.current_rps == 0 and self.filtered_target_rps != 0:
@@ -179,35 +186,36 @@ class MotorPID():
                 self.pwm_start_boost = self.start_boost
             else:
                 self.pwm_start_boost = 0
-        # change boost based on direction, and decay it over time
+        # calculate total boost and account for reverse
+        self.pwm_boost *= self.boost_fall_alpha
+        self.new_boost = self.pwm_stall_boost + self.pwm_start_boost
         if self.filtered_target_rps < 0:
-            self.pwm_boost = (self.pwm_stall_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
-        else:
-            self.pwm_boost = -(self.pwm_start_boost + self.pwm_stall_boost) + self.pwm_boost * self.boost_fall_alpha
-
-        if abs(self.pwm_boost) < 10: # if boost is very low, set it to 0 to avoid jitter
+            self.new_boost = -self.new_boost
+        self.pwm_boost += self.new_boost
+        # if boost is very low, set it to 0 to avoid jitter
+        if abs(self.pwm_boost) < 10:
             self.pwm_boost = 0
 
         # 9. calculate pwm based on feed-forward and PI control
         if abs(self.filtered_target_rps) != 0:
-            pwm = pwm_ff + self.P + self.I + self.pwm_boost
-            pwm = pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
+            self.pwm = self.pwm_ff + self.P + self.I + self.pwm_boost
+            self.pwm = self.pwm * self.pwm_filter_alpha + self.last_pwm * (1 - self.pwm_filter_alpha)
             if self.filtered_target_rps > 0:
-                pwm = int(max(pwm_ff, min(pwm, 65535)))
+                self.pwm = int(max(self.pwm_ff, min(self.pwm, 65535)))
             else:
-                pwm = int(max(-65535, min(pwm, -pwm_ff)))
+                self.pwm = int(max(-65535, min(self.pwm, -self.pwm_ff)))
         else:
-            pwm = 0
-        self.last_pwm = pwm
+            self.pwm = 0
+        self.last_pwm = self.pwm
 
         # logging, may be useful for later
 
         self.total_time += self.dt
 
-        if self.logging:
-            self.log_data.append((self.total_time, self.filtered_target_rps, self.current_rps, pwm))
+        # if self.logging:
+        #     self.log_data.append((self.total_time, self.filtered_target_rps, self.current_rps, self.pwm))
 
-        return pwm
+        return self.pwm
 
     def set_mode(self, mode):
         # mode 0: using Feed Forward
