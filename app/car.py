@@ -121,7 +121,9 @@ class Car:
 
             # speed
             spd = data[0] - data[1] #RT - LT
-            self.speed_target = spd/255 * 100
+            if self.motor:
+                self.speed_target = spd/255 * 100
+                self.motor.set_speed_percent(self.speed_target)
                 
             # steering
             if self.steering:
@@ -142,6 +144,7 @@ class Car:
             # horn
             if self.horn:
                 self.horn_state = data[5]
+                self.horn.set_state(self.horn_state)
                 
             # limit
             if self.motor:
@@ -192,62 +195,21 @@ class Car:
         except Exception as e:
                     print(f'Error while reading distance sensor data: {e}')
 
-    def aeb_max_safe_speed(self):
-        # calculate the speed at which the car can stop within the safe distance to the object
-        # d = v^2 / (2 * a)
-        # so, the stopping distance is: current_speed^2 / (2 * wheel_decel)
-        # the stopping distance + aeb max safe speed is also the maximum accepted distance for the specific speed
-        # so the maximum speed at which the car can safely stop is: sqrt(desired stopping distance * 2 * wheel_decel)
-        if self.distance_sensor and self.motor and self.aeb:
-            # stopping distance is within a safety margin to the obstacle
-            stopping_distance = self.distance_mm - self.aeb_safety_distance_mm - self.drive_train_backlash_mm
-            stopping_distance = max(0, stopping_distance) # cannot be negative
-            wheel_decel = self.motor.pid.max_decel * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm
-            max_safe_speed_mmps = (2 * stopping_distance * wheel_decel) ** 0.5
-            # clamp value between 0 and motor max rps
-            max_safe_speed_mmps = max(0, min(max_safe_speed_mmps, self.max_speed_rps*self.gearing_ratio*3.1415*self.wheel_diameter_mm))
-            # convert back to motor rps
-            self.aeb_max_safe_speed_rps = max_safe_speed_mmps / (self.gearing_ratio * 3.1415 * self.wheel_diameter_mm)
-        else:
-            self.aeb_max_safe_speed_rps = self.motor.get_max_speed_rps() if self.motor else 0
-
-    def update(self):
-        if self.motor:
-            # speed control and limit
-            speed_target_rps = self.motor.convert_speed_percent_to_rps(self.speed_target)
-            if self.aeb:
-                if speed_target_rps > self.aeb_max_safe_speed_rps:
-                    self.horn_state = True
-                self.aeb_max_safe_speed()
-                speed_target_rps = min(speed_target_rps, self.aeb_max_safe_speed_rps)
-            self.motor.set_speed_rps(speed_target_rps)
-
-            # data to be sent to remote control app
-            self.motor_rps = int(self.motor.get_speed_rps())
-            self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) # mm/s to avoid problems with struct and float
-            self.max_speed_rps = int(self.motor.get_max_speed_rps())
-
-        if self.horn:
-            if self.horn_state:
-                self.horn.turn_on()
-            else:
-                self.horn.turn_off()
-
     def get_parameters_encoded(self):
         steering_angle = int(self.steering.servo.angle) if self.steering else 0
         roll = int(self.roll) if self.imu else 0
         pitch = int(self.pitch) if self.imu else 0
         voltage = self.voltage if self.voltage_reader else 0
         motor_pwm = int(self.motor.pwm) if self.motor else 0
+        self.motor_rps = int(self.motor.get_speed_rps()) if self.motor else 0
+        self.speed_mmps = int(self.motor_rps * self.gearing_ratio * 3.1415 * self.wheel_diameter_mm) if self.motor else 0
         fl_gain = int(self.suspension.fl_gain * 100) if self.suspension else 0
         fr_gain = int(self.suspension.fr_gain * 100) if self.suspension else 0
         rl_gain = int(self.suspension.rl_gain * 100) if self.suspension else 0
         rr_gain = int(self.suspension.rr_gain * 100) if self.suspension else 0
-
         data = [voltage,
                 roll,
                 pitch,
-                self.distance_mm,
                 self.motor_rps,
                 self.speed_mmps,
                 steering_angle,
@@ -257,7 +219,7 @@ class Car:
                 rl_gain,
                 rr_gain
                 ]
-        encoded_data = struct.pack('>Bhhhhhbhhhhh', *data)
+        encoded_data = struct.pack('>Bhhhhbhhhhh', *data)
         return encoded_data
     
     def stop_car_activity(self):

@@ -275,7 +275,7 @@ class Motor:
 
     def set_speed_percent(self, speed_percent):
         if -100 <= speed_percent <= 100:
-            self.set_speed_rps((speed_percent / 100) * self.max_rps * self.speed_limit_factor)
+            self.set_speed_rps(self.convert_speed_percent_to_rps(speed_percent))
         else:
             print(f"[Motor] Invalid speed percent: {speed_percent}")
 

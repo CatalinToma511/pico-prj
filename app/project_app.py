@@ -36,7 +36,7 @@ def run():
         my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
         my_car.config_horn(_HORN_PIN)
         my_car.config_voltage_reader(_VOLTAGE_PIN)
-        my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
+        # my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
         suspension_cfg = [('fl', _FL_SERVO_PIN, 137, 137, 72),
                           ('fr', _FR_SERVO_PIN, 45, 45, 111),
                           ('rl', _RL_SERVO_PIN, 42, 42, 117),
@@ -61,10 +61,6 @@ def run():
             if time.ticks_diff(time_now, last_acquire_sensor_event_time) > ACQUIRE_SENSOR_INTERVAL_MS:
                 my_car.acquire_sensors_data()
                 last_acquire_sensor_event_time = time_now
-
-            if time.ticks_diff(time_now, last_car_update_event_time) > CAR_UPDATE_INTERVAL_MS:
-                my_car.update()
-                last_car_update_event_time = time_now
 
             loop_end_time = time.ticks_ms()
             loop_exec_time = time.ticks_diff(loop_end_time, time_now)
