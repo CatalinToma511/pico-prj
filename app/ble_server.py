@@ -131,8 +131,8 @@ class BLE_Server:
             data_encoded = get_encoded_data_handler()
             if data_encoded:
                 for conn_handle in self._connections:
-                    # Write local value
-                    self._ble.gatts_write(self._parameters_handle, data_encoded)
+                    # # Write local value
+                    # self._ble.gatts_write(self._parameters_handle, data_encoded)
                     # Notify central
                     self._ble.gatts_notify(conn_handle, self._parameters_handle, data_encoded)
 
