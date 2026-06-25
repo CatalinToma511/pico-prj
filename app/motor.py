@@ -140,8 +140,8 @@ class MotorPID():
         if self.filtered_target_rps != 0 and self.elapsed_counts < self.min_pulse_count:
             self.pulse_sum = 0
             self.pulse_iterator = 0
-            while abs(pulse_sum) < self.min_pulse_count and self.pulse_iterator < self.pulse_count_list_size:
-                pulse_sum += self.pulse_count_list[-1 - self.pulse_iterator]
+            while abs(self.pulse_sum) < self.min_pulse_count and self.pulse_iterator < self.pulse_count_list_size:
+                self.pulse_sum += self.pulse_count_list[-1 - self.pulse_iterator]
                 self.pulse_iterator += 1
             self.elapsed_counts = self.pulse_sum / self.pulse_iterator
 
