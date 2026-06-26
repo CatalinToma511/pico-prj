@@ -157,16 +157,16 @@ class Suspension:
             self.bounce_gain += self.bounce_step
             if self.bounce_gain <= 0 or self.bounce_gain >= self.bounce_range:
                 self.bounce_step = -self.bounce_step
-            if self.base_gain + self.bounce_gain > self.max_gain:
-                self.bounce_offset = - abs(self.base_gain - self.bounce_gain)
-            elif self.base_gain + self.bounce_gain < self.min_gain:
-                self.bounce_offset = abs(self.base_gain - self.bounce_gain)
+            if self.base_gain + self.bounce_range > self.max_gain:
+                self.bounce_offset = - abs(self.base_gain - self.bounce_range)
+            elif self.base_gain + self.bounce_range < self.min_gain:
+                self.bounce_offset = abs(self.base_gain - self.bounce_range)
             else:
                 self.bounce_offset = 0
-            self.fl_gain = self.bounce_gain
-            self.fr_gain = self.bounce_gain
-            self.rl_gain = self.bounce_gain
-            self.rr_gain = self.bounce_gain
+            self.fl_gain = self.bounce_gain + self.bounce_offset
+            self.fr_gain = self.bounce_gain + self.bounce_offset
+            self.rl_gain = self.bounce_gain + self.bounce_offset
+            self.rr_gain = self.bounce_gain + self.bounce_offset
 
         # correcting possible overflow or underflow due to having both base gain and another gain
         correction = 0
