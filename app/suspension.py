@@ -8,10 +8,9 @@ class Suspension:
         self.fr_servo = None
         self.rl_servo = None
         self.rr_servo = None
-        self.fr_base_gain = 0
-        self.fl_base_gain = 0
-        self.rr_base_gain = 0
-        self.rl_base_gain = 0
+        self.min_gain = 0.0
+        self.max_gain = 1.0
+        self.base_gain = 0
         self.fr_gain = 0
         self.fl_gain = 0
         self.rr_gain = 0
@@ -27,6 +26,7 @@ class Suspension:
         self.bounce_gain = 0
         self.bounce_step = 0.02
         self.bounce_range = 0.5
+        self.bounce_offset = 0
         self.update_timer = Timer()
         self.mode = 0
         self.roll = 0
@@ -71,15 +71,8 @@ class Suspension:
             self.bounce_gain = 0
             self.bounce_step = abs(self.bounce_step)
 
-    def set_base_gain(self, gain, corner = 'all'):
-        if corner == 'fl' or corner == 'all':
-            self.fl_base_gain = gain
-        if corner == 'fr' or corner == 'all':
-            self.fr_base_gain = gain
-        if corner == 'rl' or corner == 'all':
-            self.rl_base_gain = gain
-        if corner == 'rr' or corner == 'all':
-            self.rr_base_gain = gain
+    def set_base_gain(self, gain):
+        self.base_gain = gain
 
     def set_gain(self, gain, corner = 'all'):
         if corner == 'fl' or corner == 'all':
@@ -164,6 +157,12 @@ class Suspension:
             self.bounce_gain += self.bounce_step
             if self.bounce_gain <= 0 or self.bounce_gain >= self.bounce_range:
                 self.bounce_step = -self.bounce_step
+            if self.base_gain + self.bounce_gain > self.max_gain:
+                self.bounce_offset = - abs(self.base_gain - self.bounce_gain)
+            elif self.base_gain + self.bounce_gain < self.min_gain:
+                self.bounce_offset = abs(self.base_gain - self.bounce_gain)
+            else:
+                self.bounce_offset = 0
             self.fl_gain = self.bounce_gain
             self.fr_gain = self.bounce_gain
             self.rl_gain = self.bounce_gain
@@ -171,14 +170,14 @@ class Suspension:
 
         # correcting possible overflow or underflow due to having both base gain and another gain
         correction = 0
-        max_total_gain = max(self.fl_base_gain + self.fl_gain,
-                       self.fr_base_gain + self.fr_gain,
-                       self.rl_base_gain + self.rl_gain,
-                       self.rr_base_gain + self.rr_gain)
-        min_total_gain = min(self.fl_base_gain + self.fl_gain,
-                        self.fr_base_gain + self.fr_gain,
-                        self.rl_base_gain + self.rl_gain,
-                        self.rr_base_gain + self.rr_gain)
+        max_total_gain = max(self.base_gain + self.fl_gain,
+                       self.base_gain + self.fr_gain,
+                       self.base_gain + self.rl_gain,
+                       self.base_gain + self.rr_gain)
+        min_total_gain = min(self.base_gain + self.fl_gain,
+                        self.base_gain + self.fr_gain,
+                        self.base_gain + self.rl_gain,
+                        self.base_gain + self.rr_gain)
         if max_total_gain > 1 and min_total_gain > 0:
             # overflow
             correction = 1 - max_total_gain
@@ -195,16 +194,16 @@ class Suspension:
         self.rr_input_gain += correction
 
         if self.fl_servo:
-            self.fl_servo.set_base_gain(self.fl_base_gain)
+            self.fl_servo.set_base_gain(self.base_gain)
             self.fl_servo.set_gain(self.fl_gain)
         if self.fr_servo:
-            self.fr_servo.set_base_gain(self.fr_base_gain)
+            self.fr_servo.set_base_gain(self.base_gain)
             self.fr_servo.set_gain(self.fr_gain)
         if self.rl_servo:
-            self.rl_servo.set_base_gain(self.rl_base_gain)
+            self.rl_servo.set_base_gain(self.base_gain)
             self.rl_servo.set_gain(self.rl_gain)
         if self.rr_servo:
-            self.rr_servo.set_base_gain(self.rr_base_gain)
+            self.rr_servo.set_base_gain(self.base_gain)
             self.rr_servo.set_gain(self.rr_gain) 
 
 
