@@ -24,6 +24,9 @@ class Suspension:
         self.fl_tilt_gain = 0
         self.rr_tilt_gain = 0
         self.rl_tilt_gain = 0
+        self.bounce_gain = 0
+        self.bounce_step = 0.02
+        self.bounce_range = 0.5
         self.update_timer = Timer()
         self.mode = 0
         self.roll = 0
@@ -34,7 +37,6 @@ class Suspension:
         self.kp_pitch = 0.003
         self.diag_weight = 0
         self.axis_weight = 0
-
 
     def set_imu(self, imu):
         self.imu = imu
@@ -65,6 +67,9 @@ class Suspension:
             self.fr_tilt_gain = 0
             self.rl_tilt_gain = 0
             self.rr_tilt_gain = 0
+        elif mode == 2:
+            self.bounce_gain = 0
+            self.bounce_step = abs(self.bounce_step)
 
     def set_base_gain(self, gain, corner = 'all'):
         if corner == 'fl' or corner == 'all':
@@ -86,7 +91,6 @@ class Suspension:
         if corner == 'rr' or corner == 'all':
             self.rr_gain = gain
     
-
     def set_axis_gain(self, x_gain, y_gain):
         # joysticks gives values between -128 and 127, but not full range, their range is a circle
         # the usual formula would be for example something like FL = x_gain + y_gain
@@ -115,12 +119,13 @@ class Suspension:
         self.rr_input_gain = (-x_gain + y_gain) * scale
 
     def update(self, tmr):
+        # MODE 0: manual mode, suspension tilts towards the input stick
         if self.mode == 0:
             self.fl_gain = self.fl_input_gain
             self.fr_gain = self.fr_input_gain
             self.rl_gain = self.rl_input_gain
             self.rr_gain = self.rr_input_gain
-
+        # MODE 1: active mode, suspension tries to stabilez the car
         elif self.mode == 1:
             if self.imu:
                 imu_roll, imu_pitch = self.imu.read_position()
@@ -154,6 +159,15 @@ class Suspension:
             self.fr_gain = self.fr_tilt_gain
             self.rl_gain = self.rl_tilt_gain
             self.rr_gain = self.rr_tilt_gain
+        # MODE 2: bounce mode, suspension bounces to get the car unstuck
+        elif self.mode == 2:
+            self.bounce_gain += self.bounce_step
+            if self.bounce_gain <= 0 or self.bounce_gain >= self.bounce_range:
+                self.bounce_step = -self.bounce_step
+            self.fl_gain = self.bounce_gain
+            self.fr_gain = self.bounce_gain
+            self.rl_gain = self.bounce_gain
+            self.rr_gain = self.bounce_gain
 
         # correcting possible overflow or underflow due to having both base gain and another gain
         correction = 0
