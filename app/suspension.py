@@ -8,6 +8,7 @@ class Suspension:
         self.fr_servo = None
         self.rl_servo = None
         self.rr_servo = None
+        self.control_loop_freq = 50
         self.min_gain = 0.0
         self.max_gain = 1.0
         self.base_gain = 0
@@ -24,8 +25,9 @@ class Suspension:
         self.rr_tilt_gain = 0
         self.rl_tilt_gain = 0
         self.bounce_gain = 0
-        self.bounce_step = 0.02
-        self.bounce_range = 0.5
+        self.bounce_range = 0.3 # up - down bounce range
+        self.bounce_freq = 1.5 # how many full bounces (down - up - down) per second
+        self.bounce_step = self.bounce_freq * 2 * self.bounce_range / self.control_loop_freq
         self.bounce_offset = 0
         self.update_timer = Timer()
         self.mode = 0
@@ -42,7 +44,7 @@ class Suspension:
         self.imu = imu
 
     def start_control_loop(self):
-        self.update_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update)
+        self.update_timer.init(freq=self.control_loop_freq, mode=Timer.PERIODIC, callback=self.update)
 
     def config_servo(self, corner, servo_pin, center = 90, top_angle = 100, botton_angle = 80):
         if corner == 'fl':
@@ -155,6 +157,7 @@ class Suspension:
         # MODE 2: bounce mode, suspension bounces to get the car unstuck
         elif self.mode == 2:
             self.bounce_gain += self.bounce_step
+            self.bounce_gain = min(max(self.bounce_gain, 0), self.bounce_range)
             if self.bounce_gain <= 0 or self.bounce_gain >= self.bounce_range:
                 self.bounce_step = -self.bounce_step
             if self.base_gain + self.bounce_range > self.max_gain:
