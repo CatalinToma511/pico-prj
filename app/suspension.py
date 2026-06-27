@@ -39,6 +39,8 @@ class Suspension:
         self.kp_pitch = 0.003
         self.diag_weight = 0
         self.axis_weight = 0
+        self.wheelbase = 197
+        self.trackwidth = 125
 
     def set_imu(self, imu):
         self.imu = imu
@@ -138,8 +140,8 @@ class Suspension:
             rl_axis_correction = -roll_correction - pitch_correction
             rr_diag_correction = -roll_correction + pitch_correction
             rr_axis_correction = roll_correction - pitch_correction
-            r = abs(self.roll)
-            p = abs(self.pitch)
+            r = abs(self.roll) * self.trackwidth
+            p = abs(self.pitch) * self.wheelbase
             self.diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
             # self.diag_weight = 0
             self.axis_weight = 1.0 - self.diag_weight
