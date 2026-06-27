@@ -193,10 +193,10 @@ class Suspension:
             # both overflow and underflow should not happen at the same time, but if they do, ignore correction
             # each servo will take care of clamping its gain to its range
             correction = 0
-        self.fl_input_gain += correction
-        self.fr_input_gain += correction
-        self.rl_input_gain += correction
-        self.rr_input_gain += correction
+        # self.fl_input_gain += correction
+        # self.fr_input_gain += correction
+        # self.rl_input_gain += correction
+        # self.rr_input_gain += correction
 
         if self.fl_servo:
             self.fl_servo.set_base_gain(self.base_gain)
