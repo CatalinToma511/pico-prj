@@ -143,7 +143,7 @@ class Suspension:
             r = abs(self.roll) * self.trackwidth
             p = abs(self.pitch) * self.wheelbase
             self.diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
-            # self.diag_weight = 0
+            self.diag_weight = 0
             self.axis_weight = 1.0 - self.diag_weight
             rl_gain = self.diag_weight * rl_diag_correction + self.axis_weight * rl_axis_correction
             rr_gain = self.diag_weight * rr_diag_correction + self.axis_weight * rr_axis_correction
