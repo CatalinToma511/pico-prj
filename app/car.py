@@ -94,7 +94,6 @@ class Car:
                                             entry[1],
                                             entry[2],
                                             entry[3],
-                                            entry[4]
                                             )
             self.suspension.set_imu(self.imu)
             self.suspension.start_control_loop()
