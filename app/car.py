@@ -90,11 +90,7 @@ class Car:
         try:
             self.suspension = Suspension()
             for entry in config:
-                self.suspension.config_servo(entry[0],
-                                            entry[1],
-                                            entry[2],
-                                            entry[3],
-                                            )
+                self.suspension.config_servo(*entry)
             self.suspension.set_imu(self.imu)
             self.suspension.start_control_loop()
         except Exception as e:

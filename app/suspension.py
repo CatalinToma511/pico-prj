@@ -48,15 +48,15 @@ class Suspension:
     def start_control_loop(self):
         self.update_timer.init(freq=self.control_loop_freq, mode=Timer.PERIODIC, callback=self.update)
 
-    def config_servo(self, corner, servo_pin, top_angle = 100, botton_angle = 80):
+    def config_servo(self, corner, servo_pin, top_angle = 100, botton_angle = 80, speed_ms = 750):
         if corner == 'fl':
-            self.fl_servo = ServoCorner(servo_pin, top_angle, botton_angle)
+            self.fl_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
         elif corner == 'fr':
-            self.fr_servo = ServoCorner(servo_pin, top_angle, botton_angle)
+            self.fr_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
         elif corner == 'rl':
-            self.rl_servo = ServoCorner(servo_pin, top_angle, botton_angle)
+            self.rl_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
         elif corner == 'rr':
-            self.rr_servo = ServoCorner(servo_pin, top_angle, botton_angle)
+            self.rr_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
 
     def set_mode(self, mode):
         self.mode = mode
