@@ -232,7 +232,7 @@ class MotorPID():
             self.I = 0
         # mode 2: using Feed Forward + P + I
         elif mode == 2:
-            self.kff = 95
+            self.kff = 100
             self.kp = 250
             self.ki = 1250
             self.I = 0
