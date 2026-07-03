@@ -1,4 +1,5 @@
 import time
+from machine import Timer
 from app.ble_server import BLE_Server
 from car import Car
 
@@ -27,50 +28,57 @@ TELEMETRY_INTERVAL_MS = 100
 ACQUIRE_SENSOR_INTERVAL_MS = 25
 CAR_UPDATE_INTERVAL_MS = 10
 
+app = None
+
+class App():
+    def __init__(self):
+        self.my_car = Car()
+        self.ble = BLE_Server("PicoW_BLE", controls_callback=self.my_car.process_data)
+        self.loop_timer = Timer()
+        self.last_telemetry_time = 0
+        self.last_sensor_data_time = 0
+        self.overtime_count = 0
+        self.time_now = 0
+
+    def config(self):
+        self.my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
+        self.my_car.config_steering(_STEERING_PIN, 87, 140, 39)
+        self.my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
+        self.my_car.config_horn(_HORN_PIN)
+        self.my_car.config_voltage_reader(_VOLTAGE_PIN)
+        # my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
+        self.my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
+        servo_cfg = [('fl', _FL_SERVO_PIN, 45, 111),
+                     ('fr', _FR_SERVO_PIN, 137, 72),
+                     ('rl', _RL_SERVO_PIN, 42, 117),
+                     ('rr', _RR_SERVO_PIN, 132, 57)]
+        self.my_car.config_suspension(servo_cfg, full_range_time_ms=600)
+        
+        self.ble.advertise()
+        self.loop_timer.init(freq = int(1000/MAIN_PERIOD_MS), mode=Timer.PERIODIC, callback=self.control_loop)
+
+    def control_loop(self, timer):
+        try:
+            self.time_now = time.ticks_ms()
+            self.ble.blink_task()
+            if time.ticks_diff(self.time_now, self.last_telemetry_time) > TELEMETRY_INTERVAL_MS:
+                self.ble.send_parameters(self.my_car.get_parameters_encoded)
+                self.last_telemetry_time = self.time_now
+            if time.ticks_diff(self.time_now, self.last_sensor_data_time) > ACQUIRE_SENSOR_INTERVAL_MS:
+                self.my_car.acquire_sensors_data()
+                self.last_sensor_data_time = self.time_now
+        except Exception as e:
+            print(f'Err runing main loop: {e}')
+            self.my_car.stop_car_activity()
+
+    def start_control_loop(self):
+        self.loop_timer.init(freq = int(1000/MAIN_PERIOD_MS), mode=Timer.PERIODIC, callback=self.control_loop)
 
 def run():
+    global app
     try:
-        my_car = Car()
-        my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
-        my_car.config_steering(_STEERING_PIN, 87, 140, 39)
-        my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
-        my_car.config_horn(_HORN_PIN)
-        my_car.config_voltage_reader(_VOLTAGE_PIN)
-        # my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
-        suspension_cfg = [('fl', _FL_SERVO_PIN, 45, 111, 750),
-                          ('fr', _FR_SERVO_PIN, 137, 72, 750),
-                          ('rl', _RL_SERVO_PIN, 42, 117, 660),
-                          ('rr', _RR_SERVO_PIN, 132, 57, 660)]
-        my_car.config_mpu6050(_MPU_BUS_ID, _MPU_SCL_PIN, _MPU_SDA_PIN)
-        my_car.config_suspension(suspension_cfg)
-        ble = BLE_Server("PicoW_BLE", controls_callback=my_car.process_data)
-        ble.advertise()
-
-        last_telemetry_event_time = 0
-        last_acquire_sensor_event_time = 0
-        last_car_update_event_time = 0
-        overtime_cnt = 0
-        while True:
-            time_now = time.ticks_ms()
-            ble.blink_task()
-
-            if time.ticks_diff(time_now, last_telemetry_event_time) > TELEMETRY_INTERVAL_MS:
-                ble.send_parameters(my_car.get_parameters_encoded)
-                last_telemetry_event_time = time_now
-
-            if time.ticks_diff(time_now, last_acquire_sensor_event_time) > ACQUIRE_SENSOR_INTERVAL_MS:
-                my_car.acquire_sensors_data()
-                last_acquire_sensor_event_time = time_now
-
-            loop_end_time = time.ticks_ms()
-            loop_exec_time = time.ticks_diff(loop_end_time, time_now)
-            
-            if loop_exec_time < MAIN_PERIOD_MS:
-                time.sleep_ms(MAIN_PERIOD_MS - loop_exec_time)
-            else:
-                overtime_cnt += 1
-                print(f'overtime reached: {loop_exec_time}')
-
+        app = App()
+        app.config()
+        app.start_control_loop()
     except Exception as e:
-        print(f'Err runing main loop: {e}')
-        my_car.stop_car_activity()
+        print(f'Error in main: {e}')

@@ -2,12 +2,13 @@ from servocorner import ServoCorner
 from machine import Timer
 
 class Suspension:
-    def __init__(self):
+    def __init__(self, full_range_time = 0):
         self.imu = None
         self.fl_servo = None
         self.fr_servo = None
         self.rl_servo = None
         self.rr_servo = None
+        self.full_range_time = full_range_time
         self.control_loop_freq = 50
         self.min_gain = 0.0
         self.max_gain = 1.0
@@ -48,15 +49,18 @@ class Suspension:
     def start_control_loop(self):
         self.update_timer.init(freq=self.control_loop_freq, mode=Timer.PERIODIC, callback=self.update)
 
-    def config_servo(self, corner, servo_pin, top_angle = 100, botton_angle = 80, speed_ms = 750):
+    def config_servo(self, corner, servo_pin, top_angle = 100, bottom_angle = 80):
+        speed = 0 # ms per 60 deg
+        if self.full_range_time > 0:
+            speed = int(self.full_range_time * 60 / abs(top_angle - bottom_angle))
         if corner == 'fl':
-            self.fl_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
+            self.fl_servo = ServoCorner(servo_pin, top_angle, bottom_angle, speed)
         elif corner == 'fr':
-            self.fr_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
+            self.fr_servo = ServoCorner(servo_pin, top_angle, bottom_angle, speed)
         elif corner == 'rl':
-            self.rl_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
+            self.rl_servo = ServoCorner(servo_pin, top_angle, bottom_angle, speed)
         elif corner == 'rr':
-            self.rr_servo = ServoCorner(servo_pin, top_angle, botton_angle, speed_ms=speed_ms)
+            self.rr_servo = ServoCorner(servo_pin, top_angle, bottom_angle, speed)
 
     def set_mode(self, mode):
         self.mode = mode

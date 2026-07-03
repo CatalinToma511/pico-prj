@@ -86,11 +86,12 @@ class Car:
             print(f"Error initializing distance sensor: {e}")
             self.distance_sensor = None
 
-    def config_suspension(self, config):
+    def config_suspension(self, config, full_range_time_ms = 0):
         try:
             self.suspension = Suspension()
             for entry in config:
-                self.suspension.config_servo(*entry)
+                if len(entry) >= 4:
+                    self.suspension.config_servo(*entry)
             self.suspension.set_imu(self.imu)
             self.suspension.start_control_loop()
         except Exception as e:
