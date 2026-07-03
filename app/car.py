@@ -89,6 +89,7 @@ class Car:
     def config_suspension(self, config, full_range_time_ms = 0):
         try:
             self.suspension = Suspension()
+            self.suspension.full_range_time = full_range_time_ms
             for entry in config:
                 if len(entry) >= 4:
                     self.suspension.config_servo(*entry)
