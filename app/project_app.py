@@ -79,5 +79,8 @@ def run():
         app = App()
         app.config()
         app.start_control_loop()
+        while True:
+            time.sleep(1)
+            pass
     except Exception as e:
         print(f'Error in main: {e}')
