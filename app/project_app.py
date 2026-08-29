@@ -23,6 +23,8 @@ _FR_SERVO_PIN = 9
 _RL_SERVO_PIN = 10
 _RR_SERVO_PIN = 11
 
+_RECEIVER_CHANNEL_PINS = [28, 27, 22, 19, 18, 15]
+
 MAIN_PERIOD_MS = 10
 TELEMETRY_INTERVAL_MS = 100
 ACQUIRE_SENSOR_INTERVAL_MS = 25
@@ -53,6 +55,7 @@ class App():
                      ('rl', _RL_SERVO_PIN, 42, 117),
                      ('rr', _RR_SERVO_PIN, 132, 57)]
         self.my_car.config_suspension(servo_cfg, full_range_time_ms=600)
+        # self.my_car.config_receiver(_RECEIVER_CHANNEL_PINS)
         self.ble.advertise()
         self.loop_timer.init(freq = int(1000/MAIN_PERIOD_MS), mode=Timer.PERIODIC, callback=self.control_loop)
 
@@ -81,6 +84,5 @@ def run():
         app.start_control_loop()
         while True:
             time.sleep(1)
-            pass
     except Exception as e:
         print(f'Error in main: {e}')

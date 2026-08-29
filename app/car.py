@@ -6,9 +6,11 @@ from horn import Horn
 from voltagereader import VoltageReader
 from distance_sensor import DistanceSensor
 from suspension import Suspension
+from receiver import Receiver
 import machine
 import struct
 import time
+from machine import Timer
 
 class Car:
     def __init__(self):
@@ -20,6 +22,8 @@ class Car:
         self.imu = None
         self.distance_sensor = None
         self.suspension = None
+        self.receiver = None
+        self.receiver_timer = None
 
         self.speed_target = 0
         self.motor_rps = 0
@@ -99,6 +103,16 @@ class Car:
             print(f"Error configuring suspension: {e}")
             self.suspension = None
 
+    def config_receiver(self, channel_pins):
+        try:
+            # self.receiver = Receiver(channel_pins)
+            # self.receiver_timer = Timer()
+            # self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
+            print("Receiver configured successfully.")
+        except Exception as e:
+            print(f"Error configuring receiver: {e}")
+            self.receiver = None
+
     def process_data(self, data):
         try:
             # restart the Pico if needed
@@ -138,10 +152,10 @@ class Car:
                     self.gearbox.set_gear(1)
                 self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
-            # horn
-            if self.horn:
-                self.horn_state = data[5]
-                self.horn.set_state(self.horn_state)
+            # # horn
+            # if self.horn:
+            #     self.horn_state = data[5]
+            #     self.horn.set_state(self.horn_state)
                 
             # limit
             if self.motor:
@@ -171,6 +185,18 @@ class Car:
 
         except Exception as e:
             print(f"Error processing data: {e}")
+
+    def update_receiver_data(self, timer):
+        print("Updating receiver data...")
+        try:
+            if self.receiver:
+                self.receiver.decode_channels()
+                if self.horn:
+                    self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
+                    self.horn.set_state(self.horn_state)
+                print("Receiver data updated successfully.")
+        except Exception as e:
+            print(f"Error updating receiver data: {e}")
 
     def acquire_sensors_data(self):
         try:
