@@ -130,10 +130,10 @@ class Car:
                 return
 
             # speed
-            spd = data[0] - data[1] #RT - LT
-            if self.motor:
-                self.speed_target = spd/255 * 100
-                self.motor.set_speed_percent(self.speed_target)
+            # spd = data[0] - data[1] #RT - LT
+            # if self.motor:
+            #     self.speed_target = spd/255 * 100
+            #     self.motor.set_speed_percent(self.speed_target)
                 
             # steering
             # if self.steering:
@@ -189,6 +189,9 @@ class Car:
         try:
             if self.receiver:
                 self.receiver.decode_channels()
+                if self.motor:
+                    self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because  / 500 * 100 to convert to percentage
+                    self.motor.set_speed_percent(self.speed_target)
                 if self.steering:
                     self.steering_target = self.receiver.steering_channel
                     self.steering.set_steering_position(self.steering_target)
