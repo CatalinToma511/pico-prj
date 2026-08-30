@@ -56,6 +56,13 @@ class Car:
 
         self.horn_state = 0
 
+        self.ch1 = 0
+        self.ch2 = 0
+        self.ch3 = 0
+        self.ch4 = 0
+        self.ch5 = 0
+        self.ch6 = 0
+
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
         self.speed_target = 0
@@ -188,10 +195,16 @@ class Car:
     def update_receiver_data(self, timer):
         try:
             if self.receiver:
+                self.ch1 = self.receiver.pulse_widths[0]
+                self.ch2 = self.receiver.pulse_widths[1]
+                self.ch3 = self.receiver.pulse_widths[2]
+                self.ch4 = self.receiver.pulse_widths[3]
+                self.ch5 = self.receiver.pulse_widths[4]
+                self.ch6 = self.receiver.pulse_widths[5]
                 self.receiver.decode_channels()
-                if self.motor:
-                    self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because  / 500 * 100 to convert to percentage
-                    self.motor.set_speed_percent(self.speed_target)
+                # if self.motor:
+                #     self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because  / 500 * 100 to convert to percentage
+                #     self.motor.set_speed_percent(self.speed_target)
                 if self.steering:
                     self.steering_target = self.receiver.steering_channel
                     self.steering.set_steering_position(self.steering_target)
@@ -242,9 +255,15 @@ class Car:
                 fl_gain,
                 fr_gain,
                 rl_gain,
-                rr_gain
+                rr_gain,
+                int(self.ch1),
+                int(self.ch2),
+                int(self.ch3),
+                int(self.ch4),
+                int(self.ch5),
+                int(self.ch6)
                 ]
-        encoded_data = struct.pack('>Bhhhhbhhhhh', *data)
+        encoded_data = struct.pack('>Bhhhhbhhhhhhhhhhh', *data)
         return encoded_data
     
     def stop_car_activity(self):
