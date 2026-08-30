@@ -105,9 +105,9 @@ class Car:
 
     def config_receiver(self, channel_pins):
         try:
-            # self.receiver = Receiver(channel_pins)
-            # self.receiver_timer = Timer()
-            # self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
+            self.receiver = Receiver(channel_pins)
+            self.receiver_timer = Timer()
+            self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
             print("Receiver configured successfully.")
         except Exception as e:
             print(f"Error configuring receiver: {e}")
