@@ -6,7 +6,7 @@ import micropython
 class Receiver:
     def __init__(self, channel_pins = [28, 27, 22, 19, 18, 15]):
         self.channel_pins = channel_pins
-        self.pins = [Pin(pin_num, Pin.IN) for pin_num in channel_pins]
+        self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
         self.pins[0].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq0_handler, hard=True)
         self.pins[1].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq1_handler, hard=True)
         self.pins[2].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq2_handler, hard=True)
