@@ -79,6 +79,7 @@ class App():
 def run():
     global app
     try:
+        machine.freq(240_000_000)  # Set CPU frequency to 240 MHz
         app = App()
         app.config()
         app.start_control_loop()
