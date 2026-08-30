@@ -6,14 +6,17 @@ import micropython
 class Receiver:
     def __init__(self, channel_pins = [28, 27, 22, 19, 18, 15]):
         self.channel_pins = channel_pins
+        self.pins = [Pin(pin_num, Pin.IN) for pin_num in channel_pins]
+        self.pins[0].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq0_handler, hard=True)
+        self.pins[1].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq1_handler, hard=True)
+        self.pins[2].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq2_handler, hard=True)
+        self.pins[3].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq3_handler, hard=True)
+        self.pins[4].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq4_handler, hard=True)
+        self.pins[5].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq5_handler, hard=True)
 
         self.last_capture_time = [0] * len(channel_pins)
         self.pulse_widths = [0] * len(channel_pins)
         self.current_time = 0
-
-        for pin_num in self.channel_pins:
-            pin = Pin(pin_num, Pin.IN)
-            pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._capture_pulse)
 
         self.channels_values = [1500] * len(channel_pins)
         self.steering_channel = 1500
@@ -27,13 +30,47 @@ class Receiver:
         self.vra_channel = 1500
         self.vrb_channel = 1500
 
-
-    def _capture_pulse(self, pin):
+    def _irq0_handler(self, pin):
         self.current_time = time.ticks_us()
         if pin.value() == 1:  # Rising edge
-            self.last_capture_time[self.channel_pins.index(pin.pin)] = self.current_time
+            self.last_capture_time[0] = self.current_time
         else:  # Falling edge
-            self.pulse_widths[self.channel_pins.index(pin.pin)] = time.ticks_diff(self.current_time, self.last_capture_time[self.channel_pins.index(pin.pin)])
+            self.pulse_widths[0] = time.ticks_diff(self.current_time, self.last_capture_time[0])
+
+    def _irq1_handler(self, pin):
+        self.current_time = time.ticks_us()
+        if pin.value() == 1:  # Rising edge
+            self.last_capture_time[1] = self.current_time
+        else:  # Falling edge
+            self.pulse_widths[1] = time.ticks_diff(self.current_time, self.last_capture_time[1])
+
+    def _irq2_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[2] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[2] = time.ticks_diff(self.current_time, self.last_capture_time[2])
+
+    def _irq3_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[3] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[3] = time.ticks_diff(self.current_time, self.last_capture_time[3])
+
+    def _irq4_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[4] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[4] = time.ticks_diff(self.current_time, self.last_capture_time[4])
+
+    def _irq5_handler(self, pin):
+                self.current_time = time.ticks_us()
+                if pin.value() == 1:  # Rising edge
+                    self.last_capture_time[5] = self.current_time
+                else:  # Falling edge
+                    self.pulse_widths[5] = time.ticks_diff(self.current_time, self.last_capture_time[5])
 
     def decode_mixed_channel(self, pulse_width):
         host_channel_pulse = (pulse_width - 400) % 500
