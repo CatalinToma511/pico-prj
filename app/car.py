@@ -205,9 +205,9 @@ class Car:
                 # if self.motor:
                 #     self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because  / 500 * 100 to convert to percentage
                 #     self.motor.set_speed_percent(self.speed_target)
-                if self.steering:
-                    self.steering_target = self.receiver.steering_channel
-                    self.steering.set_steering_position(self.steering_target)
+                # if self.steering:
+                #     self.steering_target = self.receiver.steering_channel
+                #     self.steering.set_steering_position(self.steering_target)
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
         except Exception as e:
