@@ -108,7 +108,6 @@ class Car:
             self.receiver = Receiver(channel_pins)
             self.receiver_timer = Timer()
             self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
-            print("Receiver configured successfully.")
         except Exception as e:
             print(f"Error configuring receiver: {e}")
             self.receiver = None
@@ -187,14 +186,11 @@ class Car:
             print(f"Error processing data: {e}")
 
     def update_receiver_data(self, timer):
-        print("Updating receiver data...")
         try:
             if self.receiver:
                 self.receiver.decode_channels()
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
-                    self.horn.set_state(self.horn_state)
-                print("Receiver data updated successfully.")
         except Exception as e:
             print(f"Error updating receiver data: {e}")
 
