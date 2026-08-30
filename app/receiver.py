@@ -18,7 +18,6 @@ class Receiver:
         self.pulse_widths = [0] * len(channel_pins)
         self.current_time = 0
 
-        self.channels_values = [1500] * len(channel_pins)
         self.steering_channel = 1500
         self.throttle_channel = 1500
         self.swa_channel = 1500
@@ -78,19 +77,16 @@ class Receiver:
         return host_channel_pulse, sub_channel_pulse
 
     def decode_channels(self):
-        self.channels_values = [1500] * len(self.channel_pins)
-        for i, pulse_width in enumerate(self.pulse_widths):
-            if 800 <= pulse_width <= 2200:
-                self.channels_values[i] = pulse_width
-            else:
-                self.channels_values[i] = 1500  # Default to center position if out of range
+        for pulse_width in self.pulse_widths:
+            if pulse_width < 800 or pulse_width > 2200:
+                pulse_width = 1500  # Set to neutral if out of range
 
         # Assign channels to specific controls
-        self.steering_channel = self.channels_values[0]
-        self.throttle_channel = self.channels_values[1]
+        self.steering_channel = self.pulse_widths[0]
+        self.throttle_channel = self.pulse_widths[1]
 
-        self.swa_channel, self.swb_channel = self.decode_mixed_channel(self.channels_values[2])
-        self.a_channel, self.vra_channel = self.decode_mixed_channel(self.channels_values[3])
-        self.b_channel, self.vrb_channel = self.decode_mixed_channel(self.channels_values[4])
-        self.c_channel = self.channels_values[5]
+        self.swa_channel, self.swb_channel = self.decode_mixed_channel(self.pulse_widths[2])
+        self.a_channel, self.vra_channel = self.decode_mixed_channel(self.pulse_widths[3])
+        self.b_channel, self.vrb_channel = self.decode_mixed_channel(self.pulse_widths[4])
+        self.c_channel = self.pulse_widths[5]
         

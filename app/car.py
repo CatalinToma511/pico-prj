@@ -62,7 +62,7 @@ class Car:
         self.motor.start_control_loop()
 
     def config_steering(self, steering_pin, center, max_left, max_right):
-        self.steering = Steering(steering_pin, center=center, left=max_left, right=max_right)
+        self.steering = Steering(steering_pin, center=center, left=max_left, right=max_right, max_left_pos=1000, max_right_pos=2000, center_pos=1500, pos_deadzone=0)
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
@@ -136,10 +136,10 @@ class Car:
                 self.motor.set_speed_percent(self.speed_target)
                 
             # steering
-            if self.steering:
-                l_joystick_x = data[2] - 128
-                steering_target = int(l_joystick_x)
-                self.steering.set_steering_position(steering_target)
+            # if self.steering:
+            #     l_joystick_x = data[2] - 128
+            #     steering_target = int(l_joystick_x)
+            #     self.steering.set_steering_position(steering_target)
 
             #gearbox
             if self.gearbox:
@@ -189,6 +189,9 @@ class Car:
         try:
             if self.receiver:
                 self.receiver.decode_channels()
+                if self.steering:
+                    self.steering_target = self.receiver.steering_channel
+                    self.steering.set_steering_position(self.steering_target)
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
         except Exception as e:
