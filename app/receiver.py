@@ -86,7 +86,7 @@ class Receiver:
         host_channel_pulse = (pulse_width - 400) % 500              # gives us sth in range 0-200
         sub_channel_pulse = pulse_width - host_channel_pulse + 100
         host_channel_pulse = host_channel_pulse * 5 + 1000          # gives sth in range 1000-2000
-        return host_channel_pulse, sub_channel_pulse
+        return sub_channel_pulse, host_channel_pulse
 
     def decode_channels(self):
         self.read_channels()

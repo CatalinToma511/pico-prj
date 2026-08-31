@@ -149,52 +149,52 @@ class Car:
                 self.ch5 = self.receiver.swa_channel
                 self.ch6 = self.receiver.swb_channel
 
-                # # motor control
-                # if self.motor:
-                #     # speed
-                #     self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because (/ 500 * 100) to convert to percentage
-                #     self.motor.set_speed_percent(self.speed_target)
+                # motor control
+                if self.motor:
+                    # speed
+                    self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because (/ 500 * 100) to convert to percentage
+                    self.motor.set_speed_percent(self.speed_target)
 
-                #     # limit factor
-                #     limit_factor = 1
-                #     if self.receiver.swb_channel < 1250:
-                #         limit_factor = 0.5
-                #     self.motor.set_speed_limit_factor(limit_factor)
+                    # limit factor
+                    limit_factor = 1
+                    if self.receiver.swb_channel < 1250:
+                        limit_factor = 0.5
+                    self.motor.set_speed_limit_factor(limit_factor)
 
-                #     # control mode
-                #     mode = 0
-                #     if self.receiver.a_channel > 1500:
-                #         mode = 2
-                #     self.motor.pid.set_mode(mode)
+                    # control mode
+                    mode = 0
+                    if self.receiver.a_channel > 1500:
+                        mode = 2
+                    self.motor.pid.set_mode(mode)
 
-                # # steering control
-                # if self.steering:
-                #     self.steering_target = self.receiver.steering_channel
-                #     self.steering.set_steering_position(self.steering_target)
+                # steering control
+                if self.steering:
+                    self.steering_target = self.receiver.steering_channel
+                    self.steering.set_steering_position(self.steering_target)
 
-                # # gearbox control
-                # if self.gearbox:
-                #     if self.receiver.swb_channel < 1750:
-                #         gear = 0
-                #     else:
-                #         gear = 1
-                #     self.gearbox.set_gear(gear)
-                #     self.gearing_ratio = self.gearbox.get_gearing_ratio()
+                # gearbox control
+                if self.gearbox:
+                    if self.receiver.swb_channel < 1750:
+                        gear = 0
+                    else:
+                        gear = 1
+                    self.gearbox.set_gear(gear)
+                    self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
-                # # suspension control
-                # if self.suspension:
-                #     gain = (self.receiver.vra_channel - 1000) / 1000
-                #     self.suspension.set_base_gain(gain)
-                #     mode = 0
-                #     if 1250 <= self.receiver.b_channel < 1750:
-                #         mode = 1
-                #     elif self.receiver.b_channel >= 1750:
-                #         mode = 2
-                #     self.suspension.set_mode(mode)
+                # suspension control
+                if self.suspension:
+                    gain = (self.receiver.vra_channel - 1000) / 1000
+                    self.suspension.set_base_gain(gain)
+                    mode = 0
+                    if 1250 <= self.receiver.b_channel < 1750:
+                        mode = 1
+                    elif self.receiver.b_channel >= 1750:
+                        mode = 2
+                    self.suspension.set_mode(mode)
 
-                # if self.horn:
-                #     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
-                #     self.horn.set_state(self.horn_state)
+                if self.horn:
+                    self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
+                    self.horn.set_state(self.horn_state)
         except Exception as e:
             print(f"Error updating receiver data: {e}")
 
