@@ -147,7 +147,7 @@ class Car:
                 self.ch3 = self.receiver.vra_channel
                 self.ch4 = self.receiver.a_channel
                 self.ch5 = self.receiver.swa_channel
-                self.ch6 = self.receiver.swb_channel
+                # self.ch6 = self.receiver.swb_channel
 
                 # motor control
                 if self.motor:
@@ -191,6 +191,7 @@ class Car:
                     elif self.receiver.b_channel >= 1750:
                         mode = 2
                     self.suspension.set_mode(mode)
+                    self.ch6 = self.suspension.mode
 
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
