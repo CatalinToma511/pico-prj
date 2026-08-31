@@ -1,4 +1,5 @@
 import time
+import machine
 from machine import Timer
 from app.ble_server import BLE_Server
 from car import Car
@@ -79,7 +80,6 @@ class App():
 def run():
     global app
     try:
-        machine.freq(240_000_000)  # Set CPU frequency to 240 MHz
         app = App()
         app.config()
         app.start_control_loop()

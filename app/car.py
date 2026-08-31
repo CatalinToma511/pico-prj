@@ -195,6 +195,7 @@ class Car:
     def update_receiver_data(self, timer):
         try:
             if self.receiver:
+                self.receiver.read_channels()
                 self.ch1 = self.receiver.pulse_widths[0]
                 self.ch2 = self.receiver.pulse_widths[1]
                 self.ch3 = self.receiver.pulse_widths[2]
