@@ -69,6 +69,12 @@ class Receiver:
         self.ch4_reader = PWM_Pulse_Reader(channel_pins[3], 3)
         self.ch4_reader.start()
 
+        self.ch5_reader = PWM_Pulse_Reader(channel_pins[4], 4)
+        self.ch5_reader.start()
+
+        self.ch6_reader = PWM_Pulse_Reader(channel_pins[5], 5)
+        self.ch6_reader.start()
+
         self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
         self.pins[4].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq4_handler, hard=True)
         self.pins[5].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq5_handler, hard=True)
@@ -93,6 +99,8 @@ class Receiver:
         self.pulse_widths[1] = self.ch2_reader.pulse_width
         self.pulse_widths[2] = self.ch3_reader.pulse_width
         self.pulse_widths[3] = self.ch4_reader.pulse_width
+        self.pulse_widths[4] = self.ch5_reader.pulse_width
+        self.pulse_widths[5] = self.ch6_reader.pulse_width
 
     def decode_mixed_channel(self, pulse_width):
         host_channel_pulse = (pulse_width - 400) % 500
