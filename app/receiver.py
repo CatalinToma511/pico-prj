@@ -60,7 +60,7 @@ class Receiver:
         self.ch1_reader = PWM_Pulse_Reader(channel_pins[0], 0)
         self.ch1_reader.start()
 
-        self.ch2_reader = PWM_Pulse_Reader(channel_pins[1], 1)
+        self.ch2_reader = PWM_Pulse_Reader(channel_pins[1], 4)
         self.ch2_reader.start()
 
         self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
