@@ -18,8 +18,8 @@ class PWM_Pulse_Reader:
         jmp(pin, "loop")            # if pin is still high, keep counting
         
         mov(isr, invert(x))         # store the count, reversed because we counted down
-        push(noblock)              # push into pio fifo; do not block if fifo is full, just drop the value
-        irq(0)                      # trigger the irq to notify the main program that a pulse has been captured
+        push(noblock)               # push into pio fifo; do not block if fifo is full, just drop the value
+        irq(rel(0))                      # trigger the irq to notify the main program that a pulse has been captured
 
         jmp("start")                # repeat the process
 
@@ -60,7 +60,7 @@ class Receiver:
         self.ch1_reader = PWM_Pulse_Reader(channel_pins[0], 0)
         self.ch1_reader.start()
 
-        self.ch2_reader = PWM_Pulse_Reader(channel_pins[1], 4)
+        self.ch2_reader = PWM_Pulse_Reader(channel_pins[1], 1)
         self.ch2_reader.start()
 
         self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
