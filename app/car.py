@@ -193,9 +193,10 @@ class Car:
                     self.suspension.set_mode(mode)
 
                     self.ch1 = self.suspension.mode
-                    self.ch2 = self.suspension.base_gain
-                    self.ch3 = self.suspension.bounce_gain
-                    self.ch3 = self.suspension.bounce_offset
+                    self.ch2 = self.suspension.base_gain * 100
+                    self.ch3 = self.suspension.bounce_gain * 100
+                    self.ch4 = self.suspension.bounce_offset * 100
+                    self.ch5 = self.suspension.bounce_step * 100
 
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
