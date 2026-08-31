@@ -32,6 +32,7 @@ class PWM_Pulse_Reader:
             self._pulse_capture,
             freq=20_000_000,
             in_base=self.pin,
+            jmp_pin=self.pin
         )
         if capture_time_flag:
             self.sm.irq(self._irq_capture_time)
