@@ -59,6 +59,13 @@ class Receiver:
         self.ch1_reader = PWM_Pulse_Reader(channel_pins[0], 0)
         self.ch1_reader.start()
 
+        self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
+        self.pins[1].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq1_handler, hard=True)
+        self.pins[2].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq2_handler, hard=True)
+        self.pins[3].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq3_handler, hard=True)
+        self.pins[4].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq4_handler, hard=True)
+        self.pins[5].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq5_handler, hard=True)
+
         self.last_capture_time = [0] * len(channel_pins)
         self.pulse_widths = [0] * len(channel_pins)
         self.current_time = 0
@@ -95,4 +102,38 @@ class Receiver:
         self.a_channel, self.vra_channel = self.decode_mixed_channel(self.pulse_widths[3])
         self.b_channel, self.vrb_channel = self.decode_mixed_channel(self.pulse_widths[4])
         self.c_channel = self.pulse_widths[5]
-        
+
+    def _irq1_handler(self, pin):
+        self.current_time = time.ticks_us()
+        if pin.value() == 1:  # Rising edge
+            self.last_capture_time[1] = self.current_time
+        else:  # Falling edge
+            self.pulse_widths[1] = time.ticks_diff(self.current_time, self.last_capture_time[1])
+
+    def _irq2_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[2] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[2] = time.ticks_diff(self.current_time, self.last_capture_time[2])
+
+    def _irq3_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[3] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[3] = time.ticks_diff(self.current_time, self.last_capture_time[3])
+
+    def _irq4_handler(self, pin):
+            self.current_time = time.ticks_us()
+            if pin.value() == 1:  # Rising edge
+                self.last_capture_time[4] = self.current_time
+            else:  # Falling edge
+                self.pulse_widths[4] = time.ticks_diff(self.current_time, self.last_capture_time[4])
+
+    def _irq5_handler(self, pin):
+                self.current_time = time.ticks_us()
+                if pin.value() == 1:  # Rising edge
+                    self.last_capture_time[5] = self.current_time
+                else:  # Falling edge
+                    self.pulse_widths[5] = time.ticks_diff(self.current_time, self.last_capture_time[5])
