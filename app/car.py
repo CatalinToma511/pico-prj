@@ -113,6 +113,7 @@ class Car:
     def config_receiver(self, channel_pins):
         try:
             self.receiver = Receiver(channel_pins)
+            self.receiver.start()
             self.receiver_timer = Timer()
             self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
         except Exception as e:

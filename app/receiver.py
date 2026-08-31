@@ -57,27 +57,7 @@ class Receiver:
     def __init__(self, channel_pins = [28, 27, 22, 19, 18, 15]):
         self.channel_pins = channel_pins
 
-        self.ch1_reader = PWM_Pulse_Reader(channel_pins[0], 0)
-        self.ch1_reader.start()
-
-        self.ch2_reader = PWM_Pulse_Reader(channel_pins[1], 1)
-        self.ch2_reader.start()
-
-        self.ch3_reader = PWM_Pulse_Reader(channel_pins[2], 2)
-        self.ch3_reader.start()
-
-        self.ch4_reader = PWM_Pulse_Reader(channel_pins[3], 3)
-        self.ch4_reader.start()
-
-        self.ch5_reader = PWM_Pulse_Reader(channel_pins[4], 4)
-        self.ch5_reader.start()
-
-        self.ch6_reader = PWM_Pulse_Reader(channel_pins[5], 5)
-        self.ch6_reader.start()
-
-        self.pins = [Pin(pin_num, Pin.IN, Pin.PULL_DOWN) for pin_num in channel_pins]
-        self.pins[4].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq4_handler, hard=True)
-        self.pins[5].irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=self._irq5_handler, hard=True)
+        self.ch_readers = [PWM_Pulse_Reader(pin, i) for i, pin in enumerate(channel_pins)]
 
         self.last_capture_time = [0] * len(channel_pins)
         self.pulse_widths = [0] * len(channel_pins)
@@ -94,13 +74,13 @@ class Receiver:
         self.vra_channel = 1500
         self.vrb_channel = 1500
 
+    def start(self):
+        for reader in self.ch_readers:
+            reader.start()
+
     def read_channels(self):
-        self.pulse_widths[0] = self.ch1_reader.pulse_width
-        self.pulse_widths[1] = self.ch2_reader.pulse_width
-        self.pulse_widths[2] = self.ch3_reader.pulse_width
-        self.pulse_widths[3] = self.ch4_reader.pulse_width
-        self.pulse_widths[4] = self.ch5_reader.pulse_width
-        self.pulse_widths[5] = self.ch6_reader.pulse_width
+        for i in range(len(self.pulse_widths)):
+            self.pulse_widths[i] = self.ch_readers[i].pulse_width
 
     def decode_mixed_channel(self, pulse_width):
         host_channel_pulse = (pulse_width - 400) % 500
@@ -120,38 +100,3 @@ class Receiver:
         self.a_channel, self.vra_channel = self.decode_mixed_channel(self.pulse_widths[3])
         self.b_channel, self.vrb_channel = self.decode_mixed_channel(self.pulse_widths[4])
         self.c_channel = self.pulse_widths[5]
-
-    def _irq1_handler(self, pin):
-        self.current_time = time.ticks_us()
-        if pin.value() == 1:  # Rising edge
-            self.last_capture_time[1] = self.current_time
-        else:  # Falling edge
-            self.pulse_widths[1] = time.ticks_diff(self.current_time, self.last_capture_time[1])
-
-    def _irq2_handler(self, pin):
-            self.current_time = time.ticks_us()
-            if pin.value() == 1:  # Rising edge
-                self.last_capture_time[2] = self.current_time
-            else:  # Falling edge
-                self.pulse_widths[2] = time.ticks_diff(self.current_time, self.last_capture_time[2])
-
-    def _irq3_handler(self, pin):
-            self.current_time = time.ticks_us()
-            if pin.value() == 1:  # Rising edge
-                self.last_capture_time[3] = self.current_time
-            else:  # Falling edge
-                self.pulse_widths[3] = time.ticks_diff(self.current_time, self.last_capture_time[3])
-
-    def _irq4_handler(self, pin):
-            self.current_time = time.ticks_us()
-            if pin.value() == 1:  # Rising edge
-                self.last_capture_time[4] = self.current_time
-            else:  # Falling edge
-                self.pulse_widths[4] = time.ticks_diff(self.current_time, self.last_capture_time[4])
-
-    def _irq5_handler(self, pin):
-                self.current_time = time.ticks_us()
-                if pin.value() == 1:  # Rising edge
-                    self.last_capture_time[5] = self.current_time
-                else:  # Falling edge
-                    self.pulse_widths[5] = time.ticks_diff(self.current_time, self.last_capture_time[5])
