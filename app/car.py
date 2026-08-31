@@ -196,14 +196,15 @@ class Car:
     def update_receiver_data(self, timer):
         try:
             if self.receiver:
-                self.receiver.read_channels()
-                self.ch1 = self.receiver.pulse_widths[0]
-                self.ch2 = self.receiver.pulse_widths[1]
-                self.ch3 = self.receiver.pulse_widths[2]
-                self.ch4 = self.receiver.pulse_widths[3]
-                self.ch5 = self.receiver.pulse_widths[4]
-                self.ch6 = self.receiver.pulse_widths[5]
                 self.receiver.decode_channels()
+
+                self.ch1 = self.receiver.steering_channel
+                self.ch2 = self.receiver.throttle_channel
+                self.ch3 = self.receiver.vra_channel
+                self.ch4 = self.receiver.a_channel
+                self.ch5 = self.receiver.swa_channel
+                self.ch6 = self.receiver.swb_channel
+                
                 # if self.motor:
                 #     self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because  / 500 * 100 to convert to percentage
                 #     self.motor.set_speed_percent(self.speed_target)

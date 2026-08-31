@@ -83,14 +83,17 @@ class Receiver:
             self.pulse_widths[i] = self.ch_readers[i].pulse_width
 
     def decode_mixed_channel(self, pulse_width):
-        host_channel_pulse = (pulse_width - 400) % 500
+        host_channel_pulse = (pulse_width - 400) % 500              # gives us sth in range 0-200
         sub_channel_pulse = pulse_width - host_channel_pulse + 100
+        host_channel_pulse = host_channel_pulse * 5 + 1000          # gives sth in range 1000-2000
         return host_channel_pulse, sub_channel_pulse
 
     def decode_channels(self):
-        # for pulse_width in self.pulse_widths:
-        #     if pulse_width < 800 or pulse_width > 2200:
-        #         pulse_width = 1500  # Set to neutral if out of range
+        self.read_channels()
+
+        for pulse_width in self.pulse_widths:
+            if pulse_width < 500 or pulse_width > 2500:
+                pulse_width = 1500  # Set to neutral if out of range
 
         # Assign channels to specific controls
         self.steering_channel = self.pulse_widths[0]
