@@ -6,6 +6,8 @@ from horn import Horn
 from voltagereader import VoltageReader
 from distance_sensor import DistanceSensor
 from suspension import Suspension
+from receiver import Receiver
+from machine import Timer
 import machine
 import struct
 import time
@@ -20,6 +22,8 @@ class Car:
         self.imu = None
         self.distance_sensor = None
         self.suspension = None
+        self.receiver = None
+        self.receiver_timer = None
 
         self.speed_target = 0
         self.motor_rps = 0
@@ -99,6 +103,16 @@ class Car:
             print(f"Error configuring suspension: {e}")
             self.suspension = None
 
+    def config_receiver(self, channel_pins):
+        try:
+            self.receiver = Receiver(channel_pins)
+            self.receiver.start()
+            self.receiver_timer = Timer()
+            self.receiver_timer.init(freq=50, mode=Timer.PERIODIC, callback=self.update_receiver_data)
+        except Exception as e:
+            print(f"Error configuring receiver: {e}")
+            self.receiver = None
+
     def process_data(self, data):
         try:
             # restart the Pico if needed
@@ -171,6 +185,9 @@ class Car:
 
         except Exception as e:
             print(f"Error processing data: {e}")
+
+    def update_receiver_data(self, timer):
+        pass
 
     def acquire_sensors_data(self):
         try:
