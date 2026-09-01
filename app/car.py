@@ -62,7 +62,7 @@ class Car:
         self.motor.start_control_loop()
 
     def config_steering(self, steering_pin, center, max_left, max_right):
-        self.steering = Steering(steering_pin, center=center, left=max_left, right=max_right)
+        self.steering = Steering(steering_pin, center=center, left=max_left, right=max_right, max_left_pos=1000, max_right_pos=2000, center_pos=1500, pos_deadzone=0)
     
     def config_gearbox(self, gearbox_shift_pin):
         self.gearbox = Gearbox(gearbox_shift_pin)
@@ -173,9 +173,9 @@ class Car:
             #     self.motor.pid.set_mode(mode)
 
             # suspension base gain
-            if self.suspension and data[9] is not None:
-                suspension_gain = data[9] / 255
-                self.suspension.set_base_gain(suspension_gain)
+            # if self.suspension and data[9] is not None:
+            #     suspension_gain = data[9] / 255
+            #     self.suspension.set_base_gain(suspension_gain)
 
             # suspension manual control
             if self.suspension and data[10] is not None and data[11] is not None:
@@ -196,7 +196,8 @@ class Car:
                 self.ch3 = self.receiver.vra_channel
                 self.ch4 = self.receiver.a_channel
                 self.ch5 = self.receiver.b_channel
-                self.ch6 = self.receiver.swb_channel
+                if self.suspension:
+                    self.ch6 = self.suspension.mode
 
                 # motor control
                 if self.motor:
@@ -231,9 +232,9 @@ class Car:
                     self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
                 # # suspension control
-                # if self.suspension:
-                #     gain = (self.receiver.vra_channel - 1000) / 1000
-                #     self.suspension.set_base_gain(gain)
+                if self.suspension:
+                    gain = (self.receiver.vra_channel - 1000) / 1000
+                    self.suspension.set_base_gain(gain)
                 #     mode = 0
                 #     if 1250 <= self.receiver.b_channel < 1750:
                 #         mode = 1
