@@ -296,9 +296,15 @@ class Car:
                 fl_gain,
                 fr_gain,
                 rl_gain,
-                rr_gain
+                rr_gain,
+                int(self.ch1),
+                int(self.ch2),
+                int(self.ch3),
+                int(self.ch4),
+                int(self.ch5),
+                int(self.ch6)
                 ]
-        encoded_data = struct.pack('>Bhhhhbhhhhh', *data)
+        encoded_data = struct.pack('>Bhhhhbhhhhhhhhhhh', *data)
         return encoded_data
     
     def stop_car_activity(self):
