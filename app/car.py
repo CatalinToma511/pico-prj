@@ -131,10 +131,10 @@ class Car:
                 return
 
             # speed
-            spd = data[0] - data[1] #RT - LT
-            if self.motor:
-                self.speed_target = spd/255 * 100
-                self.motor.set_speed_percent(self.speed_target)
+            # spd = data[0] - data[1] #RT - LT
+            # if self.motor:
+            #     self.speed_target = spd/255 * 100
+            #     self.motor.set_speed_percent(self.speed_target)
                 
             # steering
             if self.steering:
@@ -199,22 +199,22 @@ class Car:
                 self.ch6 = self.receiver.swb_channel
 
                 # motor control
-                # if self.motor:
-                #     # speed
-                #     self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because (/ 500 * 100) to convert to percentage
-                #     self.motor.set_speed_percent(self.speed_target)
+                if self.motor:
+                    # speed
+                    self.speed_target = (self.receiver.throttle_channel - 1500) / 5 # 5 because (/ 500 * 100) to convert to percentage
+                    self.motor.set_speed_percent(self.speed_target)
 
-                #     # limit factor
-                #     limit_factor = 1
-                #     if self.receiver.swb_channel < 1250:
-                #         limit_factor = 0.5
-                #     self.motor.set_speed_limit_factor(limit_factor)
+                    # limit factor
+                    limit_factor = 1
+                    if self.receiver.swb_channel < 1250:
+                        limit_factor = 0.5
+                    self.motor.set_speed_limit_factor(limit_factor)
 
-                #     # control mode
-                #     mode = 0
-                #     if self.receiver.a_channel > 1500:
-                #         mode = 2
-                #     self.motor.pid.set_mode(mode)
+                    # control mode
+                    mode = 0
+                    if self.receiver.a_channel > 1500:
+                        mode = 2
+                    self.motor.pid.set_mode(mode)
 
                 # # steering control
                 # if self.steering:
