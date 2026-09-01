@@ -4,7 +4,7 @@ from machine import Timer
 
 class Steering:
     def __init__(self, steering_servo_pin, center = 90., left = 135., right = 45., max_left_pos=-128, max_right_pos=127, center_pos=0, pos_deadzone = 5):
-        self.servo = Servo(steering_servo_pin, frequency=100, speed_ms=250, control_loop_interval_ms=10)
+        self.servo = Servo(steering_servo_pin, frequency=100, speed_ms=150, control_loop_interval_ms=10)
         self.position = 0
         # angles
         self.center = center
@@ -32,6 +32,12 @@ class Steering:
         # if input is in deadzone
         if abs(target_position - self.center_pos) < self.pos_deadzone:
             angle = self.center
+        # adjust if out of range
+        elif not (min(self.max_left_pos, self.max_right_pos) <= target_position <= max(self.max_left_pos, self.max_right_pos)):
+            if target_position < min(self.max_left_pos, self.max_right_pos):
+                target_position = min(self.max_left_pos, self.max_right_pos)
+            elif target_position > max(self.max_left_pos, self.max_right_pos):
+                target_position = max(self.max_left_pos, self.max_right_pos)
         # if steering left
         elif min(self.min_left_pos, self.max_left_pos) <= target_position < max(self.min_left_pos, self.max_left_pos):
             angle = self.center + (target_position - self.min_left_pos) * (self.left - self.center) / (self.max_left_pos - self.min_left_pos)
