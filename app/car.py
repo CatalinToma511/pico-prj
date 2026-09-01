@@ -7,10 +7,10 @@ from voltagereader import VoltageReader
 from distance_sensor import DistanceSensor
 from suspension import Suspension
 from receiver import Receiver
-from machine import Timer
 import machine
 import struct
 import time
+from machine import Timer
 
 class Car:
     def __init__(self):
@@ -55,6 +55,13 @@ class Car:
         self.gearing_ratio = 1
 
         self.horn_state = 0
+
+        self.ch1 = 0
+        self.ch2 = 0
+        self.ch3 = 0
+        self.ch4 = 0
+        self.ch5 = 0
+        self.ch6 = 0
 
     def config_motor(self, motor_in1, motor_in2, enc_a, enc_b):
         self.motor = Motor(motor_in1, motor_in2, enc_a, enc_b)
@@ -120,68 +127,12 @@ class Car:
                 print("Resetting the machine...")
                 self.stop_car_activity()
                 machine.reset()
-            
-            if data == b'DISCONNECTED':
-                print("Client disconnected - stopping the car.")
-                if self.motor:
-                    self.speed_target = 0
-                if self.steering:
-                    self.steering_target = 0
-                    self.steering.set_steering_position(0)
-                return
 
-            # speed
-            # spd = data[0] - data[1] #RT - LT
-            # if self.motor:
-            #     self.speed_target = spd/255 * 100
-            #     self.motor.set_speed_percent(self.speed_target)
-                
-            # # steering
-            # if self.steering:
-            #     l_joystick_x = data[2] - 128
-            #     steering_target = int(l_joystick_x)
-            #     self.steering.set_steering_position(steering_target)
-
-            # #gearbox
-            # if self.gearbox:
-            #     left_button = data[3]
-            #     right_button = data[4]
-            #     if left_button and not right_button:
-            #         self.gearbox.set_gear(0)
-            #     elif right_button and not left_button:
-            #         self.gearbox.set_gear(1)
-            #     self.gearing_ratio = self.gearbox.get_gearing_ratio()
-
-            # # horn
-            # if self.horn:
-            #     self.horn_state = data[5]
-            #     self.horn.set_state(self.horn_state)
-                
-            # # limit
-            # if self.motor:
-            #     speed_limit = data[6]
-            #     self.motor.set_speed_limit_factor(speed_limit / 100)
-
-            # suspension mode:
-            if self.suspension and data[7] is not None:
-                suspension_mode = data[7]
-                self.suspension.mode = suspension_mode
-
-            # # motor control mode
-            # if self.motor and self.motor.pid:
-            #     mode = data[8]
-            #     self.motor.pid.set_mode(mode)
-
-            # suspension base gain
-            # if self.suspension and data[9] is not None:
-            #     suspension_gain = data[9] / 255
-            #     self.suspension.set_base_gain(suspension_gain)
-
-            # suspension manual control
-            if self.suspension and data[10] is not None and data[11] is not None:
-                suspension_x = (data[10] - 128) / 128
-                suspension_y = (data[11] - 128) / 128
-                self.suspension.set_axis_gain(suspension_x, suspension_y)
+            # # suspension manual control
+            # if self.suspension and data[10] is not None and data[11] is not None:
+            #     suspension_x = (data[10] - 128) / 128
+            #     suspension_y = (data[11] - 128) / 128
+            #     self.suspension.set_axis_gain(suspension_x, suspension_y)
 
         except Exception as e:
             print(f"Error processing data: {e}")
@@ -191,13 +142,12 @@ class Car:
             if self.receiver:
                 self.receiver.decode_channels()
 
-                self.ch1 = self.receiver.steering_channel
-                self.ch2 = self.receiver.throttle_channel
-                self.ch3 = self.receiver.vra_channel
-                self.ch4 = self.receiver.a_channel
-                self.ch5 = self.receiver.b_channel
-                if self.suspension:
-                    self.ch6 = self.suspension.mode
+                # self.ch1 = self.receiver.steering_channel
+                # self.ch2 = self.receiver.throttle_channel
+                # self.ch3 = self.receiver.vra_channel
+                # self.ch4 = self.receiver.a_channel
+                # self.ch5 = self.receiver.swa_channel
+                # self.ch6 = self.receiver.swb_channel
 
                 # motor control
                 if self.motor:
@@ -231,29 +181,28 @@ class Car:
                     self.gearbox.set_gear(gear)
                     self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
-                # # suspension control
+                # suspension control
                 if self.suspension:
                     gain = (self.receiver.vra_channel - 1000) / 1000
                     self.suspension.set_base_gain(gain)
-                #     mode = 0
-                #     if 1250 <= self.receiver.b_channel < 1750:
-                #         mode = 1
-                #     elif self.receiver.b_channel >= 1750:
-                #         mode = 2
-                #     self.suspension.set_mode(mode)
+                    mode = 0
+                    if 1250 <= self.receiver.b_channel < 1750:
+                        mode = 1
+                    elif self.receiver.b_channel >= 1750:
+                        mode = 2
+                    self.suspension.set_mode(mode)
 
-                #     self.ch1 = self.suspension.mode
-                #     self.ch2 = self.suspension.base_gain * 100
-                #     self.ch3 = self.suspension.bounce_gain * 100
-                #     self.ch4 = self.suspension.bounce_offset * 100
-                #     self.ch5 = self.suspension.bounce_step * 100
+                    self.ch1 = self.suspension.mode
+                    self.ch2 = self.suspension.base_gain * 100
+                    self.ch3 = self.suspension.bounce_gain * 100
+                    self.ch4 = self.suspension.bounce_offset * 100
+                    self.ch5 = self.suspension.bounce_step * 100
 
                 if self.horn:
                     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
                     self.horn.set_state(self.horn_state)
         except Exception as e:
             print(f"Error updating receiver data: {e}")
-
 
     def acquire_sensors_data(self):
         try:

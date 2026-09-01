@@ -63,6 +63,8 @@ class Suspension:
             self.rr_servo = ServoCorner(servo_pin, top_angle, bottom_angle, speed)
 
     def set_mode(self, mode):
+        if self.mode == mode:
+            return
         self.mode = mode
         # reseting the gains
         if mode == 0:
