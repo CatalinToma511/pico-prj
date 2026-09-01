@@ -195,7 +195,7 @@ class Car:
                 self.ch2 = self.receiver.throttle_channel
                 self.ch3 = self.receiver.vra_channel
                 self.ch4 = self.receiver.a_channel
-                self.ch5 = self.receiver.swa_channel
+                self.ch5 = self.receiver.b_channel
                 self.ch6 = self.receiver.swb_channel
 
                 # motor control
