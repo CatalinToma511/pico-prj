@@ -15,6 +15,8 @@ class Gearbox:
 
 
     def set_gear(self, gear):
+        if self.gear == gear:
+            return
         if gear == 0:
             self.gear_shift_servo.set_angle(self.low_gear_angle)
             self.gear = gear

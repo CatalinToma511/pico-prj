@@ -218,6 +218,8 @@ class MotorPID():
         return self.pwm
 
     def set_mode(self, mode):
+        if self.mode == mode:
+            return
         # mode 0: using Feed Forward
         if mode == 0:
             self.kff = 100

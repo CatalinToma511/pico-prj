@@ -19,6 +19,8 @@ class Horn:
         self.state = 0
 
     def set_state(self, state):
+        if self.state == state:
+            return
         if state == 0:
             self.turn_off()
         elif state == 1:

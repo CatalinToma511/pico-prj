@@ -213,8 +213,9 @@ class Car:
                 # if battery level under 6.5V
                 # take account for situations when motor draws battery tension down
 
-                if self.voltage < 65 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
-                    self.horn_state = 1
+                if self.voltage < 70 and self.motor and self.motor.get_speed_rps() == 0 and self.motor.pid.target_rps == 0: 
+                    # self.horn_state = 1
+                    pass
 
             if self.imu:
                 self.roll, self.pitch = self.imu.read_position()
