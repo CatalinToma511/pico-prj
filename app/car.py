@@ -136,41 +136,41 @@ class Car:
             #     self.speed_target = spd/255 * 100
             #     self.motor.set_speed_percent(self.speed_target)
                 
-            # steering
-            if self.steering:
-                l_joystick_x = data[2] - 128
-                steering_target = int(l_joystick_x)
-                self.steering.set_steering_position(steering_target)
+            # # steering
+            # if self.steering:
+            #     l_joystick_x = data[2] - 128
+            #     steering_target = int(l_joystick_x)
+            #     self.steering.set_steering_position(steering_target)
 
-            #gearbox
-            if self.gearbox:
-                left_button = data[3]
-                right_button = data[4]
-                if left_button and not right_button:
-                    self.gearbox.set_gear(0)
-                elif right_button and not left_button:
-                    self.gearbox.set_gear(1)
-                self.gearing_ratio = self.gearbox.get_gearing_ratio()
+            # #gearbox
+            # if self.gearbox:
+            #     left_button = data[3]
+            #     right_button = data[4]
+            #     if left_button and not right_button:
+            #         self.gearbox.set_gear(0)
+            #     elif right_button and not left_button:
+            #         self.gearbox.set_gear(1)
+            #     self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
-            # horn
-            if self.horn:
-                self.horn_state = data[5]
-                self.horn.set_state(self.horn_state)
+            # # horn
+            # if self.horn:
+            #     self.horn_state = data[5]
+            #     self.horn.set_state(self.horn_state)
                 
-            # limit
-            if self.motor:
-                speed_limit = data[6]
-                self.motor.set_speed_limit_factor(speed_limit / 100)
+            # # limit
+            # if self.motor:
+            #     speed_limit = data[6]
+            #     self.motor.set_speed_limit_factor(speed_limit / 100)
 
             # suspension mode:
             if self.suspension and data[7] is not None:
                 suspension_mode = data[7]
                 self.suspension.mode = suspension_mode
 
-            # motor control mode
-            if self.motor and self.motor.pid:
-                mode = data[8]
-                self.motor.pid.set_mode(mode)
+            # # motor control mode
+            # if self.motor and self.motor.pid:
+            #     mode = data[8]
+            #     self.motor.pid.set_mode(mode)
 
             # suspension base gain
             if self.suspension and data[9] is not None:
@@ -216,19 +216,19 @@ class Car:
                         mode = 2
                     self.motor.pid.set_mode(mode)
 
-                # # steering control
-                # if self.steering:
-                #     self.steering_target = self.receiver.steering_channel
-                #     self.steering.set_steering_position(self.steering_target)
+                # steering control
+                if self.steering:
+                    self.steering_target = self.receiver.steering_channel
+                    self.steering.set_steering_position(self.steering_target)
 
-                # # gearbox control
-                # if self.gearbox:
-                #     if self.receiver.swb_channel < 1750:
-                #         gear = 0
-                #     else:
-                #         gear = 1
-                #     self.gearbox.set_gear(gear)
-                #     self.gearing_ratio = self.gearbox.get_gearing_ratio()
+                # gearbox control
+                if self.gearbox:
+                    if self.receiver.swb_channel < 1750:
+                        gear = 0
+                    else:
+                        gear = 1
+                    self.gearbox.set_gear(gear)
+                    self.gearing_ratio = self.gearbox.get_gearing_ratio()
 
                 # # suspension control
                 # if self.suspension:
@@ -247,9 +247,9 @@ class Car:
                 #     self.ch4 = self.suspension.bounce_offset * 100
                 #     self.ch5 = self.suspension.bounce_step * 100
 
-                # if self.horn:
-                #     self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
-                #     self.horn.set_state(self.horn_state)
+                if self.horn:
+                    self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
+                    self.horn.set_state(self.horn_state)
         except Exception as e:
             print(f"Error updating receiver data: {e}")
 
