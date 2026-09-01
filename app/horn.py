@@ -20,9 +20,9 @@ class Horn:
 
     def set_state(self, state):
         if state == 0:
-            self.turn_on()
-        elif state == 1:
             self.turn_off()
+        elif state == 1:
+            self.turn_on()
         else:
             print(f'[Horn] Invalid horn state input: {state}')
         
