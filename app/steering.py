@@ -1,5 +1,4 @@
 from servo import Servo
-from machine import Timer
 
 
 class Steering:
@@ -14,6 +13,8 @@ class Steering:
         self.max_left_pos = max_left_pos
         self.max_right_pos = max_right_pos
         self.center_pos = center_pos
+        self.min_range = min(max_left_pos, max_right_pos)
+        self.max_range = max(max_left_pos, max_right_pos)
         # deadzone
         self.min_left_pos = center_pos
         self.min_right_pos = center_pos
@@ -25,9 +26,6 @@ class Steering:
             self.min_left_pos = self.center_pos + self.pos_deadzone
             self.min_right_pos = self.center_pos - self.pos_deadzone
         self.set_steering_position(self.center_pos)
-
-        self.min_range = min(self.max_left_pos, self.max_right_pos)
-        self.max_range = max(self.max_left_pos, self.max_right_pos)
 
 
     def set_steering_position(self, target_position):
