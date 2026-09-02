@@ -202,7 +202,10 @@ class Car:
                     self.ch5 = self.suspension.bounce_step * 100
 
                 if self.horn:
-                    self.horn_state = 1 if self.receiver.swa_channel > 1900 else 0
+                    if self.receiver.swa_channel == 2000:
+                        self.horn_state = 1
+                    elif self.receiver.swa_channel == 1000:
+                        self.horn_state = 0
                     self.horn.set_state(self.horn_state)
         except Exception as e:
             print(f"Error updating receiver data: {e}")
