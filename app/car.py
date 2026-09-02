@@ -142,12 +142,13 @@ class Car:
             if self.receiver:
                 self.receiver.decode_channels()
 
-                # self.ch1 = self.receiver.steering_channel
-                # self.ch2 = self.receiver.throttle_channel
-                # self.ch3 = self.receiver.vra_channel
-                # self.ch4 = self.receiver.a_channel
-                # self.ch5 = self.receiver.swa_channel
-                # self.ch6 = self.receiver.swb_channel
+                self.ch1 = self.receiver.steering_channel
+                if self.steering:
+                    self.ch2 = self.steering.min_range
+                    self.ch3 = self.steering.max_range
+                    self.ch4 = self.steering.center_pos
+                    self.ch5 = self.steering.position
+                    self.ch6 = self.steering.servo.angle
 
                 # motor control
                 if self.motor:
@@ -194,12 +195,6 @@ class Car:
                     elif self.receiver.b_channel >= 1750:
                         mode = 2
                     self.suspension.set_mode(mode)
-
-                    self.ch1 = self.suspension.mode
-                    self.ch2 = self.suspension.base_gain * 100
-                    self.ch3 = self.suspension.bounce_gain * 100
-                    self.ch4 = self.suspension.bounce_offset * 100
-                    self.ch5 = self.suspension.bounce_step * 100
 
                 if self.horn:
                     if self.receiver.swa_channel == 2000:
