@@ -26,18 +26,18 @@ class Steering:
             self.min_right_pos = self.center_pos - self.pos_deadzone
         self.set_steering_position(self.center_pos)
 
+        self.min_range = min(self.max_left_pos, self.max_right_pos)
+        self.max_range = max(self.max_left_pos, self.max_right_pos)
+
 
     def set_steering_position(self, target_position):
         angle = self.center # just initialize to avoid unbound variable error
         # if input is in deadzone
         if abs(target_position - self.center_pos) < self.pos_deadzone:
             angle = self.center
-        # adjust if out of range
-        elif not (min(self.max_left_pos, self.max_right_pos) <= target_position <= max(self.max_left_pos, self.max_right_pos)):
-            if target_position < min(self.max_left_pos, self.max_right_pos):
-                target_position = min(self.max_left_pos, self.max_right_pos)
-            elif target_position > max(self.max_left_pos, self.max_right_pos):
-                target_position = max(self.max_left_pos, self.max_right_pos)
+        # clamping the target position to the valid range
+        elif not (self.min_range <= target_position <= self.max_range):
+            target_position = max(min(target_position, self.max_range), self.min_range)
         # if steering left
         elif min(self.min_left_pos, self.max_left_pos) <= target_position < max(self.min_left_pos, self.max_left_pos):
             angle = self.center + (target_position - self.min_left_pos) * (self.left - self.center) / (self.max_left_pos - self.min_left_pos)

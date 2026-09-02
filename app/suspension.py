@@ -80,6 +80,11 @@ class Suspension:
         elif mode == 2:
             self.bounce_gain = 0
             self.bounce_step = abs(self.bounce_step)
+        elif mode == 3:
+            self.fl_tilt_gain = 0
+            self.fr_tilt_gain = 0
+            self.rl_tilt_gain = 0
+            self.rr_tilt_gain = 0
 
     def set_base_gain(self, gain):
         self.base_gain = gain
@@ -141,21 +146,9 @@ class Suspension:
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
             self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction + pitch_correction)
             self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
-            # for the rear, analize if tilt is more alligned with roll/pitch axis or diagonal
-            rl_diag_correction = roll_correction + pitch_correction
-            rl_axis_correction = -roll_correction - pitch_correction
-            rr_diag_correction = -roll_correction + pitch_correction
-            rr_axis_correction = roll_correction - pitch_correction
-            r = abs(self.roll) * self.trackwidth
-            p = abs(self.pitch) * self.wheelbase
-            self.diag_weight = min(r, p) / max(r, p) if max(r, p) > 0 else 0
-            self.diag_weight = 0
-            self.axis_weight = 1.0 - self.diag_weight
-            rl_gain = self.diag_weight * rl_diag_correction + self.axis_weight * rl_axis_correction
-            rr_gain = self.diag_weight * rr_diag_correction + self.axis_weight * rr_axis_correction
-            self.rl_tilt_gain = self.rl_tilt_gain + rl_gain
+            self.rl_tilt_gain = self.rl_tilt_gain + (-roll_correction - pitch_correction)
             self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
-            self.rr_tilt_gain = self.rr_tilt_gain + rr_gain
+            self.rr_tilt_gain = self.rr_tilt_gain + (roll_correction - pitch_correction)
             self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
             # set the gain to each corner
             self.fl_gain = self.fl_tilt_gain
@@ -178,6 +171,21 @@ class Suspension:
             self.fr_gain = self.bounce_gain + self.bounce_offset
             self.rl_gain = self.bounce_gain + self.bounce_offset
             self.rr_gain = self.bounce_gain + self.bounce_offset
+
+        elif self.mode == 3:
+            if self.imu:
+                imu_roll, imu_pitch = self.imu.read_position()
+                self.roll = imu_roll if abs(imu_roll) > self.incline_epsilon else 0
+                self.pitch = imu_pitch if abs(imu_pitch) > self.incline_epsilon else 0
+            roll_correction = self.kp_roll * self.roll
+            self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction)
+            self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
+            self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction)
+            self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
+            self.rl_tilt_gain = self.rl_tilt_gain + (roll_correction)
+            self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
+            self.rr_tilt_gain = self.rr_tilt_gain + (-roll_correction)
+            self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
 
         # correcting possible overflow or underflow due to having both base gain and another gain
         correction = 0

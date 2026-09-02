@@ -187,7 +187,10 @@ class Car:
                     self.suspension.set_base_gain(gain)
                     mode = 0
                     if 1250 <= self.receiver.b_channel < 1750:
-                        mode = 1
+                        if self.receiver.c_channel < 1500:
+                            mode = 1
+                        else:
+                            mode = 3
                     elif self.receiver.b_channel >= 1750:
                         mode = 2
                     self.suspension.set_mode(mode)
