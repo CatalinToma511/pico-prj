@@ -178,14 +178,19 @@ class Suspension:
                 self.roll = imu_roll if abs(imu_roll) > self.incline_epsilon else 0
                 self.pitch = imu_pitch if abs(imu_pitch) > self.incline_epsilon else 0
             roll_correction = self.kp_roll * self.roll
-            self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction)
+            pitch_correction = self.kp_pitch * self.pitch
+            self.fl_tilt_gain = self.fl_tilt_gain + (-roll_correction + pitch_correction)
             self.fl_tilt_gain = max(min(self.fl_tilt_gain, 1.0), -1.0)
-            self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction)
+            self.fr_tilt_gain = self.fr_tilt_gain + (roll_correction + pitch_correction)
             self.fr_tilt_gain = max(min(self.fr_tilt_gain, 1.0), -1.0)
-            self.rl_tilt_gain = self.rl_tilt_gain + (roll_correction)
+            self.rl_tilt_gain = self.rl_tilt_gain + (roll_correction + pitch_correction)
             self.rl_tilt_gain = max(min(self.rl_tilt_gain, 1.0), -1.0)
-            self.rr_tilt_gain = self.rr_tilt_gain + (-roll_correction)
+            self.rr_tilt_gain = self.rr_tilt_gain + (-roll_correction + pitch_correction)
             self.rr_tilt_gain = max(min(self.rr_tilt_gain, 1.0), -1.0)
+            self.fl_gain = self.fl_tilt_gain
+            self.fr_gain = self.fr_tilt_gain
+            self.rl_gain = self.rl_tilt_gain
+            self.rr_gain = self.rr_tilt_gain
 
         # correcting possible overflow or underflow due to having both base gain and another gain
         correction = 0
