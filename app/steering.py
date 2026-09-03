@@ -36,6 +36,9 @@ class Steering:
         self.pid_freq = 100 # Hz
         self.kg = abs(max_left_pos - center_pos) / 200 # 200 = aproximation of max yaw rate in deg/s
         self.pid_output_limit = abs(max_left_pos - center_pos) * 0.3 # could also be max_right_pos - center_pos
+        self.error = 0
+        self.p = 0
+        self.d = 0
         self.kp = self.pid_output_limit * 0.3 / 100 # aim for kp to be around 30% of output limit
         self.ki = 0
         self.integral_limit = 75
@@ -50,14 +53,14 @@ class Steering:
     def update(self, timer):
         if self.imu:
             driver_delta = self.target_position - self.center_pos
-            error = driver_delta - self.imu.gyro_y * self.kg
-            p = self.kp * error
-            d = (self.prev_error - error) / self.dt
-            self.gyro_correction = p + self.ki * self.integral + d
+            self.error = driver_delta - self.imu.gyro_y * self.kg
+            self.p = self.kp * self.error
+            self.d = self.ki * (self.prev_error - self.error) / self.dt
+            self.gyro_correction = self.p + self.ki * self.integral + self.d
             self.gyro_correction = max(min(self.gyro_correction, self.pid_output_limit), -self.pid_output_limit)
-            self.integral += error * self.dt
+            self.integral += self.error * self.dt
             self.integral = max(min(self.integral, self.integral_limit), -self.integral_limit)
-            self.prev_error = error
+            self.prev_error = self.error
         else:
             self.gyro_correction = 0.0
         self.set_steering_angle(self.target_position + self.gyro_correction * self.gyro_gain)

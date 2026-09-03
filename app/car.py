@@ -150,8 +150,9 @@ class Car:
                 if self.imu:
                     self.ch2 = self.imu.gyro_y * 100
                 if self.steering:
-                    self.ch4 = self.steering.center_pos
-                    #self.ch5 = self.steering.position
+                    self.ch3 = self.steering.gyro_correction
+                    self.ch4 = self.steering.error
+                    self.ch5 = self.steering.p
                     self.ch6 = self.steering.servo.angle
 
                 # motor control

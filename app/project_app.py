@@ -45,7 +45,7 @@ class App():
 
     def config(self):
         self.my_car.config_motor(_MOTOR_IN1, _MOTOR_IN2, _MOTOR_ENC_A, _MOTOR_ENC_B)
-        self.my_car.config_steering(_STEERING_PIN, 84.5, 140, 39)
+        self.my_car.config_steering(_STEERING_PIN, 79, 140, 39)
         self.my_car.config_gearbox(_GEARBOX_SHIFT_PIN)
         self.my_car.config_horn(_HORN_PIN)
         self.my_car.config_voltage_reader(_VOLTAGE_PIN)
