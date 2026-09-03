@@ -143,9 +143,9 @@ class Car:
                 self.receiver.decode_channels()
 
                 self.ch1 = self.receiver.steering_channel
+                if self.imu:
+                    self.ch2 = self.imu.gyro_y
                 if self.steering:
-                    self.ch2 = self.steering.min_range
-                    self.ch3 = self.steering.max_range
                     self.ch4 = self.steering.center_pos
                     self.ch5 = self.steering.position
                     self.ch6 = self.steering.servo.angle
