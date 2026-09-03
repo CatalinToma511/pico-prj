@@ -147,7 +147,7 @@ class Car:
                     self.ch2 = self.imu.gyro_y
                 if self.steering:
                     self.ch4 = self.steering.center_pos
-                    self.ch5 = self.steering.position
+                    #self.ch5 = self.steering.position
                     self.ch6 = self.steering.servo.angle
 
                 # motor control
@@ -171,7 +171,8 @@ class Car:
                 # steering control
                 if self.steering:
                     self.steering_target = self.receiver.steering_channel
-                    self.steering.set_steering_position(self.steering_target)
+                    self.steering.set_target_position(self.steering_target)
+                    self.steering.set_gyro_gain((self.receiver.vrb_channel - 1000) / 1000) # scale to 0-1 range
 
                 # gearbox control
                 if self.gearbox:
