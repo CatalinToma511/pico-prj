@@ -76,19 +76,19 @@ class MPU6050:
         
         # set dlpf
         cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_CONFIG, 1)
-        dlpf_cfg = DLPF_CFG_2
+        dlpf_cfg = DLPF_CFG_3
         new_cfg = (cfg[0] & DLPF_CFG_MASK_INVERSE) | dlpf_cfg
         self.i2c.writeto_mem(self.addr, MPU6050_REG_CONFIG, bytes([new_cfg]))
         
         # set accelerometer high pass filter
         accel_cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, 1)
-        afs_sel = AFS_SEL_3
+        afs_sel = AFS_SEL_0
         new_accel_cfg = (accel_cfg[0] & AFS_SEL_MASK_INVERSE) | (afs_sel << 3)
         self.i2c.writeto_mem(self.addr, MPU6050_REG_ACCEL_CONFIG, bytes([new_accel_cfg]))
 
         # set gyro range
         gyro_cfg = self.i2c.readfrom_mem(self.addr, MPU6050_REG_GYRO_CONFIG, 1)
-        fs_sel = FS_SEL_0
+        fs_sel = FS_SEL_1
         new_gyro_cfg = (gyro_cfg[0] & FS_SEL_MASK_INVERSE) | (fs_sel << 3)
         self.i2c.writeto_mem(self.addr, MPU6050_REG_GYRO_CONFIG, bytes([new_gyro_cfg]))
 

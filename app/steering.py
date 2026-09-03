@@ -2,7 +2,10 @@ from servo import Servo
 
 
 class Steering:
-    def __init__(self, steering_servo_pin, center = 90., left = 135., right = 45., max_left_pos=-128, max_right_pos=127, center_pos=0, pos_deadzone = 5):
+    def __init__(self, steering_servo_pin,
+                 center = 90., left = 135., right = 45.,
+                 max_left_pos=-128, max_right_pos=127, center_pos=0, pos_deadzone = 5,
+                 imu = None):
         self.servo = Servo(steering_servo_pin, frequency=100, speed_ms=150, control_loop_interval_ms=10)
         self.position = 0
         # angles
@@ -26,6 +29,17 @@ class Steering:
             self.min_left_pos = self.center_pos + self.pos_deadzone
             self.min_right_pos = self.center_pos - self.pos_deadzone
         self.set_steering_position(self.center_pos)
+        self.imu = imu
+
+        # # gyro PID state, now living in the same object
+        # self.kp = kp
+        # self.ki = ki
+        # self.integral_limit = integral_limit
+        # self.output_limit = output_limit
+        # self.dt = dt
+        # self.integral = 0.0
+        # self.prev_error = 0.0
+        # self.gyro_enabled = False
 
 
     def set_steering_position(self, target_position):
