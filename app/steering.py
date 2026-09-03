@@ -35,12 +35,13 @@ class Steering:
         # gyro PID state, now living in the same object
         self.pid_freq = 100 # Hz
         self.kg = abs(max_left_pos - center_pos) / 200 # 200 = aproximation of max yaw rate in deg/s
-        self.pid_output_limit = abs(max_left_pos - center_pos) * 0.3 # could also be max_right_pos - center_pos
+        self.pid_output_limit = abs(max_left_pos - center_pos) * 0.5 # could also be max_right_pos - center_pos
         self.error = 0
         self.p = 0
         self.d = 0
-        self.kp = self.pid_output_limit * 0.3 / 100 # aim for kp to be around 30% of output limit
+        self.kp = self.pid_output_limit * 0.5 / 100 # aim for kp to be around 30% of output limit
         self.ki = 0
+        self.kd = 0
         self.integral_limit = 75
         self.dt = 1.0 / self.pid_freq
         self.integral = 0.0
