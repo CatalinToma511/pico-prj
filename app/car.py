@@ -148,7 +148,7 @@ class Car:
 
                 self.ch1 = self.receiver.steering_channel
                 if self.imu:
-                    self.ch2 = self.imu.gyro_y
+                    self.ch2 = self.imu.gyro_y * 100
                 if self.steering:
                     self.ch4 = self.steering.center_pos
                     #self.ch5 = self.steering.position
