@@ -63,7 +63,6 @@ class Steering:
         self.set_steering_angle(self.target_position + self.gyro_correction * self.gyro_gain)
 
     def set_target_position(self, target_position):
-        angle = self.center # just initialize to avoid unbound variable error
         # clamping the target position to the valid range
         if not (self.min_range <= target_position <= self.max_range):
             target_position = max(min(target_position, self.max_range), self.min_range)
@@ -73,6 +72,7 @@ class Steering:
         self.target_position = target_position
 
     def set_steering_angle(self, target_position):
+        angle = self.center # just initialize to avoid unbound variable error
         # if steering left
         if min(self.min_left_pos, self.max_left_pos) <= target_position < max(self.min_left_pos, self.max_left_pos):
             angle = self.center + (target_position - self.min_left_pos) * (self.left - self.center) / (self.max_left_pos - self.min_left_pos)
