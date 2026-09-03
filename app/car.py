@@ -86,6 +86,10 @@ class Car:
             self.imu = MPU6050(bus_id, scl_pin, sda_pin)
             self.imu.calibrate()
             self.imu.start_reading()
+            if self.suspension:
+                self.suspension.imu = self.imu
+            if self.steering:
+                self.steering.imu = self.imu
         except Exception as e:
             print(f"Error initializing MPU6050: {e}")
             self.imu = None
