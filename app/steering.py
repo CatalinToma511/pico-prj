@@ -47,7 +47,7 @@ class Steering:
         self.timer = Timer()
         self.timer.init(freq=self.pid_freq, mode=Timer.PERIODIC, callback=self.update)
 
-    def update(self):
+    def update(self, timer):
         if self.imu:
             driver_delta = self.target_position - self.center_pos
             error = driver_delta - self.imu.gyro_y * self.kg
