@@ -56,7 +56,7 @@ class Steering:
             driver_delta = self.target_position - self.center_pos
             self.error = driver_delta - self.imu.gyro_y * self.kg
             self.p = self.kp * self.error
-            self.d = self.ki * (self.prev_error - self.error) / self.dt
+            self.d = self.kd * (self.prev_error - self.error) / self.dt
             self.gyro_correction = self.p + self.ki * self.integral + self.d
             self.gyro_correction = max(min(self.gyro_correction, self.pid_output_limit), -self.pid_output_limit)
             self.integral += self.error * self.dt
