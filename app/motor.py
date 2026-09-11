@@ -22,7 +22,7 @@ class MotorPID():
         # init values for paramters
         self.kp = 0
         self.ki = 0
-        self.kff = 0
+        self.kff = 100
         self.dt = 0.020 # seconds
         self.I = 0
         self.min_pwm = 1500

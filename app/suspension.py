@@ -27,8 +27,11 @@ class Suspension:
         self.rl_tilt_gain = 0
         self.bounce_gain = 0
         self.bounce_range = 0.3 # up - down bounce range
-        self.bounce_freq = 1.5 # how many full bounces (down - up - down) per second
-        self.bounce_step = self.bounce_freq * 2 * self.bounce_range / self.control_loop_freq
+        self.bouce_min_freq = 0
+        self.bounce_max_freq = 5
+        self.bounce_freq = 0 # how many full bounces (down - up - down) per second
+        self.bounce_step = 0
+        self.set_bounce_freq(1.5)
         self.bounce_offset = 0
         self.update_timer = Timer()
         self.mode = 0
@@ -98,6 +101,15 @@ class Suspension:
             self.rl_gain = gain
         if corner == 'rr' or corner == 'all':
             self.rr_gain = gain
+
+    def set_bounce_freq(self, freq = 0.0, factor = None):
+        if factor:
+            factor = min(max(factor, 0.0), 1.0)
+            self.bounce_freq = self.bouce_min_freq + (self.bounce_max_freq - self.bouce_min_freq) * factor
+        else:
+            self.bounce_freq = freq
+        self.bounce_step = self.bounce_freq * 2 * self.bounce_range / self.control_loop_freq
+
     
     def set_axis_gain(self, x_gain, y_gain):
         # joysticks gives values between -128 and 127, but not full range, their range is a circle

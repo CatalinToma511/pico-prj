@@ -177,7 +177,6 @@ class Car:
                 if self.steering:
                     self.steering_target = self.receiver.steering_channel
                     self.steering.set_target_position(self.steering_target)
-                    self.steering.set_gyro_gain((self.receiver.vrb_channel - 1000) / 1000) # scale to 0-1 range
 
                 # gearbox control
                 if self.gearbox:
@@ -190,8 +189,7 @@ class Car:
 
                 # suspension control
                 if self.suspension:
-                    gain = (self.receiver.vra_channel - 1000) / 1000
-                    self.suspension.set_base_gain(gain)
+                    self.suspension.set_base_gain(((self.receiver.vra_channel - 1000) / 1000))
                     mode = 0
                     if 1250 <= self.receiver.b_channel < 1750:
                         if self.receiver.c_channel < 1500:
@@ -200,6 +198,7 @@ class Car:
                             mode = 3
                     elif self.receiver.b_channel >= 1750:
                         mode = 2
+                        self.suspension.set_bounce_freq(factor=((self.receiver.c_channel - 1500) / 500))
                     self.suspension.set_mode(mode)
 
                 if self.horn:
