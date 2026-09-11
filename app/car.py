@@ -198,7 +198,7 @@ class Car:
                             mode = 3
                     elif self.receiver.b_channel >= 1750:
                         mode = 2
-                        self.suspension.set_bounce_freq(factor=((self.receiver.c_channel - 1500) / 500))
+                        self.suspension.set_bounce_freq(factor=((self.receiver.vrb_channel - 1000) / 1000))
                     self.suspension.set_mode(mode)
 
                 if self.horn:
