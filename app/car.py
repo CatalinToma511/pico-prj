@@ -149,11 +149,11 @@ class Car:
                 self.ch1 = self.receiver.steering_channel
                 if self.imu:
                     self.ch2 = self.imu.gyro_y * 100
-                if self.steering:
-                    self.ch3 = self.steering.gyro_correction
-                    self.ch4 = self.steering.error
-                    self.ch5 = self.steering.p
-                    self.ch6 = self.steering.servo.angle
+                if self.suspension:
+                    self.ch3 = self.suspension.bounce_freq * 100
+                    self.ch4 = self.suspension.bounce_range * 100
+                    self.ch5 = self.suspension.bounce_gain * 100
+                    self.ch6 = self.suspension.bounce_step * 100
 
                 # motor control
                 if self.motor:
