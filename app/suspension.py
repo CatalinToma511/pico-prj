@@ -30,6 +30,7 @@ class Suspension:
         self.bouce_min_freq = 0
         self.bounce_max_freq = 5
         self.bounce_freq = 0 # how many full bounces (down - up - down) per second
+        self.bounce_freq_factor = 0
         self.bounce_step = 0
         self.set_bounce_freq(1.5)
         self.bounce_offset = 0
@@ -104,10 +105,15 @@ class Suspension:
 
     def set_bounce_freq(self, freq = 0.0, factor = None):
         if factor:
-            factor = min(max(factor, 0.0), 1.0)
+            if factor == self.bounce_freq_factor:
+                return
+            self.bounce_freq_factor = min(max(factor, 0.0), 1.0)
             self.bounce_freq = self.bouce_min_freq + (self.bounce_max_freq - self.bouce_min_freq) * factor
         else:
+            if freq == self.bounce_freq:
+                return
             self.bounce_freq = freq
+            self.bounce_freq_factor = (freq - self.bouce_min_freq) / (self.bounce_max_freq - self.bouce_min_freq)
         self.bounce_step = self.bounce_freq * 2 * self.bounce_range / self.control_loop_freq
 
     
