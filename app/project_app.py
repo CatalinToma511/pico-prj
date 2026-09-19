@@ -50,8 +50,8 @@ class App():
         self.my_car.config_horn(_HORN_PIN)
         self.my_car.config_voltage_reader(_VOLTAGE_PIN)
         # my_car.config_distance_sensor(_VL53L0X_BUS_ID, _VL53L0X_SCL_PIN, _VL53L0X_SDA_PIN)
-        servo_cfg = [('fl', _FL_SERVO_PIN, 45, 111),
-                     ('fr', _FR_SERVO_PIN, 137, 72),
+        servo_cfg = [('fl', _FL_SERVO_PIN, 43, 109),
+                     ('fr', _FR_SERVO_PIN, 139, 74),
                      ('rl', _RL_SERVO_PIN, 42, 117),
                      ('rr', _RR_SERVO_PIN, 132, 57)]
         self.my_car.config_suspension(servo_cfg, full_range_time_ms=600)
